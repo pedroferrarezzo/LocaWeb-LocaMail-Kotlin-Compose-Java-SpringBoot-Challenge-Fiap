@@ -149,7 +149,6 @@ fun CriaEmailScreen(navController: NavController) {
                         .show()
                 }
                 navController.popBackStack()
-
             },
             onClickPaperClip = {
                 launcher.launch("image/*")
