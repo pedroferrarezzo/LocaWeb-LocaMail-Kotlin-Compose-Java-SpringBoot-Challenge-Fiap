@@ -148,6 +148,7 @@
     <string name="register_screen_return">Return</string>
     <string name="register_screen_pickimage">Open Gallery</string>
     <string name="toast_register_createduser">User created</string>
+    <string name="toast_api_wait">Wait for it to load!</string>
     <string name="content_desc_eye">Eye image</string>
     <string name="content_desc_eye_slash">Slash Eye Image</string>
     <string name="user_email_required">Email is mandatory</string>

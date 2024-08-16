@@ -138,6 +138,7 @@
     <string name="register_screen_signup">Cadastrar</string>
     <string name="register_screen_question">Não possui cadastro?</string>
     <string name="toast_mail_ai_wait">Aguarde a análise da Loca Assistente</string>
+    <string name="toast_api_wait">Aguarde o carregamento!</string>
     <string name="register_welcome_title">Conecte-se, organize-se e realize tarefas com email pessoal e calendário gratuitos.</string>
     <string name="register_welcome_comeback">Opa, você de volta? Seja bem-vindo(a)!</string>
     <string name="register_forget_pass">Esqueceu sua senha?</string>

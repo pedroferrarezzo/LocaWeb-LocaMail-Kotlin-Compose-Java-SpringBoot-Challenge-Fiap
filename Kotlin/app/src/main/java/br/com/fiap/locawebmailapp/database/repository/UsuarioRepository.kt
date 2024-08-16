@@ -34,7 +34,6 @@ class UsuarioRepository(context: Context) {
         return usuarioDao.retornaUsuarioPorId(id_usuario)
     }
 
-
     fun listarUsuarioSelecionado(): Usuario {
         return usuarioDao.listarUsuarioSelecionado()
     }

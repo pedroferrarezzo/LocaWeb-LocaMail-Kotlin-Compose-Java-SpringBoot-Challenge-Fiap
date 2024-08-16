@@ -44,7 +44,7 @@ import br.com.fiap.locawebmailapp.model.ai.ContentsBody
 import br.com.fiap.locawebmailapp.model.ai.GeminiRequest
 import br.com.fiap.locawebmailapp.model.ai.GeminiResponse
 import br.com.fiap.locawebmailapp.model.ai.TextRequestResponse
-import br.com.fiap.locawebmailapp.utils.callGemini
+import br.com.fiap.locawebmailapp.utils.api.callGemini
 import br.com.fiap.locawebmailapp.utils.checkInternetConnectivity
 import com.halilibo.richtext.commonmark.CommonmarkAstNodeParser
 import com.halilibo.richtext.commonmark.MarkdownParseOptions

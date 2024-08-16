@@ -57,7 +57,9 @@ import br.com.fiap.locawebmailapp.model.Alteracao
 import br.com.fiap.locawebmailapp.model.Convidado
 import br.com.fiap.locawebmailapp.model.Email
 import br.com.fiap.locawebmailapp.model.Usuario
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiRetornaUsarioPorEmail
 import br.com.fiap.locawebmailapp.utils.bitmapToByteArray
+import br.com.fiap.locawebmailapp.utils.checkInternetConnectivity
 import br.com.fiap.locawebmailapp.utils.generateSha256
 import br.com.fiap.locawebmailapp.utils.pickImageFromGallery
 import br.com.fiap.locawebmailapp.utils.validateEmail
@@ -65,8 +67,20 @@ import br.com.fiap.locawebmailapp.utils.validatePassword
 
 @Composable
 fun SignupScreen(navController: NavController) {
-
     val context = LocalContext.current
+
+    val isConnectedStatus = remember {
+        mutableStateOf(checkInternetConnectivity(context))
+    }
+    val isLoading = remember {
+        mutableStateOf(true)
+    }
+
+    val isError = remember {
+        mutableStateOf(false)
+    }
+
+    val toastMessageWait = stringResource(id = R.string.toast_api_wait)
 
     var nome by remember {
         mutableStateOf("")
@@ -356,6 +370,7 @@ fun SignupScreen(navController: NavController) {
                     if (!isErrorEmail.value && !isErrorPassword.value && !isErrorNome.value) {
                         val usuarioExistente = usuarioRepository.retornaUsarioPorEmail(email)
 
+
                         if (usuarioExistente == null) {
                             val hashPassword = generateSha256(senha)
                             val devUser = usuarioRepository.retornaUsarioPorEmail("dev@locaweb.com.br")
@@ -378,7 +393,6 @@ fun SignupScreen(navController: NavController) {
                                 convidado.email = usuarioCriado.email
                                 convidadoRepository.criarConvidado(convidado)
                             }
-
 
 
                             val emailWelcome = Email(
