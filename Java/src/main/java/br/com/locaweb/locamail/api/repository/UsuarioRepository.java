@@ -1,6 +1,5 @@
 package br.com.locaweb.locamail.api.repository;
 
-import br.com.locaweb.locamail.api.dto.UsuarioExibicaoDto;
 import br.com.locaweb.locamail.api.model.Usuario;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

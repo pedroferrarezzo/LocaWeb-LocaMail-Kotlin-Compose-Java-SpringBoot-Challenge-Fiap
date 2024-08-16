@@ -1,7 +1,7 @@
 package br.com.locaweb.locamail.api.service;
 
-import br.com.locaweb.locamail.api.dto.UsuarioCadastroDto;
-import br.com.locaweb.locamail.api.dto.UsuarioExibicaoDto;
+import br.com.locaweb.locamail.api.dto.usuario.UsuarioCadastroDto;
+import br.com.locaweb.locamail.api.dto.usuario.UsuarioExibicaoDto;
 import br.com.locaweb.locamail.api.model.Usuario;
 import br.com.locaweb.locamail.api.repository.UsuarioRepository;
 import org.springframework.beans.BeanUtils;

@@ -1,4 +1,4 @@
-package br.com.locaweb.locamail.api.dto;
+package br.com.locaweb.locamail.api.dto.usuario;
 
 import br.com.locaweb.locamail.api.model.Usuario;
 import jakarta.validation.constraints.NotNull;

@@ -1,8 +1,7 @@
 package br.com.locaweb.locamail.api.controller;
 
-import br.com.locaweb.locamail.api.dto.UsuarioCadastroDto;
-import br.com.locaweb.locamail.api.dto.UsuarioExibicaoDto;
-import br.com.locaweb.locamail.api.model.Usuario;
+import br.com.locaweb.locamail.api.dto.usuario.UsuarioCadastroDto;
+import br.com.locaweb.locamail.api.dto.usuario.UsuarioExibicaoDto;
 import br.com.locaweb.locamail.api.service.UsuarioService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
