@@ -42,7 +42,7 @@ public class Agenda {
     private String horario;
 
     @Column(name = "data", nullable = false)
-    private String data = LocalDate.now().toString();
+    private String data;
 
     @Column(name = "proprietario", nullable = false)
     private String proprietario;

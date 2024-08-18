@@ -1,8 +1,7 @@
 package br.com.locaweb.locamail.api.repository;
 
 import br.com.locaweb.locamail.api.model.Email;
-import br.com.locaweb.locamail.api.model.EmailComAlteracao;
-import br.com.locaweb.locamail.api.model.Usuario;
+import br.com.locaweb.locamail.api.dto.email.EmailComAlteracao;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -11,7 +10,7 @@ import java.util.List;
 
 
 @Repository
-public interface EmailRepository extends JpaRepository<Usuario, Long> {
+public interface EmailRepository extends JpaRepository<Email, Long> {
 
     @Query(value = "SELECT DISTINCT * FROM T_LCW_EMAIL INNER JOIN T_LCW_ALTERACAO ON T_LCW_EMAIL.id_email = T_LCW_ALTERACAO.alt_id_email WHERE editavel = 0 AND arquivado = 0 AND excluido = 0 AND spam = 0", nativeQuery = true)
     public List<EmailComAlteracao> listarTodosEmails();

@@ -40,8 +40,6 @@ class EmailRepository(context: Context) {
                     listTodosEmails.add(email)
                 }
             }
-
-
         }
         return listTodosEmails
     }

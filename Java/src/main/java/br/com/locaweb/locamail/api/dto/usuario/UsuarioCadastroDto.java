@@ -1,5 +1,6 @@
 package br.com.locaweb.locamail.api.dto.usuario;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 
 public record UsuarioCadastroDto (
@@ -7,6 +8,7 @@ public record UsuarioCadastroDto (
     Long id_usuario,
 
     @NotNull(message = "O email do usuário é obrigatório!")
+    @Email(message = "O email deve estar no formato correto!")
     String email,
 
     @NotNull(message = "O nome do usuário é obrigatório!")

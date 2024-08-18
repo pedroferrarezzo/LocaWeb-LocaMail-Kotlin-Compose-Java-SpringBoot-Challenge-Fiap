@@ -10,7 +10,7 @@ import java.util.List;
 
 
 @Repository
-public interface AlteracaoRepository extends JpaRepository<Usuario, Long> {
+public interface AlteracaoRepository extends JpaRepository<Alteracao, Long> {
 
     @Query(value = "SELECT * FROM T_LCW_ALTERACAO where alt_id_email = :id_email AND alt_id_usuario = :id_usuario", nativeQuery = true)
     public Alteracao listarAlteracaoPorIdEmailEIdUsuario(Long id_email, Long id_usuario);

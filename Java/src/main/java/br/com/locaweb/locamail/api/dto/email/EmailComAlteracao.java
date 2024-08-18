@@ -1,5 +1,7 @@
-package br.com.locaweb.locamail.api.model;
+package br.com.locaweb.locamail.api.dto.email;
 
+import br.com.locaweb.locamail.api.model.Alteracao;
+import br.com.locaweb.locamail.api.model.Email;
 import jakarta.persistence.Embedded;
 import lombok.*;
 

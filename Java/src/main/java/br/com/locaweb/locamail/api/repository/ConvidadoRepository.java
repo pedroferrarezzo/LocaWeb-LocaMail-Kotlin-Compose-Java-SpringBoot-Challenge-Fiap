@@ -10,7 +10,7 @@ import java.util.List;
 
 
 @Repository
-public interface ConvidadoRepository extends JpaRepository<Usuario, Long> {
+public interface ConvidadoRepository extends JpaRepository<Convidado, Long> {
 
     @Query(value = "SELECT * from T_LCW_CONVIDADO", nativeQuery = true)
     public List<Convidado> listarConvidado();

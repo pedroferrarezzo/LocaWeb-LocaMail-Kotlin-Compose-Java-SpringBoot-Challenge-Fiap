@@ -23,5 +23,4 @@ data class Pasta(
     @PrimaryKey(autoGenerate = true) var id_pasta: Long = 0,
     var id_usuario: Long = 0,
     var nome: String = ""
-
 )

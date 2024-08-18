@@ -1,0 +1,53 @@
+package br.com.locaweb.locamail.api.dto.respostaEmail;
+
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotNull;
+
+public record RespostaEmailCadastroDto(
+
+        Long id_resposta_email,
+
+        @NotNull(message = "O ID do email é obrigatório!")
+        Long id_email,
+
+        @NotNull(message = "O ID do usuário é obrigatório!")
+        Long id_usuario,
+
+        @NotNull(message = "O remetente é obrigatório!")
+        @Email(message = "O email deve estar no formato correto!")
+        String remetente,
+
+        @NotNull(message = "O destinatário é obrigatório!")
+        @Email(message = "O email deve estar no formato correto!")
+        String destinatario,
+
+        @NotNull(message = "O campo CC é obrigatório!")
+        @Email(message = "O email deve estar no formato correto!")
+        String cc,
+
+        @NotNull(message = "O campo CCO é obrigatório!")
+        @Email(message = "O email deve estar no formato correto!")
+        String cco,
+
+        @NotNull(message = "O assunto é obrigatório!")
+        String assunto,
+
+        @NotNull(message = "O corpo do email é obrigatório!")
+        String corpo,
+
+        @NotNull(message = "O status de edição é obrigatório!")
+        Boolean editavel,
+
+        @NotNull(message = "O status de envio é obrigatório!")
+        Boolean enviado,
+
+        @NotNull(message = "O horário é obrigatório!")
+        String horario,
+
+        @NotNull(message = "A data é obrigatória!")
+        String data
+
+) {
+
+}
+
