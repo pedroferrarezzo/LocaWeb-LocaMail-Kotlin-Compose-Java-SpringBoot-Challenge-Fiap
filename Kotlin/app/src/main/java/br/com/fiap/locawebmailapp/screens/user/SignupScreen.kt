@@ -33,7 +33,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -71,9 +70,6 @@ import br.com.fiap.locawebmailapp.utils.generateSha256
 import br.com.fiap.locawebmailapp.utils.pickImageFromGallery
 import br.com.fiap.locawebmailapp.utils.validateEmail
 import br.com.fiap.locawebmailapp.utils.validatePassword
-import kotlinx.coroutines.launch
-import java.io.EOFException
-import java.io.IOException
 
 @Composable
 fun SignupScreen(navController: NavController) {
@@ -102,6 +98,19 @@ fun SignupScreen(navController: NavController) {
 
     var senha by remember {
         mutableStateOf("")
+    }
+
+    val usuarioExistente = remember {
+        mutableStateOf<Usuario?>(null)
+    }
+
+    val usuarioCriado = remember {
+        mutableStateOf<UsuarioSemSenha?>(null)
+    }
+
+
+    var convidadoExistente = remember {
+        mutableStateOf<String?>(null)
     }
 
     val passwordVisibility = remember { mutableStateOf(false) }
@@ -138,8 +147,6 @@ fun SignupScreen(navController: NavController) {
     val isErrorNome = remember {
         mutableStateOf(false)
     }
-
-    val coroutineScope = rememberCoroutineScope()
 
     val toastMessageRegisterUserCreated = stringResource(id = R.string.toast_register_createduser)
     val welcomeSubject = stringResource(id = R.string.register_email_welcome)
@@ -438,136 +445,127 @@ fun SignupScreen(navController: NavController) {
                             isErrorPassword.value = !validatePassword(password = senha)
 
                             if (!isErrorEmail.value && !isErrorPassword.value && !isErrorNome.value) {
-                                isLoading.value = true;
 
-                                var usuarioExistente: Usuario? = null
+                                isLoading.value = true
 
-                                 callLocaMailApiRetornaUsarioPorEmail(
+                                callLocaMailApiRetornaUsarioPorEmail(
                                     email = email,
-                                     onSuccess = { usuario ->
-                                         usuarioExistente = usuario
+                                    onSuccess = { usuario ->
+                                        usuarioExistente.value = usuario
 
-                                     },
-                                     onFailure = {
-                                         throw Throwable()
-                                     }
-                                )
+                                        if (usuarioExistente.value != null) {
+                                            isLoading.value = false
+                                            Toast.makeText(
+                                                context,
+                                                toastMessageAlreadyExistUser,
+                                                Toast.LENGTH_LONG
+                                            )
+                                                .show()
+                                        } else {
+                                            val hashPassword = generateSha256(senha)
+                                            var devUser: Usuario? = null
 
-                                if (usuarioExistente != null) {
-                                    isLoading.value = false;
-                                    Toast.makeText(context, toastMessageAlreadyExistUser, Toast.LENGTH_LONG)
-                                        .show()
+                                            callLocaMailApiRetornaUsarioPorEmail(
+                                                email = "dev@locaweb.com.br",
+                                                onSuccess = { usuarioRetornado ->
+                                                    devUser = usuarioRetornado
 
-                                }
-                                else {
-                                    val hashPassword = generateSha256(senha)
-                                    var devUser: Usuario? = null
+                                                    val usuarioPersistir = Usuario(
+                                                        nome = nome,
+                                                        email = email,
+                                                        senha = hashPassword,
+                                                        profile_image = bitmapToByteArray(bitmap.value!!),
+                                                        selected_user = false,
+                                                        autenticado = false
+                                                    )
 
-                                    callLocaMailApiRetornaUsarioPorEmail(
-                                        email = "dev@locaweb.com.br",
-                                        onSuccess = {usuario -> devUser = usuario},
-                                        onFailure = {throw Throwable()}
-                                    )
+                                                    callLocaMailApicriarUsuario(
+                                                        usuario = usuarioPersistir,
+                                                        onSuccess = { usuarioPersistido ->
+                                                            usuarioCriado.value = usuarioPersistido
 
-                                    val usuario = Usuario(
-                                        nome = nome,
-                                        email = email,
-                                        senha = hashPassword,
-                                        profile_image = bitmapToByteArray(bitmap.value!!),
-                                        selected_user = false,
-                                        autenticado = false
-                                    )
+                                                            if (usuarioCriado.value != null) {
+                                                                callLocaMailApiVerificarConvidadoExiste(
+                                                                    email = usuarioCriado.value!!.email,
+                                                                    onSuccess = { convidado ->
+                                                                        convidadoExistente.value =
+                                                                            convidado
 
-                                    var usuarioCriado: UsuarioSemSenha? = null
+                                                                        if (convidadoExistente.value != usuarioCriado.value!!.email) {
+                                                                            val novoConvidado =
+                                                                                Convidado()
+                                                                            novoConvidado.email =
+                                                                                usuarioCriado.value!!.email
+                                                                            callLocaMailApiCriarConvidado(
+                                                                                convidado = novoConvidado,
+                                                                                onSuccess = {})
+                                                                        }
 
-                                    callLocaMailApicriarUsuario(
-                                        usuario = usuario,
-                                        onSuccess = {usuarioRetornado -> usuarioCriado = usuarioRetornado},
-                                        onFailure = {
-                                            throw Throwable()
-                                        }
-                                    )
+                                                                        val emailWelcome = Email(
+                                                                            id_usuario = devUser!!.id_usuario,
+                                                                            remetente = "dev@locaweb.com.br",
+                                                                            destinatario = usuarioCriado.value!!.email,
+                                                                            assunto = welcomeSubject,
+                                                                            corpo = "$hello ${usuarioCriado.value!!.nome}!\n" +
+                                                                                    "$messageFirstLine\n" +
+                                                                                    "$messageSecondLine\n" +
+                                                                                    "$messageThirdLine \n" +
+                                                                                    "$messageFourthLine\n" +
+                                                                                    "$messageFifthLine\n" +
+                                                                                    "$messageSixthLine\n" +
+                                                                                    "$messageSeventhLine\n" +
+                                                                                    "$messageEighthLine\n" +
+                                                                                    "$messageNinthLine\n" +
+                                                                                    "$messageTenthLine\n" +
+                                                                                    "$messageEleventhLine\n" +
+                                                                                    "$messageTwelfthLine\n" +
+                                                                                    "$messageNote\n" +
+                                                                                    "$messageThirteenthLine\n" +
+                                                                                    messageFourteenthLine,
+                                                                            editavel = false,
+                                                                            enviado = true
 
-                                    if (usuarioCriado != null) {
+                                                                        )
+                                                                        var emailCriado: Email?
 
-                                        var convidadoExistente: String? = null
+                                                                        callLocaMailApiCriarEmail(
+                                                                            email = emailWelcome,
+                                                                            onSuccess = { email ->
+                                                                                emailCriado = email
 
-                                        callLocaMailApiVerificarConvidadoExiste(
-                                            email = usuarioCriado!!.email,
-                                            onSuccess = {
-                                                    convidado -> convidadoExistente = convidado
-                                            },
-                                            onFailure = {
-                                                throw Throwable()
-                                            }
-                                        )
+                                                                                if (emailCriado != null) {
+                                                                                    callLocaMailApiCriarAlteracao(
+                                                                                        alteracao = Alteracao(
+                                                                                            alt_id_email = emailCriado!!.id_email,
+                                                                                            alt_id_usuario = usuarioCriado.value!!.id_usuario
+                                                                                        ),
+                                                                                        onSuccess = {
+                                                                                            Toast.makeText(
+                                                                                                context,
+                                                                                                toastMessageRegisterUserCreated,
+                                                                                                Toast.LENGTH_LONG
+                                                                                            )
+                                                                                                .show()
+                                                                                            navController.popBackStack()
+                                                                                            isLoading.value =
+                                                                                                false
 
-                                        if (convidadoExistente != usuarioCriado!!.email) {
-                                            val convidado = Convidado()
-                                            convidado.email = usuarioCriado!!.email
-                                            callLocaMailApiCriarConvidado(
-                                                convidado = convidado,
-                                                onSuccess = {},
-                                                onFailure = {throw Throwable()}
+                                                                                        }
+                                                                                    )
+                                                                                }
+                                                                            })
+                                                                    }
+                                                                )
+                                                            }
+                                                        }
+                                                    )
+                                                },
                                             )
                                         }
-                                        val emailWelcome = Email(
-                                            id_usuario = devUser!!.id_usuario,
-                                            remetente = "dev@locaweb.com.br",
-                                            destinatario = usuarioCriado!!.email,
-                                            assunto = welcomeSubject,
-                                            corpo = "$hello ${usuarioCriado!!.nome}!\n" +
-                                                    "$messageFirstLine\n" +
-                                                    "$messageSecondLine\n" +
-                                                    "$messageThirdLine \n" +
-                                                    "$messageFourthLine\n" +
-                                                    "$messageFifthLine\n" +
-                                                    "$messageSixthLine\n" +
-                                                    "$messageSeventhLine\n" +
-                                                    "$messageEighthLine\n" +
-                                                    "$messageNinthLine\n" +
-                                                    "$messageTenthLine\n" +
-                                                    "$messageEleventhLine\n" +
-                                                    "$messageTwelfthLine\n" +
-                                                    "$messageNote\n" +
-                                                    "$messageThirteenthLine\n" +
-                                                    messageFourteenthLine,
-                                            editavel = false,
-                                            enviado = true
-
-                                        )
-                                        var emailCriado: Email? = null
-
-                                        callLocaMailApiCriarEmail(
-                                            email = emailWelcome,
-                                            onSuccess = {
-                                                email ->  emailCriado = email
-                                            },
-                                            onFailure = {throw Throwable()})
-
-                                        if (emailCriado != null) {
-                                            callLocaMailApiCriarAlteracao(
-                                                alteracao = Alteracao(
-                                                    alt_id_email = emailCriado!!.id_email,
-                                                    alt_id_usuario = usuarioCriado!!.id_usuario
-                                                ),
-                                                onSuccess = {},
-                                                onFailure = {throw Throwable()}
-                                            )
-                                        }
-
-                                        Toast.makeText(
-                                            context,
-                                            toastMessageRegisterUserCreated,
-                                            Toast.LENGTH_LONG
-                                        )
-                                            .show()
-                                        navController.popBackStack()
                                     }
-                                }
+                                )
                             }
-                        }
-                        catch (t: Throwable) {
+                        } catch (t: Throwable) {
                             isError.value = true
                             isLoading.value = false
                         }

@@ -18,7 +18,7 @@ public interface ConvidadoRepository extends JpaRepository<Convidado, Long> {
     @Query(value = "SELECT * from T_LCW_CONVIDADO where id_convidado = :id_convidado", nativeQuery = true)
     public Convidado listarConvidadoPorId(Long id_convidado);
 
-    @Query(value = "SELECT email FROM T_LCW_CONVIDADO where email = :email LIMIT 1", nativeQuery = true)
+    @Query(value = "SELECT email FROM T_LCW_CONVIDADO WHERE email = :email AND ROWNUM = 1", nativeQuery = true)
     public String verificarConvidadoExiste(String email);
 
 }

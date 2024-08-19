@@ -160,33 +160,29 @@ fun HomeScreen(navController: NavController) {
                                     onSuccess = { usuarioRetornado ->
                                         emailExistente.value = usuarioRetornado
 
-//                                        if (emailExistente.value == null) {
-//                                            val senha = generateSha256("@quweuqweusudausdu@123323Sdsdiadi1j23asd123S\$\$\$%232@#1skls")
-//                                            val usuario = Usuario(
-//                                                nome = "Dev",
-//                                                email = "dev@locaweb.com.br",
-//                                                senha = senha,
-//                                                autenticado = false,
-//                                                selected_user = false
-//                                            )
-//
-//                                            callLocaMailApicriarUsuario(
-//                                                usuario = usuario,
-//                                                onSuccess = {
-//                                                    isLoading.value = false
-//                                                    navController.navigate("loginscreen") {
-//                                                        popUpTo(navController.graph.startDestinationId) {
-//                                                            inclusive = true
-//                                                        }
-//                                                    }
-//                                                },
-//                                                onFailure = {
-//                                                    throw Throwable()
-//                                                }
-//                                            )
-//                                        }
-                                    },
-                                    onFailure = {}
+                                        if (emailExistente.value == null) {
+                                            val senha = generateSha256("@quweuqweusudausdu@123323Sdsdiadi1j23asd123S\$\$\$%232@#1skls")
+                                            val usuario = Usuario(
+                                                nome = "Dev",
+                                                email = "dev@locaweb.com.br",
+                                                senha = senha,
+                                                autenticado = false,
+                                                selected_user = false
+                                            )
+
+                                            callLocaMailApicriarUsuario(
+                                                usuario = usuario,
+                                                onSuccess = {
+                                                    isLoading.value = false
+                                                    navController.navigate("loginscreen") {
+                                                        popUpTo(navController.graph.startDestinationId) {
+                                                            inclusive = true
+                                                        }
+                                                    }
+                                                }
+                                            )
+                                        }
+                                    }
                                 )
 
                                 isLoading.value = false

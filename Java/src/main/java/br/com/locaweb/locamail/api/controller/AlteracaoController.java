@@ -16,7 +16,7 @@ public class AlteracaoController {
 
     @PostMapping("/criarAlteracao")
     @ResponseStatus(HttpStatus.CREATED)
-    public AlteracaoExibicaoDto criarAlteracao(@RequestBody @Valid AlteracaoCadastroDto alteracaoCadastroDto) {
+    public AlteracaoExibicaoDto criarAlteracao (@RequestBody @Valid AlteracaoCadastroDto alteracaoCadastroDto) {
         return alteracaoService.criarAlteracao(alteracaoCadastroDto);
     }
 }

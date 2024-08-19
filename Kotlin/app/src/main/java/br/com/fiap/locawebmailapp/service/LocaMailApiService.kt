@@ -16,21 +16,21 @@ import retrofit2.http.Query
 interface LocaMailApiService {
 
     @GET("/usuario/retornaUsarioPorEmail")
-    fun retornaUsarioPorEmail(@Query("email") email: String): Call<Usuario>
+    fun retornaUsarioPorEmail(@Query("email") email: String): Call<Usuario?>
 
     @POST("/usuario/criarUsuario")
-    fun criarUsuario(@Body usuario: Usuario): Call<UsuarioSemSenha>
+    fun criarUsuario(@Body usuario: Usuario): Call<UsuarioSemSenha?>
 
     @POST("/alteracao/criarAlteracao")
-    fun criarAlteracao(@Body alteracao: Alteracao): Call<Alteracao>
+    fun criarAlteracao(@Body alteracao: Alteracao): Call<Alteracao?>
 
     @POST("/convidado/criarConvidado")
-    fun criarConvidado(@Body convidado: Convidado): Call<Convidado>
+    fun criarConvidado(@Body convidado: Convidado): Call<Convidado?>
 
     @GET("/convidado/verificarConvidadoExiste")
-    fun verificarConvidadoExiste(@Query("email") email: String): Call<String>
+    fun verificarConvidadoExiste(@Query("email") email: String): Call<String?>
 
-    @POST("/alteracao/criarAlteracao")
-    fun criarEmail(@Body email: Email): Call<Email>
+    @POST("/email/criarEmail")
+    fun criarEmail(@Body email: Email): Call<Email?>
 
 }

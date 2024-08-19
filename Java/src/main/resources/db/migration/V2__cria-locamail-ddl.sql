@@ -73,8 +73,8 @@ CREATE TABLE T_LCW_PASTA (
 -- Criação da tabela T_LCW_ALTERACAO
 CREATE TABLE T_LCW_ALTERACAO (
     id_alteracao NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    id_usuario NUMBER NOT NULL,
-    id_email NUMBER,
+    alt_id_usuario NUMBER NOT NULL,
+    alt_id_email NUMBER,
     id_pasta NUMBER,
     importante NUMBER,
     lido NUMBER,

@@ -16,7 +16,7 @@ public class EmailController {
 
     @PostMapping("/criarEmail")
     @ResponseStatus(HttpStatus.CREATED)
-    public EmailExibicaoDto criarEmail(@RequestBody @Valid EmailCadastroDto emailCadastroDto) {
+    public EmailExibicaoDto criarEmail (@RequestBody @Valid EmailCadastroDto emailCadastroDto) {
         return emailService.criarEmail(emailCadastroDto);
     }
 
