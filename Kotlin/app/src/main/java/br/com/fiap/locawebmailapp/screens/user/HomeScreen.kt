@@ -38,13 +38,14 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import br.com.fiap.locawebmailapp.R
 import br.com.fiap.locawebmailapp.components.general.ErrorComponent
-import br.com.fiap.locawebmailapp.database.repository.UsuarioRepository
 import br.com.fiap.locawebmailapp.model.Usuario
 import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiRetornaUsarioPorEmail
 import br.com.fiap.locawebmailapp.utils.api.callLocaMailApicriarUsuario
 import br.com.fiap.locawebmailapp.utils.checkInternetConnectivity
 import br.com.fiap.locawebmailapp.utils.generateSha256
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import java.io.EOFException
 import java.io.IOException
 
 @Composable
@@ -54,7 +55,7 @@ fun HomeScreen(navController: NavController) {
         mutableStateOf(checkInternetConnectivity(context))
     }
     val isLoading = remember {
-        mutableStateOf(true)
+        mutableStateOf(false)
     }
 
     val isError = remember {
@@ -65,38 +66,6 @@ fun HomeScreen(navController: NavController) {
 
     val emailExistente = remember {
         mutableStateOf<Usuario?>(null)
-    }
-
-    val coroutineScope = rememberCoroutineScope()
-
-    LaunchedEffect(key1 = Unit) {
-
-        try {
-            isConnectedStatus.value = checkInternetConnectivity(context)
-            if (!isConnectedStatus.value) {
-                isLoading.value = false
-            } else {
-                emailExistente.value = callLocaMailApiRetornaUsarioPorEmail("dev@locaweb.com.br")
-                if (emailExistente.value != null) {
-                    navController.navigate("loginscreen") {
-                        popUpTo(navController.graph.startDestinationId) {
-                            inclusive = true
-                        }
-                    }
-                }
-                else {
-                    isLoading.value = false
-                }
-            }
-        }
-        catch (t: IOException) {
-            isLoading.value = false
-        }
-        catch (t: Throwable) {
-            Log.i("erro", t.stackTraceToString())
-            isError.value = true
-            isLoading.value = false
-        }
     }
 
     if (isLoading.value) {
@@ -184,22 +153,52 @@ fun HomeScreen(navController: NavController) {
 
                     Button(
                         onClick = {
+                            try {
+                                isLoading.value = true
+                                callLocaMailApiRetornaUsarioPorEmail(
+                                    email = "dev@locaweb.com.br",
+                                    onSuccess = { usuarioRetornado ->
+                                        emailExistente.value = usuarioRetornado
 
-                            isLoading.value = true
-                            val senha = generateSha256("@quweuqweusudausdu@123323Sdsdiadi1j23asd123S\$\$\$%232@#1skls")
+//                                        if (emailExistente.value == null) {
+//                                            val senha = generateSha256("@quweuqweusudausdu@123323Sdsdiadi1j23asd123S\$\$\$%232@#1skls")
+//                                            val usuario = Usuario(
+//                                                nome = "Dev",
+//                                                email = "dev@locaweb.com.br",
+//                                                senha = senha,
+//                                                autenticado = false,
+//                                                selected_user = false
+//                                            )
+//
+//                                            callLocaMailApicriarUsuario(
+//                                                usuario = usuario,
+//                                                onSuccess = {
+//                                                    isLoading.value = false
+//                                                    navController.navigate("loginscreen") {
+//                                                        popUpTo(navController.graph.startDestinationId) {
+//                                                            inclusive = true
+//                                                        }
+//                                                    }
+//                                                },
+//                                                onFailure = {
+//                                                    throw Throwable()
+//                                                }
+//                                            )
+//                                        }
+                                    },
+                                    onFailure = {}
+                                )
 
-                            val usuario = Usuario(
-                                nome = "Dev",
-                                email = "dev@locaweb.com.br",
-                                senha = senha,
-                                autenticado = false,
-                                selected_user = false
-                            )
-
-                            coroutineScope.launch {
-                                callLocaMailApicriarUsuario(usuario)
                                 isLoading.value = false
-                                navController.navigate("loginscreen")
+                                navController.navigate("loginscreen") {
+                                    popUpTo(navController.graph.startDestinationId) {
+                                        inclusive = true
+                                    }
+                                }
+                            }
+                            catch (t: Throwable) {
+                                isError.value = true
+                                isLoading.value = false
                             }
                         },
                         modifier = Modifier

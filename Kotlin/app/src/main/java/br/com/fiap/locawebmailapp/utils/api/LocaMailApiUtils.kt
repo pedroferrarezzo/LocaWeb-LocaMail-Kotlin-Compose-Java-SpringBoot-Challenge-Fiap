@@ -1,7 +1,11 @@
 package br.com.fiap.locawebmailapp.utils.api
 
 import android.util.Log
+import br.com.fiap.locawebmailapp.model.Alteracao
+import br.com.fiap.locawebmailapp.model.Convidado
+import br.com.fiap.locawebmailapp.model.Email
 import br.com.fiap.locawebmailapp.model.Usuario
+import br.com.fiap.locawebmailapp.model.UsuarioSemSenha
 import br.com.fiap.locawebmailapp.service.LocaMailApiFactory
 import kotlinx.coroutines.suspendCancellableCoroutine
 import retrofit2.Call
@@ -12,40 +16,123 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
-// USER_SCREEN
+// USER_SCREENS
 
-suspend fun callLocaMailApiRetornaUsarioPorEmail(email: String):Usuario {
-    return suspendCoroutine { continuation ->
-        val call = LocaMailApiFactory().getLocaMailApiFactory().retornaUsarioPorEmail(email)
+fun callLocaMailApiRetornaUsarioPorEmail(
+    email: String,
+    onSuccess: (Usuario) -> Unit,
+    onFailure: (Throwable) -> Unit
+) {
+    val call = LocaMailApiFactory().getLocaMailApiFactory().retornaUsarioPorEmail(email)
 
-        call.enqueue(object : Callback<Usuario> {
-            override fun onResponse(call: Call<Usuario>, response: Response<Usuario>) {
-                if (response.isSuccessful && response.body() != null) {
-                    continuation.resume(response.body()!!)
-                }
+    call.enqueue(object : Callback<Usuario> {
+        override fun onResponse(call: Call<Usuario>, response: Response<Usuario>) {
+            if (response.isSuccessful && response.body() != null) {
+                onSuccess(response.body()!!)
+            } else {
+                onFailure(Exception("Resposta da API não foi bem-sucedida ou corpo vazio"))
             }
-            override fun onFailure(call: Call<Usuario>, t: Throwable) {
-                continuation.resumeWithException(t)
-            }
-        })
-    }
+        }
+
+        override fun onFailure(call: Call<Usuario>, t: Throwable) {
+            onFailure(t)
+        }
+    })
 }
 
-suspend fun callLocaMailApicriarUsuario(usuario: Usuario): Usuario {
 
-    val callLocaMailApiService = LocaMailApiFactory().getLocaMailApiFactory().criarUsuario(usuario);
+fun callLocaMailApicriarUsuario(
+    usuario: Usuario,
+    onSuccess: (UsuarioSemSenha) -> Unit,
+    onFailure: (Throwable) -> Unit
+) {
+    val callLocaMailApiService = LocaMailApiFactory().getLocaMailApiFactory().criarUsuario(usuario)
 
-    return suspendCoroutine { continuation ->
-        callLocaMailApiService.enqueue(object : Callback<Usuario> {
-            override fun onResponse(call: Call<Usuario>, response: Response<Usuario>) {
-                response.body()?.let {
-                    continuation.resume(it)
-                } ?: continuation.resumeWithException(Throwable(response.errorBody()!!.string()))
-            }
+    callLocaMailApiService.enqueue(object : Callback<UsuarioSemSenha> {
+        override fun onResponse(call: Call<UsuarioSemSenha>, response: Response<UsuarioSemSenha>) {
+            response.body()?.let(onSuccess)
+        }
 
-            override fun onFailure(call: Call<Usuario>, t: Throwable) {
-                continuation.resumeWithException(Throwable("API_PROBLEM"))
-            }
-        })
-    }
+        override fun onFailure(call: Call<UsuarioSemSenha>, t: Throwable) {
+            onFailure(Throwable("API_PROBLEM"))
+        }
+    })
 }
+
+fun callLocaMailApiCriarAlteracao(
+    alteracao: Alteracao,
+    onSuccess: (Alteracao) -> Unit,
+    onFailure: (Throwable) -> Unit
+) {
+    val callLocaMailApiService = LocaMailApiFactory().getLocaMailApiFactory().criarAlteracao(alteracao)
+
+    callLocaMailApiService.enqueue(object : Callback<Alteracao> {
+        override fun onResponse(call: Call<Alteracao>, response: Response<Alteracao>) {
+            response.body()?.let(onSuccess)
+        }
+
+        override fun onFailure(call: Call<Alteracao>, t: Throwable) {
+            onFailure(Throwable("API_PROBLEM"))
+        }
+    })
+}
+
+fun callLocaMailApiCriarConvidado(
+    convidado: Convidado,
+    onSuccess: (Convidado) -> Unit,
+    onFailure: (Throwable) -> Unit
+) {
+    val callLocaMailApiService = LocaMailApiFactory().getLocaMailApiFactory().criarConvidado(convidado)
+
+    callLocaMailApiService.enqueue(object : Callback<Convidado> {
+        override fun onResponse(call: Call<Convidado>, response: Response<Convidado>) {
+            response.body()?.let(onSuccess)
+        }
+
+        override fun onFailure(call: Call<Convidado>, t: Throwable) {
+            onFailure(Throwable("API_PROBLEM"))
+        }
+    })
+}
+
+fun callLocaMailApiVerificarConvidadoExiste(
+    email: String,
+    onSuccess: (String) -> Unit,
+    onFailure: (Throwable) -> Unit
+) {
+    val callLocaMailApiService = LocaMailApiFactory().getLocaMailApiFactory().verificarConvidadoExiste(email)
+
+    callLocaMailApiService.enqueue(object : Callback<String> {
+        override fun onResponse(call: Call<String>, response: Response<String>) {
+            response.body()?.let(onSuccess)
+        }
+
+        override fun onFailure(call: Call<String>, t: Throwable) {
+            onFailure(Throwable("API_PROBLEM"))
+        }
+    })
+}
+
+fun callLocaMailApiCriarEmail(
+    email: Email,
+    onSuccess: (Email) -> Unit,
+    onFailure: (Throwable) -> Unit
+) {
+    val callLocaMailApiService = LocaMailApiFactory().getLocaMailApiFactory().criarEmail(email)
+
+    callLocaMailApiService.enqueue(object : Callback<Email> {
+        override fun onResponse(call: Call<Email>, response: Response<Email>) {
+            response.body()?.let(onSuccess)
+        }
+
+        override fun onFailure(call: Call<Email>, t: Throwable) {
+            onFailure(Throwable("API_PROBLEM"))
+        }
+    })
+}
+
+
+
+
+
+
