@@ -2,6 +2,7 @@ package br.com.locaweb.locamail.api.service;
 
 import br.com.locaweb.locamail.api.dto.usuario.UsuarioCadastroDto;
 import br.com.locaweb.locamail.api.dto.usuario.UsuarioExibicaoDto;
+import br.com.locaweb.locamail.api.dto.usuario.UsuarioExibicaoNoPasswdDto;
 import br.com.locaweb.locamail.api.model.Usuario;
 import br.com.locaweb.locamail.api.repository.UsuarioRepository;
 import org.springframework.beans.BeanUtils;
@@ -17,11 +18,11 @@ public class UsuarioService {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
-    public UsuarioExibicaoDto criarUsuario(UsuarioCadastroDto usuarioCadastroDto) {
+    public UsuarioExibicaoNoPasswdDto criarUsuario(UsuarioCadastroDto usuarioCadastroDto) {
         Usuario usuario = new Usuario();
         BeanUtils.copyProperties(usuarioCadastroDto, usuario);
         Usuario usuarioPersistido = usuarioRepository.save(usuario);
-        return new UsuarioExibicaoDto(usuarioPersistido);
+        return new UsuarioExibicaoNoPasswdDto(usuarioPersistido);
     }
 
     public List<UsuarioExibicaoDto> listarUsuarios() {

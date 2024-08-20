@@ -159,7 +159,6 @@ fun HomeScreen(navController: NavController) {
                                     email = "dev@locaweb.com.br",
                                     onSuccess = { usuarioRetornado ->
                                         emailExistente.value = usuarioRetornado
-
                                         if (emailExistente.value == null) {
                                             val senha = generateSha256("@quweuqweusudausdu@123323Sdsdiadi1j23asd123S\$\$\$%232@#1skls")
                                             val usuario = Usuario(
@@ -179,18 +178,27 @@ fun HomeScreen(navController: NavController) {
                                                             inclusive = true
                                                         }
                                                     }
+                                                },
+                                                onError = { error ->
+                                                    isError.value = true
+                                                    isLoading.value = false
                                                 }
                                             )
                                         }
+                                        else {
+                                            isLoading.value = false
+                                            navController.navigate("loginscreen") {
+                                                popUpTo(navController.graph.startDestinationId) {
+                                                    inclusive = true
+                                                }
+                                            }
+                                        }
+                                    },
+                                    onError = { error ->
+                                        isError.value = true
+                                        isLoading.value = false
                                     }
                                 )
-
-                                isLoading.value = false
-                                navController.navigate("loginscreen") {
-                                    popUpTo(navController.graph.startDestinationId) {
-                                        inclusive = true
-                                    }
-                                }
                             }
                             catch (t: Throwable) {
                                 isError.value = true

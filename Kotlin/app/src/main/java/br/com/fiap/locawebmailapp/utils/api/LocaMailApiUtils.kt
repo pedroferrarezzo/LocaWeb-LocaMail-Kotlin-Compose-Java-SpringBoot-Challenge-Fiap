@@ -20,7 +20,8 @@ import kotlin.coroutines.suspendCoroutine
 
 fun callLocaMailApiRetornaUsarioPorEmail(
     email: String,
-    onSuccess: (Usuario?) -> Unit
+    onSuccess: (Usuario?) -> Unit,
+    onError: (Throwable) -> Unit
 ) {
     val call = LocaMailApiFactory().getLocaMailApiFactory().retornaUsarioPorEmail(email)
 
@@ -28,13 +29,16 @@ fun callLocaMailApiRetornaUsarioPorEmail(
         override fun onResponse(call: Call<Usuario?>, response: Response<Usuario?>) {
             if (response.isSuccessful && response.body() != null) {
                 onSuccess(response.body()!!)
-            } else {
+            }
+            else if (response.isSuccessful == false) {
+                onError(Throwable())
+            }
+            else {
                 onSuccess(null)
             }
         }
-
         override fun onFailure(call: Call<Usuario?>, t: Throwable) {
-            throw Throwable("API_PROBLEM")
+            onError(t)
         }
     })
 }
@@ -42,7 +46,8 @@ fun callLocaMailApiRetornaUsarioPorEmail(
 
 fun callLocaMailApicriarUsuario(
     usuario: Usuario,
-    onSuccess: (UsuarioSemSenha?) -> Unit
+    onSuccess: (UsuarioSemSenha?) -> Unit,
+    onError: (Throwable) -> Unit
 ) {
     val callLocaMailApiService = LocaMailApiFactory().getLocaMailApiFactory().criarUsuario(usuario)
 
@@ -50,20 +55,25 @@ fun callLocaMailApicriarUsuario(
         override fun onResponse(call: Call<UsuarioSemSenha?>, response: Response<UsuarioSemSenha?>) {
             if (response.isSuccessful && response.body() != null) {
                 onSuccess(response.body()!!)
-            } else {
+            }
+            else if (response.isSuccessful == false) {
+                onError(Throwable())
+            }
+            else {
                 onSuccess(null)
             }
         }
 
         override fun onFailure(call: Call<UsuarioSemSenha?>, t: Throwable) {
-            throw Throwable("API_PROBLEM")
+            onError(t)
         }
     })
 }
 
 fun callLocaMailApiCriarAlteracao(
     alteracao: Alteracao,
-    onSuccess: (Alteracao?) -> Unit
+    onSuccess: (Alteracao?) -> Unit,
+    onError: (Throwable) -> Unit
 ) {
     val callLocaMailApiService = LocaMailApiFactory().getLocaMailApiFactory().criarAlteracao(alteracao)
 
@@ -71,20 +81,25 @@ fun callLocaMailApiCriarAlteracao(
         override fun onResponse(call: Call<Alteracao?>, response: Response<Alteracao?>) {
             if (response.isSuccessful && response.body() != null) {
                 onSuccess(response.body()!!)
-            } else {
+            }
+            else if (response.isSuccessful == false) {
+                onError(Throwable())
+            }
+            else {
                 onSuccess(null)
             }
         }
 
         override fun onFailure(call: Call<Alteracao?>, t: Throwable) {
-            throw Throwable("API_PROBLEM")
+            onError(t)
         }
     })
 }
 
 fun callLocaMailApiCriarConvidado(
     convidado: Convidado,
-    onSuccess: (Convidado?) -> Unit
+    onSuccess: (Convidado?) -> Unit,
+    onError: (Throwable) -> Unit
 ) {
     val callLocaMailApiService = LocaMailApiFactory().getLocaMailApiFactory().criarConvidado(convidado)
 
@@ -92,20 +107,25 @@ fun callLocaMailApiCriarConvidado(
         override fun onResponse(call: Call<Convidado?>, response: Response<Convidado?>) {
             if (response.isSuccessful && response.body() != null) {
                 onSuccess(response.body()!!)
-            } else {
+            }
+            else if (response.isSuccessful == false) {
+                onError(Throwable())
+            }
+            else {
                 onSuccess(null)
             }
         }
 
         override fun onFailure(call: Call<Convidado?>, t: Throwable) {
-            throw Throwable("API_PROBLEM")
+            onError(t)
         }
     })
 }
 
 fun callLocaMailApiVerificarConvidadoExiste(
     email: String,
-    onSuccess: (String?) -> Unit
+    onSuccess: (String?) -> Unit,
+    onError: (Throwable) -> Unit
 ) {
     val callLocaMailApiService = LocaMailApiFactory().getLocaMailApiFactory().verificarConvidadoExiste(email)
 
@@ -113,20 +133,25 @@ fun callLocaMailApiVerificarConvidadoExiste(
         override fun onResponse(call: Call<String?>, response: Response<String?>) {
             if (response.isSuccessful && response.body() != null) {
                 onSuccess(response.body()!!)
-            } else {
+            }
+            else if (response.isSuccessful == false) {
+                onError(Throwable())
+            }
+            else {
                 onSuccess(null)
             }
         }
 
         override fun onFailure(call: Call<String?>, t: Throwable) {
-            throw Throwable("API_PROBLEM")
+            onError(t)
         }
     })
 }
 
 fun callLocaMailApiCriarEmail(
     email: Email,
-    onSuccess: (Email?) -> Unit
+    onSuccess: (Email?) -> Unit,
+    onError: (Throwable) -> Unit
 ) {
     val callLocaMailApiService = LocaMailApiFactory().getLocaMailApiFactory().criarEmail(email)
 
@@ -134,15 +159,96 @@ fun callLocaMailApiCriarEmail(
         override fun onResponse(call: Call<Email?>, response: Response<Email?>) {
             if (response.isSuccessful && response.body() != null) {
                 onSuccess(response.body()!!)
-            } else {
+            }
+            else if (response.isSuccessful == false) {
+                onError(Throwable())
+            }
+            else {
                 onSuccess(null)
             }
         }
         override fun onFailure(call: Call<Email?>, t: Throwable) {
-            throw Throwable("API_PROBLEM")
+            onError(t)
         }
     })
 }
+
+fun callLocaMailApiDesselecionarUsuarioSelecionadoAtual(
+    onSuccess: (Unit?) -> Unit,
+    onError: (Throwable) -> Unit
+) {
+    val callLocaMailApiService = LocaMailApiFactory().getLocaMailApiFactory().desselecionarUsuarioSelecionadoAtual()
+
+    callLocaMailApiService.enqueue(object : Callback<Unit> {
+        override fun onResponse(call: Call<Unit>, response: Response<Unit>) {
+            if (response.isSuccessful && response.body() != null) {
+                onSuccess(response.body()!!)
+            }
+            else if (response.isSuccessful == false) {
+                onError(Throwable())
+            }
+            else {
+                onSuccess(null)
+            }
+        }
+        override fun onFailure(call: Call<Unit>, t: Throwable) {
+            onError(t)
+        }
+    })
+}
+
+fun callLocaMailApiSelecionarUsuario(
+    id_usuario: Long,
+    onSuccess: (Unit?) -> Unit,
+    onError: (Throwable) -> Unit
+) {
+    val callLocaMailApiService = LocaMailApiFactory().getLocaMailApiFactory().selecionarUsuario(id_usuario)
+
+    callLocaMailApiService.enqueue(object : Callback<Unit> {
+        override fun onResponse(call: Call<Unit>, response: Response<Unit>) {
+            if (response.isSuccessful && response.body() != null) {
+                onSuccess(response.body()!!)
+            }
+            else if (response.isSuccessful == false) {
+                onError(Throwable())
+            }
+            else {
+                onSuccess(null)
+            }
+        }
+        override fun onFailure(call: Call<Unit>, t: Throwable) {
+            onError(t)
+        }
+    })
+}
+
+fun callLocaMailApiAtualizaAutenticaUsuario(
+    id_usuario: Long,
+    autenticado: Boolean,
+    onSuccess: (Unit?) -> Unit,
+    onError: (Throwable) -> Unit
+) {
+    val callLocaMailApiService = LocaMailApiFactory().getLocaMailApiFactory().atualizaAutenticaUsuario(id_usuario, autenticado)
+
+    callLocaMailApiService.enqueue(object : Callback<Unit> {
+        override fun onResponse(call: Call<Unit>, response: Response<Unit>) {
+            if (response.isSuccessful && response.body() != null) {
+                onSuccess(response.body()!!)
+            }
+            else if (response.isSuccessful == false) {
+                onError(Throwable())
+            }
+            else {
+                onSuccess(null)
+            }
+        }
+        override fun onFailure(call: Call<Unit>, t: Throwable) {
+            onError(t)
+        }
+    })
+}
+
+
 
 
 

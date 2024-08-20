@@ -10,6 +10,7 @@ import br.com.fiap.locawebmailapp.model.ai.GeminiResponse
 import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Query
 
@@ -32,5 +33,17 @@ interface LocaMailApiService {
 
     @POST("/email/criarEmail")
     fun criarEmail(@Body email: Email): Call<Email?>
+
+    @PATCH("/usuario/desselecionarUsuarioSelecionadoAtual")
+    fun desselecionarUsuarioSelecionadoAtual(): Call<Unit>
+
+    @PATCH("/usuario/selecionarUsuario")
+    fun selecionarUsuario(@Query("idUsuario") id_usuario: Long): Call<Unit>
+
+    @PATCH("/usuario/atualizaAutenticaUsuario")
+    fun atualizaAutenticaUsuario(@Query("idUsuario") id_usuario: Long, @Query("autenticado") autenticado: Boolean): Call<Unit>
+
+
+
 
 }
