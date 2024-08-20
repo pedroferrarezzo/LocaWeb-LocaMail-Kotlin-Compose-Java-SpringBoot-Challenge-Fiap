@@ -3,6 +3,9 @@ package br.com.fiap.locawebmailapp.service
 import br.com.fiap.locawebmailapp.model.Alteracao
 import br.com.fiap.locawebmailapp.model.Convidado
 import br.com.fiap.locawebmailapp.model.Email
+import br.com.fiap.locawebmailapp.model.EmailComAlteracao
+import br.com.fiap.locawebmailapp.model.Pasta
+import br.com.fiap.locawebmailapp.model.RespostaEmail
 import br.com.fiap.locawebmailapp.model.Usuario
 import br.com.fiap.locawebmailapp.model.UsuarioSemSenha
 import br.com.fiap.locawebmailapp.model.ai.GeminiRequest
@@ -19,6 +22,9 @@ interface LocaMailApiService {
     @GET("/usuario/retornaUsarioPorEmail")
     fun retornaUsarioPorEmail(@Query("email") email: String): Call<Usuario?>
 
+    @GET("/usuario/listarUsuarioSelecionado")
+    fun listarUsuarioSelecionado(): Call<Usuario?>
+
     @POST("/usuario/criarUsuario")
     fun criarUsuario(@Body usuario: Usuario): Call<UsuarioSemSenha?>
 
@@ -34,6 +40,18 @@ interface LocaMailApiService {
     @POST("/email/criarEmail")
     fun criarEmail(@Body email: Email): Call<Email?>
 
+    @GET("/email/listarEmailsPorDestinatario")
+    fun listarEmailsPorDestinatario(@Query("destinatario") destinatario: String, @Query("idUsuario") id_usuario: Long): Call<List<EmailComAlteracao>?>
+
+    @GET("/pasta/listarPastasPorIdUsuario")
+    fun listarPastasPorIdUsuario(@Query("idUsuario") id_usuario: Long): Call<List<Pasta>?>
+
+    @GET("/anexo/listarAnexosIdEmail")
+    fun listarAnexosIdEmail(): Call<List<Long>?>
+
+    @GET("/respostaEmail/listarRespostasEmailPorIdEmail")
+    fun listarRespostasEmailPorIdEmail(@Query("idEmail") id_email: Long): Call<List<RespostaEmail>?>
+
     @PATCH("/usuario/desselecionarUsuarioSelecionadoAtual")
     fun desselecionarUsuarioSelecionadoAtual(): Call<Unit>
 
@@ -43,6 +61,14 @@ interface LocaMailApiService {
     @PATCH("/usuario/atualizaAutenticaUsuario")
     fun atualizaAutenticaUsuario(@Query("idUsuario") id_usuario: Long, @Query("autenticado") autenticado: Boolean): Call<Unit>
 
+    @PATCH("/alteracao/atualizarLidoPorIdEmailEIdusuario")
+    fun atualizarLidoPorIdEmailEIdusuario(@Query("lido") lido: Boolean, @Query("idEmail") id_email: Long, @Query("idUsuario") id_usuario: Long): Call<Unit>
+
+    @PATCH("/alteracao/atualizarPastaPorIdEmailEIdUsuario")
+    fun atualizarPastaPorIdEmailEIdUsuario(@Query("pasta") pasta: Long, @Query("idEmail") id_email: Long, @Query("idUsuario") id_usuario: Long): Call<Unit>
+
+    @PATCH("/alteracao/atualizarImportantePorIdEmail")
+    fun atualizarImportantePorIdEmail(@Query("importante") pasta: Boolean, @Query("idEmail") id_email: Long, @Query("idUsuario") id_usuario: Long): Call<Unit>
 
 
 

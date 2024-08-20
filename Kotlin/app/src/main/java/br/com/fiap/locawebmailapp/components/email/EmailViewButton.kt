@@ -48,12 +48,12 @@ fun EmailViewButton(
     onClickButton: () -> Unit,
     isRead: MutableState<Boolean>,
     redLcWeb: Color,
-    respostasEmail: List<RespostaEmail>,
+    respostasEmail: List<RespostaEmail>?,
     onClickPastaIconButton: () -> Unit = {},
     onClickPastaPastaPickerDialog: (pasta: Pasta) -> Unit = {},
     onClickImportantButton: () -> Unit = {},
     isImportant: MutableState<Boolean> = mutableStateOf(false),
-    attachEmailList: List<Long>,
+    attachEmailList: List<Long>?,
     listPastaState: SnapshotStateList<Pasta> = mutableStateListOf(),
     timeState: TimePickerState,
     openDialogPastaPicker: MutableState<Boolean> = mutableStateOf(false),
@@ -61,7 +61,7 @@ fun EmailViewButton(
     moveIconOption: Boolean = false,
     importantIconOption: Boolean = true,
     onClickMoveButton: () -> Unit = {},
-    usuarioSelecionado: MutableState<Usuario>
+    usuarioSelecionado: MutableState<Usuario?>
 
     ) {
     Button(
@@ -102,7 +102,7 @@ fun EmailViewButton(
                 modifier = Modifier.padding(horizontal = 2.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (respostasEmail.isNotEmpty()) {
+                    if (respostasEmail!!.isNotEmpty()) {
                         Icon(
                             painter = painterResource(id = R.drawable.reply_solid),
                             contentDescription = stringResource(id = R.string.content_desc_lcweb_reply),
@@ -124,7 +124,7 @@ fun EmailViewButton(
                         )
                     }
 
-                    if (email.email.id_usuario == usuarioSelecionado.value.id_usuario) {
+                    if (email.email.id_usuario == usuarioSelecionado.value!!.id_usuario) {
                         Text(
                             text = if (email.email.destinatario.length > 25) {
                                 "${stringResource(id = R.string.mail_generic_to)} ${
@@ -180,7 +180,7 @@ fun EmailViewButton(
                 ) {
 
 
-                    if (attachEmailList.contains(email.email.id_email)) {
+                    if (attachEmailList!!.contains(email.email.id_email)) {
                         Icon(
                             painter = painterResource(id = R.drawable.paperclip_solid),
                             contentDescription = stringResource(id = R.string.content_desc_clips),

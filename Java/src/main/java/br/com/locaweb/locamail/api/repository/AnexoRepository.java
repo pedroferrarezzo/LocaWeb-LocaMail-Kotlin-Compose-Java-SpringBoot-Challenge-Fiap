@@ -4,6 +4,7 @@ import br.com.locaweb.locamail.api.model.Anexo;
 import br.com.locaweb.locamail.api.model.Pasta;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -16,12 +17,12 @@ public interface AnexoRepository extends JpaRepository<Anexo, Long> {
     public List<Long> listarAnexosIdEmail();
 
     @Query(value = "SELECT id_email FROM T_LCW_ANEXO where id_email = :id_email LIMIT 1", nativeQuery = true)
-    public Long verificarAnexoExistentePorIdEmail(Long id_email);
+    public Long verificarAnexoExistentePorIdEmail(@Param("id_email") Long id_email);
 
     @Query(value = "SELECT anexo FROM T_LCW_ANEXO where id_email = :id_email", nativeQuery = true)
-    public List<byte[]> listarAnexosArrayBytePorIdEmail(Long id_email);
+    public List<byte[]> listarAnexosArrayBytePorIdEmail(@Param("id_email") Long id_email);
 
     @Query(value = "DELETE FROM T_LCW_ANEXO where id_email = :id_email", nativeQuery = true)
-    public void excluirAnexoPorIdEmail(Long id_email);
+    public void excluirAnexoPorIdEmail(@Param("id_email") Long id_email);
 
 }

@@ -35,6 +35,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -58,9 +59,9 @@ fun ModalNavDrawer(
     navController: NavController,
     drawerState: DrawerState,
     scrollState: ScrollState,
-    usuarioRepository: UsuarioRepository,
-    pastaRepository: PastaRepository,
-    alteracaoRepository: AlteracaoRepository,
+    usuarioRepository: UsuarioRepository = UsuarioRepository(LocalContext.current),
+    pastaRepository: PastaRepository = PastaRepository(LocalContext.current),
+    alteracaoRepository: AlteracaoRepository = AlteracaoRepository(LocalContext.current),
     expandedPasta: MutableState<Boolean>,
     openDialogPastaCreator: MutableState<Boolean>,
     textPastaCreator: MutableState<String>,

@@ -19,4 +19,24 @@ public class AlteracaoController {
     public AlteracaoExibicaoDto criarAlteracao (@RequestBody @Valid AlteracaoCadastroDto alteracaoCadastroDto) {
         return alteracaoService.criarAlteracao(alteracaoCadastroDto);
     }
+
+    @PatchMapping("/atualizarLidoPorIdEmailEIdusuario")
+    @ResponseStatus(HttpStatus.OK)
+    public void atualizarLidoPorIdEmailEIdusuario(@RequestParam("lido") Boolean lido, @RequestParam("idEmail") Long id_email, @RequestParam("idUsuario") Long id_usuario) {
+        alteracaoService.atualizarLidoPorIdEmailEIdUsuario(lido, id_email, id_usuario);
+    }
+
+
+    @PatchMapping("/atualizarPastaPorIdEmailEIdUsuario")
+    @ResponseStatus(HttpStatus.OK)
+    public void atualizarPastaPorIdEmailEIdUsuario(@RequestParam("pasta") Long pasta, @RequestParam("idEmail") Long id_email, @RequestParam("idUsuario") Long id_usuario) {
+        alteracaoService.atualizarPastaPorIdEmailEIdUsuario(pasta, id_email, id_usuario);
+    }
+
+
+    @PatchMapping("/atualizarImportantePorIdEmail")
+    @ResponseStatus(HttpStatus.OK)
+    public void atualizarImportantePorIdEmail(@RequestParam("importante") Boolean importante, @RequestParam("idEmail") Long id_email, @RequestParam("idUsuario") Long id_usuario) {
+        alteracaoService.atualizarImportantePorIdEmail(importante, id_email, id_usuario);
+    }
 }

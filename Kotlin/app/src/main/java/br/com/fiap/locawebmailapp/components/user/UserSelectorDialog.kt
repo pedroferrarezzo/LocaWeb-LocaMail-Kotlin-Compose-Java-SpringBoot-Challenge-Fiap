@@ -47,7 +47,7 @@ import br.com.fiap.locawebmailapp.utils.byteArrayToBitmap
 @Composable
 fun <T> UserSelectorDalog(
     openDialogUserPicker: MutableState<Boolean>,
-    usuarioSelecionado: MutableState<Usuario>,
+    usuarioSelecionado: MutableState<Usuario?>,
     stateList: SnapshotStateList<T> = mutableStateListOf(),
     applyStateList: () -> Unit = {},
     usuarioRepository: UsuarioRepository,
@@ -89,7 +89,7 @@ fun <T> UserSelectorDalog(
                         Button(
                             onClick = {
                                 usuarioRepository.atualizaAutenticaUsuario(
-                                    usuarioSelecionado.value.id_usuario,
+                                    usuarioSelecionado.value!!.id_usuario,
                                     false
                                 )
                                 usuarioRepository.desselecionarUsuarioSelecionadoAtual()
@@ -161,7 +161,7 @@ fun <T> UserSelectorDalog(
                     ) {
 
                         Image(
-                            bitmap = byteArrayToBitmap(usuarioSelecionado.value.profile_image).asImageBitmap(),
+                            bitmap = byteArrayToBitmap(usuarioSelecionado.value!!.profile_image).asImageBitmap(),
                             contentDescription = stringResource(id = R.string.content_desc_iconregister),
                             modifier = Modifier
                                 .size(50.dp)
@@ -171,26 +171,26 @@ fun <T> UserSelectorDalog(
                         Column {
 
                             Text(
-                                text = if (usuarioSelecionado.value.nome.length > 25) {
+                                text = if (usuarioSelecionado.value!!.nome.length > 25) {
                                     "${
-                                        usuarioSelecionado.value.nome.take(
+                                        usuarioSelecionado.value!!.nome.take(
                                             25
                                         )
                                     }..."
                                 } else {
-                                    usuarioSelecionado.value.nome
+                                    usuarioSelecionado.value!!.nome
                                 },
                                 color = colorResource(id = R.color.lcweb_gray_1)
                             )
                             Text(
-                                text = if (usuarioSelecionado.value.email.length > 25) {
+                                text = if (usuarioSelecionado.value!!.email.length > 25) {
                                     "${
-                                        usuarioSelecionado.value.email.take(
+                                        usuarioSelecionado.value!!.email.take(
                                             25
                                         )
                                     }..."
                                 } else {
-                                    usuarioSelecionado.value.email
+                                    usuarioSelecionado.value!!.email
                                 },
                                 color = colorResource(id = R.color.lcweb_gray_1)
                             )

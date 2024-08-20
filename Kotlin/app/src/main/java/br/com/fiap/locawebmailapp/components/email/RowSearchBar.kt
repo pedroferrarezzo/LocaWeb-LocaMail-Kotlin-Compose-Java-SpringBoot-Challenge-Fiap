@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -48,9 +49,9 @@ fun <T> RowSearchBar(
     openDialogUserPicker: MutableState<Boolean>,
     textSearchBar: MutableState<String>,
     applyStateListUserSelectorDialog: () -> Unit = {},
-    usuarioSelecionado: MutableState<Usuario>,
+    usuarioSelecionado: MutableState<Usuario?>,
     stateEmailList: SnapshotStateList<T> = mutableStateListOf(),
-    usuarioRepository: UsuarioRepository,
+    usuarioRepository: UsuarioRepository = UsuarioRepository(LocalContext.current),
     placeholderTextFieldSearch: String,
     selectedDrawerPasta: MutableState<String>,
     navController: NavController
@@ -94,7 +95,7 @@ fun <T> RowSearchBar(
                     }
                 ) {
                     Image(
-                        bitmap = byteArrayToBitmap(usuarioSelecionado.value.profile_image).asImageBitmap(),
+                        bitmap = byteArrayToBitmap(usuarioSelecionado.value!!.profile_image).asImageBitmap(),
                         contentDescription = stringResource(id = R.string.content_desc_iconregister),
                         modifier = Modifier
                             .size(30.dp)

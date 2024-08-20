@@ -21,6 +21,12 @@ public class UsuarioController {
         return usuarioService.retornaUsarioPorEmail(email);
     }
 
+    @GetMapping("/listarUsuarioSelecionado")
+    @ResponseStatus(HttpStatus.OK)
+    public UsuarioExibicaoDto listarUsuarioSelecionado() {
+        return usuarioService.listarUsuarioSelecionado();
+    }
+
     @PostMapping("/criarUsuario")
     @ResponseStatus(HttpStatus.CREATED)
     public UsuarioExibicaoNoPasswdDto gravar(@RequestBody @Valid UsuarioCadastroDto usuarioCadastroDto) {

@@ -62,199 +62,199 @@ import java.time.YearMonth
 @Stable
 @Composable
 fun CalendarMainScreen(navController: NavController, data: LocalDate = LocalDate.now()) {
-    val expanded = remember {
-        mutableStateOf(false)
-    }
-
-    var selectedDate by remember { mutableStateOf<LocalDate?>(data) }
-    val listTask = remember {
-        mutableStateOf(listOf<Agenda>())
-    }
-
-    var listColorTask = listOf<AgendaCor>()
-
-    val textSearchBar = remember {
-        mutableStateOf("")
-    }
-
-    val context = LocalContext.current
-    val agendaRepository = remember {
-        AgendaRepository(context)
-    }
-
-    val onClickDay = remember {
-        { day: CalendarDay ->
-            selectedDate = day.date
-        }
-    }
-
-    val usuarioRepository = UsuarioRepository(LocalContext.current)
-    val pastaRepository = PastaRepository(LocalContext.current)
-    val usuarioSelecionado = remember {
-        mutableStateOf(usuarioRepository.listarUsuarioSelecionado())
-    }
-
-    val expandedPasta = remember {
-        mutableStateOf(true)
-    }
-
-    val currentMonth = remember { YearMonth.now() }
-    val startMonth = remember { currentMonth.minusMonths(100) }
-    val endMonth = remember { currentMonth.plusMonths(100) }
-    val daysOfWeek = remember { daysOfWeek() }
-    val stateHorizontalCalendar = rememberCalendarState(
-        startMonth = startMonth,
-        endMonth = endMonth,
-        firstVisibleMonth = currentMonth,
-        firstDayOfWeek = daysOfWeek.first()
-    )
-
-    val selectedDrawer = remember {
-        mutableStateOf("6")
-    }
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    val scope = rememberCoroutineScope()
-
-    listTask.value = agendaRepository.listarAgendaPorDia(
-        selectedDate.toString(),
-        usuarioSelecionado.value.id_usuario
-    )
-
-    val openDialogPastaCreator = remember {
-        mutableStateOf(false)
-    }
-
-    val textPastaCreator = remember {
-        mutableStateOf("")
-    }
-
-    val usuariosExistentes = usuarioRepository.listarUsuariosNaoSelecionados()
-
-    val openDialogUserPicker = remember {
-        mutableStateOf(false)
-    }
-
-    val selectedDrawerPasta = remember {
-        mutableStateOf("")
-    }
-
-    val listPasta =
-        pastaRepository.listarPastasPorIdUsuario(usuarioRepository.listarUsuarioSelecionado().id_usuario)
-
-    val listPastaState = remember {
-        mutableStateListOf<Pasta>().apply {
-            addAll(listPasta)
-        }
-    }
-
-    val alteracaoRepository = AlteracaoRepository(context)
-    val toastMessageFolderDeleted = stringResource(id = R.string.toast_folder_deleted)
-
-    ModalNavDrawer(
-        selectedDrawer = selectedDrawer,
-        navController = navController,
-        drawerState = drawerState,
-        usuarioRepository = usuarioRepository,
-        pastaRepository = pastaRepository,
-        scrollState = rememberScrollState(),
-        expandedPasta = expandedPasta,
-        openDialogPastaCreator = openDialogPastaCreator,
-        textPastaCreator = textPastaCreator,
-        selectedDrawerPasta = selectedDrawerPasta,
-        alteracaoRepository = alteracaoRepository,
-        context = context,
-        listPastaState = listPastaState,
-        scope = scope,
-        toastMessageFolderDeleted = toastMessageFolderDeleted
-    ) {
-
-        Box(modifier = Modifier.fillMaxSize()) {
-            Column {
-
-                RowSearchBar<EmailComAlteracao>(
-                    drawerState = drawerState,
-                    scope = scope,
-                    openDialogUserPicker = openDialogUserPicker,
-                    textSearchBar = textSearchBar,
-                    usuarioSelecionado = usuarioSelecionado,
-                    usuarioRepository = usuarioRepository,
-                    placeholderTextFieldSearch = stringResource(id = R.string.calendar_main_searchbar),
-                    selectedDrawerPasta = selectedDrawerPasta,
-                    navController = navController
-                )
-
-
-
-                Calendar(
-                    stateHorizontalCalendar = stateHorizontalCalendar,
-                    daysOfWeek = daysOfWeek,
-                    dayContent = { day ->
-                        listColorTask = agendaRepository.listarCorAgendaPorDia(
-                            day.date.toString(),
-                            usuarioSelecionado.value.id_usuario
-                        )
-
-                        Day(
-                            day = day,
-                            selectedDate = selectedDate == day.date,
-                            listColorTask = listColorTask,
-                            onClick = onClickDay
-                        )
-                    })
-
-                LazyColumn(
-                    reverseLayout = false,
-                    content = {
-                        items(
-                            listTask.value.reversed(),
-                            key = {
-                                it.id_agenda
-                            }
-                        ) {
-                            if (
-                                it.nome.contains(textSearchBar.value, ignoreCase = true) ||
-                                it.descritivo.contains(textSearchBar.value, ignoreCase = true)
-                            ) {
-                                CardAgenda(
-                                    selectedDate = selectedDate,
-                                    isTask = it.tarefa,
-                                    agenda = it,
-                                    navController = navController,
-                                    timePickerState = rememberTimePickerState()
-                                )
-                            }
-                        }
-                    }
-                )
-            }
-
-
-            ShadowBox(expanded = expanded)
-
-            Column(
-                modifier = Modifier
-                    .padding(8.dp)
-                    .align(Alignment.BottomEnd)
-            ) {
-                ExpandedShadowDropdown(navController = navController, expanded = expanded)
-
-                Button(
-                    onClick = { expanded.value = true },
-                    elevation = ButtonDefaults.buttonElevation(4.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.lcweb_red_1)),
-                    modifier = Modifier
-                        .width(70.dp)
-                        .height(70.dp)
-                        .padding(vertical = 5.dp),
-                    shape = RoundedCornerShape(10.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Add,
-                        contentDescription = stringResource(id = R.string.content_desc_add),
-                        tint = colorResource(id = R.color.white)
-                    )
-                }
-            }
-        }
-    }
+//    val expanded = remember {
+//        mutableStateOf(false)
+//    }
+//
+//    var selectedDate by remember { mutableStateOf<LocalDate?>(data) }
+//    val listTask = remember {
+//        mutableStateOf(listOf<Agenda>())
+//    }
+//
+//    var listColorTask = listOf<AgendaCor>()
+//
+//    val textSearchBar = remember {
+//        mutableStateOf("")
+//    }
+//
+//    val context = LocalContext.current
+//    val agendaRepository = remember {
+//        AgendaRepository(context)
+//    }
+//
+//    val onClickDay = remember {
+//        { day: CalendarDay ->
+//            selectedDate = day.date
+//        }
+//    }
+//
+//    val usuarioRepository = UsuarioRepository(LocalContext.current)
+//    val pastaRepository = PastaRepository(LocalContext.current)
+//    val usuarioSelecionado = remember {
+//        mutableStateOf(usuarioRepository.listarUsuarioSelecionado())
+//    }
+//
+//    val expandedPasta = remember {
+//        mutableStateOf(true)
+//    }
+//
+//    val currentMonth = remember { YearMonth.now() }
+//    val startMonth = remember { currentMonth.minusMonths(100) }
+//    val endMonth = remember { currentMonth.plusMonths(100) }
+//    val daysOfWeek = remember { daysOfWeek() }
+//    val stateHorizontalCalendar = rememberCalendarState(
+//        startMonth = startMonth,
+//        endMonth = endMonth,
+//        firstVisibleMonth = currentMonth,
+//        firstDayOfWeek = daysOfWeek.first()
+//    )
+//
+//    val selectedDrawer = remember {
+//        mutableStateOf("6")
+//    }
+//    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+//    val scope = rememberCoroutineScope()
+//
+//    listTask.value = agendaRepository.listarAgendaPorDia(
+//        selectedDate.toString(),
+//        usuarioSelecionado.value.id_usuario
+//    )
+//
+//    val openDialogPastaCreator = remember {
+//        mutableStateOf(false)
+//    }
+//
+//    val textPastaCreator = remember {
+//        mutableStateOf("")
+//    }
+//
+//    val usuariosExistentes = usuarioRepository.listarUsuariosNaoSelecionados()
+//
+//    val openDialogUserPicker = remember {
+//        mutableStateOf(false)
+//    }
+//
+//    val selectedDrawerPasta = remember {
+//        mutableStateOf("")
+//    }
+//
+//    val listPasta =
+//        pastaRepository.listarPastasPorIdUsuario(usuarioRepository.listarUsuarioSelecionado().id_usuario)
+//
+//    val listPastaState = remember {
+//        mutableStateListOf<Pasta>().apply {
+//            addAll(listPasta)
+//        }
+//    }
+//
+//    val alteracaoRepository = AlteracaoRepository(context)
+//    val toastMessageFolderDeleted = stringResource(id = R.string.toast_folder_deleted)
+//
+//    ModalNavDrawer(
+//        selectedDrawer = selectedDrawer,
+//        navController = navController,
+//        drawerState = drawerState,
+//        usuarioRepository = usuarioRepository,
+//        pastaRepository = pastaRepository,
+//        scrollState = rememberScrollState(),
+//        expandedPasta = expandedPasta,
+//        openDialogPastaCreator = openDialogPastaCreator,
+//        textPastaCreator = textPastaCreator,
+//        selectedDrawerPasta = selectedDrawerPasta,
+//        alteracaoRepository = alteracaoRepository,
+//        context = context,
+//        listPastaState = listPastaState,
+//        scope = scope,
+//        toastMessageFolderDeleted = toastMessageFolderDeleted
+//    ) {
+//
+//        Box(modifier = Modifier.fillMaxSize()) {
+//            Column {
+//
+//                RowSearchBar<EmailComAlteracao>(
+//                    drawerState = drawerState,
+//                    scope = scope,
+//                    openDialogUserPicker = openDialogUserPicker,
+//                    textSearchBar = textSearchBar,
+//                    usuarioSelecionado = usuarioSelecionado,
+//                    usuarioRepository = usuarioRepository,
+//                    placeholderTextFieldSearch = stringResource(id = R.string.calendar_main_searchbar),
+//                    selectedDrawerPasta = selectedDrawerPasta,
+//                    navController = navController
+//                )
+//
+//
+//
+//                Calendar(
+//                    stateHorizontalCalendar = stateHorizontalCalendar,
+//                    daysOfWeek = daysOfWeek,
+//                    dayContent = { day ->
+//                        listColorTask = agendaRepository.listarCorAgendaPorDia(
+//                            day.date.toString(),
+//                            usuarioSelecionado.value.id_usuario
+//                        )
+//
+//                        Day(
+//                            day = day,
+//                            selectedDate = selectedDate == day.date,
+//                            listColorTask = listColorTask,
+//                            onClick = onClickDay
+//                        )
+//                    })
+//
+//                LazyColumn(
+//                    reverseLayout = false,
+//                    content = {
+//                        items(
+//                            listTask.value.reversed(),
+//                            key = {
+//                                it.id_agenda
+//                            }
+//                        ) {
+//                            if (
+//                                it.nome.contains(textSearchBar.value, ignoreCase = true) ||
+//                                it.descritivo.contains(textSearchBar.value, ignoreCase = true)
+//                            ) {
+//                                CardAgenda(
+//                                    selectedDate = selectedDate,
+//                                    isTask = it.tarefa,
+//                                    agenda = it,
+//                                    navController = navController,
+//                                    timePickerState = rememberTimePickerState()
+//                                )
+//                            }
+//                        }
+//                    }
+//                )
+//            }
+//
+//
+//            ShadowBox(expanded = expanded)
+//
+//            Column(
+//                modifier = Modifier
+//                    .padding(8.dp)
+//                    .align(Alignment.BottomEnd)
+//            ) {
+//                ExpandedShadowDropdown(navController = navController, expanded = expanded)
+//
+//                Button(
+//                    onClick = { expanded.value = true },
+//                    elevation = ButtonDefaults.buttonElevation(4.dp),
+//                    colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.lcweb_red_1)),
+//                    modifier = Modifier
+//                        .width(70.dp)
+//                        .height(70.dp)
+//                        .padding(vertical = 5.dp),
+//                    shape = RoundedCornerShape(10.dp)
+//                ) {
+//                    Icon(
+//                        imageVector = Icons.Filled.Add,
+//                        contentDescription = stringResource(id = R.string.content_desc_add),
+//                        tint = colorResource(id = R.color.white)
+//                    )
+//                }
+//            }
+//        }
+//    }
 }

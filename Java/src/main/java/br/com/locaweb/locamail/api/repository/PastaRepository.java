@@ -4,6 +4,7 @@ import br.com.locaweb.locamail.api.model.Convidado;
 import br.com.locaweb.locamail.api.model.Pasta;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -13,6 +14,6 @@ import java.util.List;
 public interface PastaRepository extends JpaRepository<Pasta, Long> {
 
     @Query(value = "SELECT * FROM T_LCW_PASTA where id_usuario = :id_usuario", nativeQuery = true)
-    public List<Pasta> listarPastasPorIdUsuario(Long id_usuario);
+    public List<Pasta> listarPastasPorIdUsuario(@Param("id_usuario") Long id_usuario);
 
 }

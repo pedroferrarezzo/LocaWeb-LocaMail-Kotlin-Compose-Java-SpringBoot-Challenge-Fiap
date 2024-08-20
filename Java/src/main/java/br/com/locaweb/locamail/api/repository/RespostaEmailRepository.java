@@ -4,6 +4,7 @@ import br.com.locaweb.locamail.api.model.Convidado;
 import br.com.locaweb.locamail.api.model.RespostaEmail;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -13,12 +14,12 @@ import java.util.List;
 public interface RespostaEmailRepository extends JpaRepository<RespostaEmail, Long> {
 
     @Query(value = "SELECT * FROM T_LCW_RESPOSTA_EMAIL  WHERE id_email = :id_email", nativeQuery = true)
-    public List<RespostaEmail> listarRespostasEmailPorIdEmail(Long id_email);
+    public List<RespostaEmail> listarRespostasEmailPorIdEmail(@Param("id_email") Long id_email);
 
     @Query(value = "SELECT * FROM T_LCW_RESPOSTA_EMAIL  WHERE id_resposta_email = :id_resposta_email", nativeQuery = true)
-    public RespostaEmail listarRespostaEmailPorIdRespostaEmail(Long id_resposta_email);
+    public RespostaEmail listarRespostaEmailPorIdRespostaEmail(@Param("id_resposta_email") Long id_resposta_email);
 
     @Query(value = "DELETE FROM T_LCW_RESPOSTA_EMAIL WHERE id_email = :id_email", nativeQuery = true)
-    public void excluirRespostaEmailPorIdEmail(Long id_email);
+    public void excluirRespostaEmailPorIdEmail(@Param("id_email") Long id_email);
 
 }
