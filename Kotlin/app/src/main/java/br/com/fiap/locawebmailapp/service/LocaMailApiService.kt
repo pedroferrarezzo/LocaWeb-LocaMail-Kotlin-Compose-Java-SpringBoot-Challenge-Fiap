@@ -12,6 +12,7 @@ import br.com.fiap.locawebmailapp.model.ai.GeminiRequest
 import br.com.fiap.locawebmailapp.model.ai.GeminiResponse
 import retrofit2.Call
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.PATCH
 import retrofit2.http.POST
@@ -46,11 +47,23 @@ interface LocaMailApiService {
     @GET("/pasta/listarPastasPorIdUsuario")
     fun listarPastasPorIdUsuario(@Query("idUsuario") id_usuario: Long): Call<List<Pasta>?>
 
+    @POST("/pasta/criarPasta")
+    fun criarPasta(@Body pasta: Pasta): Call<Pasta?>
+
+    @DELETE("/pasta/excluirPasta")
+    fun excluirPasta(@Query("pasta") pasta: Long): Call<Unit>
+
     @GET("/anexo/listarAnexosIdEmail")
     fun listarAnexosIdEmail(): Call<List<Long>?>
 
     @GET("/respostaEmail/listarRespostasEmailPorIdEmail")
     fun listarRespostasEmailPorIdEmail(@Query("idEmail") id_email: Long): Call<List<RespostaEmail>?>
+
+    @GET("/alteracao/listarAlteracaoPorIdUsuarioEIdPasta")
+    fun listarAlteracaoPorIdUsuarioEIdPasta(@Query("idUsuario") id_usuario: Long, @Query("pasta") pasta: Long): Call<List<Alteracao>?>
+
+    @PATCH("/alteracao/atualizarPastaPorIdAlteracao")
+    fun atualizarPastaPorIdAlteracao(@Query("pasta") pasta: Long?, @Query("idAlteracao") id_alteracao: Long): Call<Unit>
 
     @PATCH("/usuario/desselecionarUsuarioSelecionadoAtual")
     fun desselecionarUsuarioSelecionadoAtual(): Call<Unit>

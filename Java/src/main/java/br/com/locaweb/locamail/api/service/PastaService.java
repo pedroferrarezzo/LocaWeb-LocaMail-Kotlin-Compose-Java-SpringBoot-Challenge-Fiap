@@ -4,11 +4,15 @@ import br.com.locaweb.locamail.api.dto.pasta.PastaCadastroDto;
 import br.com.locaweb.locamail.api.dto.pasta.PastaExibicaoDto;
 import br.com.locaweb.locamail.api.model.Pasta;
 import br.com.locaweb.locamail.api.repository.PastaRepository;
+import jakarta.validation.Valid;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,10 +32,15 @@ public class PastaService {
                 .collect(Collectors.toList());
     }
 
-    public void excluirPasta(PastaCadastroDto pastaCadastroDto) {
-        Pasta pasta = new Pasta();
-        BeanUtils.copyProperties(pastaCadastroDto, pasta);
-        pastaRepository.delete(pasta = pasta);
+    public void excluirPasta(Long id_pasta) throws Exception {
+        Optional<Pasta> pasta = pastaRepository.findById(id_pasta);
+
+        if (pasta.isPresent()) {
+            pastaRepository.deleteById(id_pasta);
+        }
+        else {
+            throw new Exception("Pasta não encontrada");
+        }
     }
 
 

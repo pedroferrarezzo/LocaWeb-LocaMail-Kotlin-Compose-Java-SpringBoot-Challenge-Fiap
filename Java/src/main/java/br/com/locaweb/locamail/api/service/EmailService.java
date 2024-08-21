@@ -3,7 +3,7 @@ package br.com.locaweb.locamail.api.service;
 import br.com.locaweb.locamail.api.dto.email.EmailCadastroDto;
 import br.com.locaweb.locamail.api.dto.email.EmailExibicaoDto;
 import br.com.locaweb.locamail.api.model.Email;
-import br.com.locaweb.locamail.api.model.EmailComAlteracao;
+import br.com.locaweb.locamail.api.dto.email.EmailComAlteracaoDto;
 import br.com.locaweb.locamail.api.model.RespostaEmail;
 import br.com.locaweb.locamail.api.model.Usuario;
 import br.com.locaweb.locamail.api.repository.EmailRepository;
@@ -13,11 +13,18 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StringWriter;
+import java.math.BigDecimal;
+import java.sql.Clob;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static br.com.locaweb.locamail.api.utils.ListUtils.stringParaLista;
+import static br.com.locaweb.locamail.api.utils.ObjectMapperUtils.emailComAlteracaoObjectMapper;
 
 @Service
 public class EmailService {
@@ -50,58 +57,6 @@ public class EmailService {
         emailRepository.save(email);
     }
 
-    public List<EmailComAlteracao> listarTodosEmails() {
-        List<EmailComAlteracao> listTodosEmails = new ArrayList<>();
-
-        for (EmailComAlteracao email : emailRepository.listarTodosEmails()) {
-            Usuario usuario = usuarioRepository.retornaUsarioPorEmail(email.getEmail().getRemetente());
-            Long idRemetente = usuario != null ? usuario.getId_usuario() : null;
-
-            if (!listTodosEmails.isEmpty() && idRemetente != null) {
-                if (!email.getAlteracao().getAlt_id_usuario().equals(idRemetente) &&
-                        !listTodosEmails.get(listTodosEmails.size() - 1).getAlteracao().getAlt_id_email().equals(email.getAlteracao().getAlt_id_email())) {
-                    listTodosEmails.add(email);
-                }
-            } else if (idRemetente != null) {
-                if (!email.getAlteracao().getAlt_id_usuario().equals(idRemetente)) {
-                    listTodosEmails.add(email);
-                }
-            }
-        }
-        return listTodosEmails;
-    }
-
-    public List<EmailComAlteracao> listarEmailsEnviadosPorRemetente(
-            String remetente,
-            Long id_usuario
-    ) {
-        return emailRepository.listarEmailsEnviadosPorRemetente(remetente, id_usuario);
-    }
-
-    public List<EmailComAlteracao> listarEmailsPorDestinatario(
-            String destinatario,
-            Long id_usuario) {
-
-        List<EmailComAlteracao> emailListDb = emailRepository.listarEmailsPorDestinatario(id_usuario);
-
-        return emailListDb.stream()
-                .filter(email -> {
-                    List<RespostaEmail> respostaEmailList =
-                            respostaEmailRepository.listarRespostasEmailPorIdEmail(email.getEmail().getId_email());
-
-                    return stringParaLista(email.getEmail().getDestinatario()).contains(destinatario) ||
-                            stringParaLista(email.getEmail().getCc()).contains(destinatario) ||
-                            stringParaLista(email.getEmail().getCco()).contains(destinatario) ||
-                            respostaEmailList.stream().anyMatch(respostaEmail ->
-                                    stringParaLista(respostaEmail.getDestinatario()).contains(destinatario) ||
-                                            stringParaLista(respostaEmail.getCc()).contains(destinatario) ||
-                                            stringParaLista(respostaEmail.getCco()).contains(destinatario)
-                            );
-                })
-                .collect(Collectors.toList());
-    }
-
-
     public EmailExibicaoDto listarEmailPorId(Long id_email) {
         return new EmailExibicaoDto(emailRepository.listarEmailPorId(id_email));
     }
@@ -117,31 +72,87 @@ public class EmailService {
         return emailExibicaoDtos;
     }
 
-    public List<EmailComAlteracao> listarEmailsPorPastaEIdUsuario(Long id_usuario, Long id_pasta) {
-        return emailRepository.listarEmailsPorPastaEIdUsuario(id_usuario, id_pasta);
+    public List<EmailComAlteracaoDto> listarTodosEmails() {
+        List<Object[]> listRaw = emailRepository.listarTodosEmails();
+        List<EmailComAlteracaoDto> listLoop = emailComAlteracaoObjectMapper(listRaw);
+        List<EmailComAlteracaoDto> listTodosEmails = new ArrayList<>();
+
+
+        for (EmailComAlteracaoDto email : listLoop) {
+            Usuario usuario = usuarioRepository.retornaUsarioPorEmail(email.getRemetente());
+            Long idRemetente = usuario != null ? usuario.getId_usuario() : null;
+
+            if (!listTodosEmails.isEmpty() && idRemetente != null) {
+                if (!email.getAlt_id_usuario().equals(idRemetente) &&
+                        !listTodosEmails.get(listTodosEmails.size() - 1).getAlt_id_email().equals(email.getAlt_id_email())) {
+                    listTodosEmails.add(email);
+                }
+            } else if (idRemetente != null) {
+                if (!email.getAlt_id_usuario().equals(idRemetente)) {
+                    listTodosEmails.add(email);
+                }
+            }
+        }
+        return listTodosEmails;
     }
 
-    public List<EmailComAlteracao> listarEmailsImportantesPorIdUsuario(Long id_usuario) {
-        return emailRepository.listarEmailsImportantesPorIdUsuario(id_usuario);
+    public List<EmailComAlteracaoDto> listarEmailsEnviadosPorRemetente(
+            String remetente,
+            Long id_usuario
+    ) {
+        List<Object[]> listRaw = emailRepository.listarEmailsEnviadosPorRemetente(remetente, id_usuario);
+        return emailComAlteracaoObjectMapper(listRaw);
     }
 
-    public List<EmailComAlteracao> listarEmailsAi(Long id_usuario) {
-        return emailRepository.listarEmailsAi(id_usuario);
+    public List<EmailComAlteracaoDto> listarEmailsPorDestinatario(
+            String destinatario,
+            Long id_usuario) {
+
+        List<Object[]> resultRaw = emailRepository.listarEmailsPorDestinatario(id_usuario);
+        List<EmailComAlteracaoDto> emailList = emailComAlteracaoObjectMapper(resultRaw);
+
+        return emailList.stream()
+                .filter(email -> {
+                    List<RespostaEmail> respostaEmailList =
+                            respostaEmailRepository.listarRespostasEmailPorIdEmail(email.getId_email());
+
+                    return stringParaLista(email.getDestinatario()).contains(destinatario) ||
+                            stringParaLista(email.getCc()).contains(destinatario) ||
+                            stringParaLista(email.getCco()).contains(destinatario) ||
+                            respostaEmailList.stream().anyMatch(respostaEmail ->
+                                    stringParaLista(respostaEmail.getDestinatario()).contains(destinatario) ||
+                                            stringParaLista(respostaEmail.getCc()).contains(destinatario) ||
+                                            stringParaLista(respostaEmail.getCco()).contains(destinatario)
+                            );
+                })
+                .collect(Collectors.toList());
     }
 
-    public List<EmailComAlteracao> listarEmailsArquivadosPorIdUsuario(Long id_usuario) {
-        return emailRepository.listarEmailsArquivadosPorIdUsuario(id_usuario);
+    public List<EmailComAlteracaoDto> listarEmailsPorPastaEIdUsuario(Long id_usuario, Long id_pasta) {
+        return emailComAlteracaoObjectMapper(emailRepository.listarEmailsPorPastaEIdUsuario(id_usuario, id_pasta));
     }
 
-    public List<EmailComAlteracao> listarEmailsLixeiraPorIdUsuario(Long id_usuario) {
-        return emailRepository.listarEmailsLixeiraPorIdUsuario(id_usuario);
+    public List<EmailComAlteracaoDto> listarEmailsImportantesPorIdUsuario(Long id_usuario) {
+        return emailComAlteracaoObjectMapper(emailRepository.listarEmailsImportantesPorIdUsuario(id_usuario));
     }
 
-    public List<EmailComAlteracao> listarEmailsSpamPorIdUsuario(Long id_usuario) {
-        return emailRepository.listarEmailsSpamPorIdUsuario(id_usuario);
+    public List<EmailComAlteracaoDto> listarEmailsAi(Long id_usuario) {
+        return emailComAlteracaoObjectMapper(emailRepository.listarEmailsAi(id_usuario));
     }
 
-    public List<EmailComAlteracao> listarEmailsSociaisPorIdUsuario(Long id_usuario) {
-        return emailRepository.listarEmailsSociaisPorIdUsuario(id_usuario);
+    public List<EmailComAlteracaoDto> listarEmailsArquivadosPorIdUsuario(Long id_usuario) {
+        return emailComAlteracaoObjectMapper(emailRepository.listarEmailsArquivadosPorIdUsuario(id_usuario));
+    }
+
+    public List<EmailComAlteracaoDto> listarEmailsLixeiraPorIdUsuario(Long id_usuario) {
+        return emailComAlteracaoObjectMapper(emailRepository.listarEmailsLixeiraPorIdUsuario(id_usuario));
+    }
+
+    public List<EmailComAlteracaoDto> listarEmailsSpamPorIdUsuario(Long id_usuario) {
+        return emailComAlteracaoObjectMapper(emailRepository.listarEmailsSpamPorIdUsuario(id_usuario));
+    }
+
+    public List<EmailComAlteracaoDto> listarEmailsSociaisPorIdUsuario(Long id_usuario) {
+        return emailComAlteracaoObjectMapper(emailRepository.listarEmailsSociaisPorIdUsuario(id_usuario));
     }
 }

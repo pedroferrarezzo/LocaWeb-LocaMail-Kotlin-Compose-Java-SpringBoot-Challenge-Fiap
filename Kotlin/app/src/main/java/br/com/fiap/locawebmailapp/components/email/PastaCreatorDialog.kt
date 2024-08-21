@@ -33,14 +33,16 @@ import br.com.fiap.locawebmailapp.R
 import br.com.fiap.locawebmailapp.database.repository.PastaRepository
 import br.com.fiap.locawebmailapp.database.repository.UsuarioRepository
 import br.com.fiap.locawebmailapp.model.Pasta
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiCriarPasta
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiListarUsuarioSelecionado
 
 @Composable
 fun PastaCreatorDalog(
     openDialogPastaCreator: MutableState<Boolean>,
     textPastaCreator: MutableState<String>,
-    usuarioRepository: UsuarioRepository,
-    pastaRepository: PastaRepository,
-    listPastaState: SnapshotStateList<Pasta>
+    listPastaState: SnapshotStateList<Pasta>,
+    isLoading: MutableState<Boolean>,
+    isError: MutableState<Boolean>
 ) {
     if (openDialogPastaCreator.value) {
         Dialog(onDismissRequest = { openDialogPastaCreator.value = false }) {
@@ -121,20 +123,42 @@ fun PastaCreatorDalog(
                         }
 
                         TextButton(onClick = {
-                            val rowId = pastaRepository.criarPasta(
-                                Pasta(
-                                    nome = textPastaCreator.value,
-                                    id_usuario = usuarioRepository.listarUsuarioSelecionado().id_usuario
-                                )
-                            )
+                            isLoading.value = true
+                            callLocaMailApiListarUsuarioSelecionado(
+                                onSuccess = {
+                                    usuarioRetornado ->
 
-                            listPastaState.add(Pasta(
-                                id_pasta = rowId,
-                                nome = textPastaCreator.value,
-                                id_usuario = usuarioRepository.listarUsuarioSelecionado().id_usuario
-                            ))
-                            openDialogPastaCreator.value = false
-                            textPastaCreator.value = ""
+                                    val idUsuarioSelecionado = usuarioRetornado!!.id_usuario
+
+                                    callLocaMailApiCriarPasta(
+                                        Pasta(
+                                            nome = textPastaCreator.value,
+                                            id_usuario = idUsuarioSelecionado
+                                        ),
+                                        onSuccess = {
+                                            pastaRetornada ->
+                                            listPastaState.add(Pasta(
+                                                id_pasta = pastaRetornada!!.id_pasta,
+                                                nome = textPastaCreator.value,
+                                                id_usuario = idUsuarioSelecionado
+                                            ))
+                                            openDialogPastaCreator.value = false
+                                            textPastaCreator.value = ""
+                                            isLoading.value = false
+                                        },
+                                        onError = {error ->
+                                            isError.value = true
+                                            isLoading.value = false
+                                        }
+                                    )
+
+                                },
+                                onError = {error ->
+                                    isError.value = true
+                                    isLoading.value = false
+
+                                }
+                            )
                         }) {
                             Text(text = stringResource(id = R.string.mail_pasta_creator_create), color = colorResource(id = R.color.lcweb_red_1))
                         }

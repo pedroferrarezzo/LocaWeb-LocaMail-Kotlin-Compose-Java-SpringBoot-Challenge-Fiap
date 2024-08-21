@@ -10,6 +10,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode
+@Embeddable
 public class Email {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

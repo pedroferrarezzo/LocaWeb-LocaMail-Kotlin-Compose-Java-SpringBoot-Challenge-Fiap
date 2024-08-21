@@ -1,5 +1,6 @@
 package br.com.fiap.locawebmailapp.screens.email
 
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
@@ -194,7 +195,7 @@ fun EMailMainScreen(navController: NavController) {
 
                     if (usuarioSelecionado.value != null) {
 
-                        var receivedEmailList: List<EmailComAlteracao>? = null
+                        var receivedEmailList: List<EmailComAlteracao>?
 
                         callLocaMailApiListarEmailsPorDestinatario(
                             usuarioSelecionado.value!!.email,
@@ -203,7 +204,12 @@ fun EMailMainScreen(navController: NavController) {
                                 receivedEmailList = listMailRetornado
 
                                 if (receivedEmailList != null) {
-                                    receivedStateEmailList.addAll(receivedEmailList!!)
+
+                                    receivedEmailList!!.forEach { email ->
+                                        if (!receivedStateEmailList.contains(email)) {
+                                            receivedStateEmailList.add(email)
+                                        }
+                                    }
 
                                     callLocaMailApiListarPastasPorIdUsuario(
                                         usuarioSelecionado.value!!.id_usuario,
@@ -247,15 +253,13 @@ fun EMailMainScreen(navController: NavController) {
                 selectedDrawer = selectedDrawer,
                 navController = navController,
                 drawerState = drawerState,
-                scrollState = rememberScrollState(),
                 expandedPasta = expandedPasta,
                 openDialogPastaCreator = openDialogPastaCreator,
                 textPastaCreator = textPastaCreator,
                 selectedDrawerPasta = selectedDrawerPasta,
                 receivedEmailStateListRecompose = {
 
-                    var emails: List<EmailComAlteracao>? = null
-
+                    var emails: List<EmailComAlteracao>?
                     callLocaMailApiListarEmailsPorDestinatario(
                         usuarioSelecionado.value!!.email,
                         usuarioSelecionado.value!!.id_usuario,
@@ -278,7 +282,9 @@ fun EMailMainScreen(navController: NavController) {
                 context = context,
                 listPastaState = listPastaState,
                 scope = scope,
-                toastMessageFolderDeleted = toastMessageFolderDeleted
+                toastMessageFolderDeleted = toastMessageFolderDeleted,
+                isLoading = isLoading,
+                isError = isError
             ) {
 
                 Box(
@@ -292,7 +298,7 @@ fun EMailMainScreen(navController: NavController) {
                             textSearchBar = textSearchBar,
                             applyStateListUserSelectorDialog = {
 
-                                var emails: List<EmailComAlteracao>? = null
+                                var emails: List<EmailComAlteracao>?
 
                                 callLocaMailApiListarEmailsPorDestinatario(
                                     usuarioSelecionado.value!!.email,
@@ -304,7 +310,6 @@ fun EMailMainScreen(navController: NavController) {
                                                 receivedStateEmailList.add(email)
                                             }
                                         }
-
                                         listPastaState.clear()
                                         callLocaMailApiListarPastasPorIdUsuario(
                                             usuarioSelecionado.value!!.id_usuario,
@@ -331,37 +336,37 @@ fun EMailMainScreen(navController: NavController) {
                             navController = navController
                         )
 
-                        if (receivedStateEmailList.isNotEmpty()) {
+                        if (!receivedStateEmailList.isEmpty()) {
 
                             LazyColumn() {
                                 items(receivedStateEmailList.reversed(), key = {
-                                    it.alteracao.id_alteracao
+                                    it.id_alteracao
                                 }) {
 
                                     if (
-                                        it.email.assunto.contains(
+                                        it.assunto.contains(
                                             textSearchBar.value,
                                             ignoreCase = true
                                         ) ||
-                                        it.email.corpo.contains(
+                                        it.corpo.contains(
                                             textSearchBar.value,
                                             ignoreCase = true
                                         )
                                     ) {
                                         val isImportant = remember {
-                                            mutableStateOf(it.alteracao.importante)
+                                            mutableStateOf(it.importante)
                                         }
 
                                         val isRead = remember {
-                                            mutableStateOf(it.alteracao.lido)
+                                            mutableStateOf(it.lido)
                                         }
 
                                         var respostasEmail: List<RespostaEmail>? = null
 
                                         callLocaMailApiListarRespostasEmailPorIdEmail(
-                                            it.email.id_email,
+                                            it.id_email,
                                             onSuccess = {
-                                                listRespostaRetornado ->
+                                                    listRespostaRetornado ->
 
                                                 respostasEmail = listRespostaRetornado
 
@@ -372,7 +377,6 @@ fun EMailMainScreen(navController: NavController) {
                                             }
                                         )
 
-
                                         EmailViewButton(
                                             onClickButton = {
                                                 if (!isRead.value) {
@@ -380,8 +384,8 @@ fun EMailMainScreen(navController: NavController) {
 
                                                     callLocaMailApiAtualizarLidoPorIdEmailEIdusuario(
                                                         isRead.value,
-                                                        it.email.id_email,
-                                                        it.alteracao.alt_id_usuario,
+                                                        it.id_email,
+                                                        it.alt_id_usuario,
                                                         onSuccess = {
 
                                                         },
@@ -392,7 +396,7 @@ fun EMailMainScreen(navController: NavController) {
                                                         }
                                                     )
                                                 }
-                                                navController.navigate("visualizaemailscreen/${it.email.id_email}/false")
+                                                navController.navigate("visualizaemailscreen/${it.id_email}/false")
                                             },
                                             isRead = isRead,
                                             redLcWeb = redLcWeb,
@@ -403,11 +407,14 @@ fun EMailMainScreen(navController: NavController) {
 
                                             },
                                             onClickPastaPastaPickerDialog = { pasta ->
+                                                isLoading.value = true
+
                                                 callLocaMailApiAtualizarPastaPorIdEmailEIdUsuario(
                                                     pasta = pasta.id_pasta,
-                                                    id_email = it.alteracao.alt_id_email,
+                                                    id_email = it.alt_id_email,
                                                     id_usuario = usuarioSelecionado.value!!.id_usuario,
                                                     onSuccess = {
+                                                        isLoading.value = false
                                                         Toast.makeText(
                                                             context,
                                                             "$toastMessageMailMovedFolder ${pasta.nome}",
@@ -430,8 +437,8 @@ fun EMailMainScreen(navController: NavController) {
 
                                                 callLocaMailApiAtualizarImportantePorIdEmail(
                                                     isImportant.value,
-                                                    it.email.id_email,
-                                                    it.alteracao.alt_id_usuario,
+                                                    it.id_email,
+                                                    it.alt_id_usuario,
                                                     onSuccess = {
 
                                                     },

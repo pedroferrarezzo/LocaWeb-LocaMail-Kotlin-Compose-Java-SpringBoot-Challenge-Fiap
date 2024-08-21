@@ -102,18 +102,21 @@ fun EmailViewButton(
                 modifier = Modifier.padding(horizontal = 2.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (respostasEmail!!.isNotEmpty()) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.reply_solid),
-                            contentDescription = stringResource(id = R.string.content_desc_lcweb_reply),
-                            modifier = Modifier
-                                .width(20.dp)
-                                .height(20.dp)
-                                .padding(horizontal = 5.dp)
-                        )
+
+                    if (respostasEmail != null) {
+                        if (respostasEmail.isNotEmpty()) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.reply_solid),
+                                contentDescription = stringResource(id = R.string.content_desc_lcweb_reply),
+                                modifier = Modifier
+                                    .width(20.dp)
+                                    .height(20.dp)
+                                    .padding(horizontal = 5.dp)
+                            )
+                        }
                     }
 
-                    if (email.email.agenda_atrelada) {
+                    if (email.agenda_atrelada) {
                         Icon(
                             imageVector = Icons.Filled.DateRange,
                             contentDescription = stringResource(id = R.string.content_desc_event),
@@ -124,16 +127,16 @@ fun EmailViewButton(
                         )
                     }
 
-                    if (email.email.id_usuario == usuarioSelecionado.value!!.id_usuario) {
+                    if (email.id_usuario == usuarioSelecionado.value!!.id_usuario) {
                         Text(
-                            text = if (email.email.destinatario.length > 25) {
+                            text = if (email.destinatario.length > 25) {
                                 "${stringResource(id = R.string.mail_generic_to)} ${
-                                    email.email.destinatario.take(
+                                    email.destinatario.take(
                                         25
                                     )
                                 }..."
                             } else {
-                                "${stringResource(id = R.string.mail_generic_to)} ${email.email.destinatario}"
+                                "${stringResource(id = R.string.mail_generic_to)} ${email.destinatario}"
                             },
                             maxLines = 1
                         )
@@ -141,14 +144,14 @@ fun EmailViewButton(
                     }
                     else {
                         Text(
-                            text = if (email.email.remetente.length > 25) {
+                            text = if (email.remetente.length > 25) {
                                 "${stringResource(id = R.string.mail_generic_from)} ${
-                                    email.email.remetente.take(
+                                    email.remetente.take(
                                         25
                                     )
                                 }..."
                             } else {
-                                "${stringResource(id = R.string.mail_generic_from)} ${email.email.remetente}"
+                                "${stringResource(id = R.string.mail_generic_from)} ${email.remetente}"
                             },
                             maxLines = 1
                         )
@@ -159,12 +162,12 @@ fun EmailViewButton(
                 }
 
 
-                Text(text = email.email.assunto)
+                Text(text = email.assunto)
                 Text(
-                    text = if (email.email.corpo.length > 25) {
-                        "${email.email.corpo.take(25)}..."
+                    text = if (email.corpo.length > 25) {
+                        "${email.corpo.take(25)}..."
                     } else {
-                        email.email.corpo
+                        email.corpo
                     },
                     maxLines = 1
                 )
@@ -178,22 +181,22 @@ fun EmailViewButton(
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    if (attachEmailList != null) {
+                        if (attachEmailList.contains(email.id_email)) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.paperclip_solid),
+                                contentDescription = stringResource(id = R.string.content_desc_clips),
+                                modifier = Modifier
+                                    .width(20.dp)
+                                    .height(20.dp)
+                                    .padding(horizontal = 5.dp)
+                            )
+                        }
 
-
-                    if (attachEmailList!!.contains(email.email.id_email)) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.paperclip_solid),
-                            contentDescription = stringResource(id = R.string.content_desc_clips),
-                            modifier = Modifier
-                                .width(20.dp)
-                                .height(20.dp)
-                                .padding(horizontal = 5.dp)
-                        )
                     }
-
                     Text(
-                        text = if (timeState.is24hour) email.email.horario else convertTo12Hours(
-                            email.email.horario
+                        text = if (timeState.is24hour) email.horario else convertTo12Hours(
+                            email.horario
                         )
                     )
                 }

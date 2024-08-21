@@ -27,16 +27,16 @@ class EmailRepository(context: Context) {
 
         for (email in emailDao.listarTodosEmails()) {
 
-            val usuario = usuarioRepository.retornaUsarioPorEmail(email.email.remetente)
+            val usuario = usuarioRepository.retornaUsarioPorEmail(email.remetente)
 
             val idRemetente = if (usuario != null) usuario.id_usuario else null
 
             if (listTodosEmails.isNotEmpty() && idRemetente != null) {
-                if (email.alteracao.alt_id_usuario != idRemetente && listTodosEmails.last().alteracao.alt_id_email != email.alteracao.alt_id_email) {
+                if (email.alt_id_usuario != idRemetente && listTodosEmails.last().alt_id_email != email.alt_id_email) {
                     listTodosEmails.add(email)
                 }
             } else if (idRemetente != null) {
-                if (email.alteracao.alt_id_usuario != idRemetente) {
+                if (email.alt_id_usuario != idRemetente) {
                     listTodosEmails.add(email)
                 }
             }
@@ -61,11 +61,11 @@ class EmailRepository(context: Context) {
 
         return emailListDb.filter { email ->
             val respostaEmailList =
-                respostaEmailRepository.listarRespostasEmailPorIdEmail(email.email.id_email)
+                respostaEmailRepository.listarRespostasEmailPorIdEmail(email.id_email)
 
-            stringParaLista(email.email.destinatario).contains(destinatario) ||
-                    stringParaLista(email.email.cc).contains(destinatario) ||
-                    stringParaLista(email.email.cco).contains(destinatario) ||
+            stringParaLista(email.destinatario).contains(destinatario) ||
+                    stringParaLista(email.cc).contains(destinatario) ||
+                    stringParaLista(email.cco).contains(destinatario) ||
                     respostaEmailList.any {respostaEmail ->
                         stringParaLista(respostaEmail.destinatario).contains(destinatario) ||
                                 stringParaLista(respostaEmail.cc).contains(destinatario) ||

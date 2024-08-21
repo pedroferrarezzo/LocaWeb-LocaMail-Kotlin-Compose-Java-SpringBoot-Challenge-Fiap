@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/alteracao")
 public class AlteracaoController {
@@ -38,5 +40,17 @@ public class AlteracaoController {
     @ResponseStatus(HttpStatus.OK)
     public void atualizarImportantePorIdEmail(@RequestParam("importante") Boolean importante, @RequestParam("idEmail") Long id_email, @RequestParam("idUsuario") Long id_usuario) {
         alteracaoService.atualizarImportantePorIdEmail(importante, id_email, id_usuario);
+    }
+
+    @PatchMapping("/atualizarPastaPorIdAlteracao")
+    @ResponseStatus(HttpStatus.OK)
+    public void atualizarPastaPorIdAlteracao(@RequestParam(value = "pasta", required = false) Long pasta, @RequestParam("idAlteracao") Long id_alteracao) {
+        alteracaoService.atualizarPastaPorIdAlteracao(pasta, id_alteracao);
+    }
+
+    @GetMapping("/listarAlteracaoPorIdUsuarioEIdPasta")
+    @ResponseStatus(HttpStatus.OK)
+    public List<AlteracaoExibicaoDto> listarAlteracaoPorIdUsuarioEIdPasta(@RequestParam("idUsuario") Long id_usuario, @RequestParam("pasta") Long pasta) {
+        return alteracaoService.listarAlteracaoPorIdUsuarioEIdPasta(id_usuario, pasta);
     }
 }
