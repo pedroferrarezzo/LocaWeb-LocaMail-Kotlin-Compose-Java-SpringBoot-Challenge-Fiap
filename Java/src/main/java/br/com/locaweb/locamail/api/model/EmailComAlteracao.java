@@ -1,8 +1,7 @@
-package br.com.locaweb.locamail.api.dto.email;
+package br.com.locaweb.locamail.api.model;
 
-import br.com.locaweb.locamail.api.model.Alteracao;
-import br.com.locaweb.locamail.api.model.Email;
-import jakarta.persistence.Embedded;
+import br.com.locaweb.locamail.api.dto.email.EmailExibicaoDto;
+import jakarta.persistence.*;
 import lombok.*;
 
 @Getter
@@ -17,4 +16,5 @@ public class EmailComAlteracao {
 
     @Embedded
     private Alteracao alteracao;
+
 }

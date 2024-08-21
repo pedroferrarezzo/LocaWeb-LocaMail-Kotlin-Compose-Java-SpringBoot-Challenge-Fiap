@@ -46,7 +46,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import br.com.fiap.locawebmailapp.R
 import br.com.fiap.locawebmailapp.components.general.ErrorComponent
-import br.com.fiap.locawebmailapp.database.repository.UsuarioRepository
 import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiAtualizaAutenticaUsuario
 import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiDesselecionarUsuarioSelecionadoAtual
 import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiRetornaUsarioPorEmail

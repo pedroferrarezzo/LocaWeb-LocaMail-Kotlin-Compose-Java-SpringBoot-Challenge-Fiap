@@ -2,7 +2,9 @@ package br.com.locaweb.locamail.api.repository;
 
 import br.com.locaweb.locamail.api.model.AnexoRespostaEmail;
 import br.com.locaweb.locamail.api.model.Pasta;
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -22,6 +24,8 @@ public interface AnexoRespostaEmailRepository extends JpaRepository<AnexoRespost
     @Query(value = "SELECT anexo FROM T_LCW_ANEXO_RESPOSTA_EMAIL where id_resposta_email = :id_resposta_email", nativeQuery = true)
     public List<byte[]> listarAnexosArrayBytePorIdRespostaEmail(@Param("id_resposta_email") Long id_resposta_email);
 
+    @Transactional
+    @Modifying
     @Query(value = "DELETE FROM T_LCW_ANEXO_RESPOSTA_EMAIL where id_resposta_email = :id_resposta_email", nativeQuery = true)
     public void excluirAnexoPorIdRespostaEmail(@Param("id_resposta_email") Long id_resposta_email);
 }

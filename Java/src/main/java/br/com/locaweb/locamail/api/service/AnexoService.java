@@ -6,9 +6,11 @@ import br.com.locaweb.locamail.api.model.Anexo;
 import br.com.locaweb.locamail.api.repository.AnexoRepository;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Service
 public class AnexoService {
 
     @Autowired

@@ -1,7 +1,7 @@
 package br.com.locaweb.locamail.api.repository;
 
+import br.com.locaweb.locamail.api.model.EmailComAlteracao;
 import br.com.locaweb.locamail.api.model.Email;
-import br.com.locaweb.locamail.api.dto.email.EmailComAlteracao;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

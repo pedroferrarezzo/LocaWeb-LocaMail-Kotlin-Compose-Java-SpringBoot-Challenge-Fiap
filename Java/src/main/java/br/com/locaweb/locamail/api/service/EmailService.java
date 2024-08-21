@@ -3,7 +3,7 @@ package br.com.locaweb.locamail.api.service;
 import br.com.locaweb.locamail.api.dto.email.EmailCadastroDto;
 import br.com.locaweb.locamail.api.dto.email.EmailExibicaoDto;
 import br.com.locaweb.locamail.api.model.Email;
-import br.com.locaweb.locamail.api.dto.email.EmailComAlteracao;
+import br.com.locaweb.locamail.api.model.EmailComAlteracao;
 import br.com.locaweb.locamail.api.model.RespostaEmail;
 import br.com.locaweb.locamail.api.model.Usuario;
 import br.com.locaweb.locamail.api.repository.EmailRepository;

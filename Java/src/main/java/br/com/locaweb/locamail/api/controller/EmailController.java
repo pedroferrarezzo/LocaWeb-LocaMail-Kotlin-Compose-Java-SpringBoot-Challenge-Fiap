@@ -1,12 +1,11 @@
 package br.com.locaweb.locamail.api.controller;
 
 import br.com.locaweb.locamail.api.dto.email.EmailCadastroDto;
-import br.com.locaweb.locamail.api.dto.email.EmailComAlteracao;
+import br.com.locaweb.locamail.api.model.EmailComAlteracao;
 import br.com.locaweb.locamail.api.dto.email.EmailExibicaoDto;
 import br.com.locaweb.locamail.api.service.EmailService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,8 +25,8 @@ public class EmailController {
 
     @GetMapping("/listarEmailsPorDestinatario")
     @ResponseStatus(HttpStatus.OK)
-    public List<EmailComAlteracao>  listarEmailsPorDestinatario(@RequestParam("destinatario") String destinatario,
-                                                                @RequestParam("idUsuario") Long id_usuario) {
+    public List<EmailComAlteracao> listarEmailsPorDestinatario(@RequestParam("destinatario") String destinatario,
+                                                               @RequestParam("idUsuario") Long id_usuario) {
         return emailService.listarEmailsPorDestinatario(destinatario, id_usuario);
     }
 

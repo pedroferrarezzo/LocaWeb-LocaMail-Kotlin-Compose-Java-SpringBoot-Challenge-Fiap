@@ -94,13 +94,16 @@ fun <T> RowSearchBar(
                         openDialogUserPicker.value = !openDialogUserPicker.value
                     }
                 ) {
-                    Image(
-                        bitmap = byteArrayToBitmap(usuarioSelecionado.value!!.profile_image).asImageBitmap(),
-                        contentDescription = stringResource(id = R.string.content_desc_iconregister),
-                        modifier = Modifier
-                            .size(30.dp)
-                            .clip(shape = CircleShape)
-                    )
+                    if (usuarioSelecionado.value != null) {
+                        Image(
+                            bitmap = byteArrayToBitmap(usuarioSelecionado.value!!.profile_image).asImageBitmap(),
+                            contentDescription = stringResource(id = R.string.content_desc_iconregister),
+                            modifier = Modifier
+                                .size(30.dp)
+                                .clip(shape = CircleShape)
+                        )
+
+                    }
                 }
             },
             colors = TextFieldDefaults.colors(
