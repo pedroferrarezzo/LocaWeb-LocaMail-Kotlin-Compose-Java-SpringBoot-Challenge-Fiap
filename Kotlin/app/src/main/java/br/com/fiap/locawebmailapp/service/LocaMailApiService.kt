@@ -47,6 +47,12 @@ interface LocaMailApiService {
     @GET("/pasta/listarPastasPorIdUsuario")
     fun listarPastasPorIdUsuario(@Query("idUsuario") id_usuario: Long): Call<List<Pasta>?>
 
+    @GET("/usuario/listarUsuariosAutenticados")
+    fun listarUsuariosAutenticados(): Call<List<Usuario>?>
+
+    @GET("/usuario/listarUsuariosNaoSelecionados")
+    fun listarUsuariosNaoSelecionados(): Call<List<Usuario>?>
+
     @POST("/pasta/criarPasta")
     fun criarPasta(@Body pasta: Pasta): Call<Pasta?>
 

@@ -127,22 +127,37 @@ fun EmailViewButton(
                         )
                     }
 
-                    if (email.id_usuario == usuarioSelecionado.value!!.id_usuario) {
-                        Text(
-                            text = if (email.destinatario.length > 25) {
-                                "${stringResource(id = R.string.mail_generic_to)} ${
-                                    email.destinatario.take(
-                                        25
-                                    )
-                                }..."
-                            } else {
-                                "${stringResource(id = R.string.mail_generic_to)} ${email.destinatario}"
-                            },
-                            maxLines = 1
-                        )
-
+                    if (usuarioSelecionado.value != null) {
+                        if (email.id_usuario == usuarioSelecionado.value!!.id_usuario) {
+                            Text(
+                                text = if (email.destinatario.length > 25) {
+                                    "${stringResource(id = R.string.mail_generic_to)} ${
+                                        email.destinatario.take(
+                                            25
+                                        )
+                                    }..."
+                                } else {
+                                    "${stringResource(id = R.string.mail_generic_to)} ${email.destinatario}"
+                                },
+                                maxLines = 1
+                            )
+                        }
+                        else {
+                            Text(
+                                text = if (email.remetente.length > 25) {
+                                    "${stringResource(id = R.string.mail_generic_from)} ${
+                                        email.remetente.take(
+                                            25
+                                        )
+                                    }..."
+                                } else {
+                                    "${stringResource(id = R.string.mail_generic_from)} ${email.remetente}"
+                                },
+                                maxLines = 1
+                            )
+                        }
                     }
-                    else {
+                    else{
                         Text(
                             text = if (email.remetente.length > 25) {
                                 "${stringResource(id = R.string.mail_generic_from)} ${
@@ -155,13 +170,8 @@ fun EmailViewButton(
                             },
                             maxLines = 1
                         )
-
                     }
-
-
                 }
-
-
                 Text(text = email.assunto)
                 Text(
                     text = if (email.corpo.length > 25) {

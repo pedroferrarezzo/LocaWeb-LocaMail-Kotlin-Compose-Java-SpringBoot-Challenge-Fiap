@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/usuario")
 public class UsuarioController {
@@ -19,6 +21,18 @@ public class UsuarioController {
     @ResponseStatus(HttpStatus.OK)
     public UsuarioExibicaoDto retornaUsarioPorEmail(@RequestParam("email") String email) {
         return usuarioService.retornaUsarioPorEmail(email);
+    }
+
+    @GetMapping("/listarUsuariosAutenticados")
+    @ResponseStatus(HttpStatus.OK)
+    public List<UsuarioExibicaoDto> listarUsuariosAutenticados() {
+        return usuarioService.listarUsuariosAutenticados();
+    }
+
+    @GetMapping("/listarUsuariosNaoSelecionados")
+    @ResponseStatus(HttpStatus.OK)
+    public List<UsuarioExibicaoDto> listarUsuariosNaoSelecionados() {
+        return usuarioService.listarUsuariosNaoSelecionados();
     }
 
     @GetMapping("/listarUsuarioSelecionado")

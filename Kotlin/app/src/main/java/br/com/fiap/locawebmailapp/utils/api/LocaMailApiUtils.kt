@@ -188,6 +188,57 @@ fun callLocaMailApiListarAlteracaoPorIdUsuarioEIdPasta(
     })
 }
 
+fun callLocaMailApiListarUsuariosAutenticados(
+    onSuccess: (List<Usuario>?) -> Unit,
+    onError: (Throwable) -> Unit
+) {
+    val call = LocaMailApiFactory().getLocaMailApiFactory().listarUsuariosAutenticados()
+
+    call.enqueue(object : Callback<List<Usuario>?> {
+        override fun onResponse(call: Call<List<Usuario>?>, response: Response<List<Usuario>?>) {
+            if (response.isSuccessful && response.body() != null) {
+                onSuccess(response.body()!!)
+            }
+            else if (response.isSuccessful == false) {
+                onError(Throwable())
+            }
+            else {
+                onSuccess(null)
+            }
+        }
+        override fun onFailure(call: Call<List<Usuario>?>, t: Throwable) {
+            onError(t)
+        }
+    })
+}
+
+fun callLocaMailApiListarUsuariosNaoSelecionados(
+    onSuccess: (List<Usuario>?) -> Unit,
+    onError: (Throwable) -> Unit
+) {
+    val call = LocaMailApiFactory().getLocaMailApiFactory().listarUsuariosNaoSelecionados()
+
+    call.enqueue(object : Callback<List<Usuario>?> {
+        override fun onResponse(call: Call<List<Usuario>?>, response: Response<List<Usuario>?>) {
+            if (response.isSuccessful && response.body() != null) {
+                onSuccess(response.body()!!)
+            }
+            else if (response.isSuccessful == false) {
+                onError(Throwable())
+            }
+            else {
+                onSuccess(null)
+            }
+        }
+        override fun onFailure(call: Call<List<Usuario>?>, t: Throwable) {
+            onError(t)
+        }
+    })
+}
+
+
+
+
 fun callLocaMailApiAtualizarPastaPorIdAlteracao(
     id_alteracao: Long,
     pasta: Long?,

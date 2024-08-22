@@ -174,7 +174,7 @@ fun HomeScreen(navController: NavController) {
                                                 onSuccess = {
                                                     isLoading.value = false
                                                     navController.navigate("loginscreen") {
-                                                        popUpTo(navController.graph.startDestinationId) {
+                                                        popUpTo(navController.graph.id) {
                                                             inclusive = true
                                                         }
                                                     }
@@ -188,7 +188,7 @@ fun HomeScreen(navController: NavController) {
                                         else {
                                             isLoading.value = false
                                             navController.navigate("loginscreen") {
-                                                popUpTo(navController.graph.startDestinationId) {
+                                                popUpTo(navController.graph.id) {
                                                     inclusive = true
                                                 }
                                             }

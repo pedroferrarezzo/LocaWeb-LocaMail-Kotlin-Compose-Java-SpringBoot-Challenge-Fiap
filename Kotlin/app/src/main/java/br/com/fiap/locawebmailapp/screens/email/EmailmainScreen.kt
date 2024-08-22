@@ -1,6 +1,5 @@
 package br.com.fiap.locawebmailapp.screens.email
 
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
@@ -13,18 +12,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -113,6 +111,11 @@ fun EMailMainScreen(navController: NavController) {
     val redLcWeb = colorResource(id = R.color.lcweb_red_1)
     val toastMessageMailMovedFolder = stringResource(id = R.string.toast_mail_moved_folder)
     val toastMessageFolderDeleted = stringResource(id = R.string.toast_folder_deleted)
+
+
+    val listUsuariosNaoAutenticados = remember {
+        mutableStateListOf<Usuario>()
+    }
 
     if (isLoading.value) {
         BackHandler {
@@ -332,8 +335,10 @@ fun EMailMainScreen(navController: NavController) {
                             usuarioSelecionado = usuarioSelecionado,
                             stateEmailList = receivedStateEmailList,
                             placeholderTextFieldSearch = stringResource(id = R.string.mail_main_searchbar),
-                            selectedDrawerPasta = selectedDrawerPasta,
-                            navController = navController
+                            navController = navController,
+                            isLoading = isLoading,
+                            isError = isError,
+                            listUsuariosNaoAutenticados = listUsuariosNaoAutenticados
                         )
 
                         if (!receivedStateEmailList.isEmpty()) {
@@ -365,13 +370,12 @@ fun EMailMainScreen(navController: NavController) {
 
                                         callLocaMailApiListarRespostasEmailPorIdEmail(
                                             it.id_email,
-                                            onSuccess = {
-                                                    listRespostaRetornado ->
+                                            onSuccess = { listRespostaRetornado ->
 
                                                 respostasEmail = listRespostaRetornado
 
                                             },
-                                            onError = {error ->
+                                            onError = { error ->
                                                 isError.value = true
                                                 isLoading.value = false
                                             }
@@ -389,8 +393,7 @@ fun EMailMainScreen(navController: NavController) {
                                                         onSuccess = {
 
                                                         },
-                                                        onError = {
-                                                                error ->
+                                                        onError = { error ->
                                                             isError.value = true
                                                             isLoading.value = false
                                                         }
@@ -422,7 +425,7 @@ fun EMailMainScreen(navController: NavController) {
                                                         )
                                                             .show()
                                                     },
-                                                    onError = {error ->
+                                                    onError = { error ->
                                                         isError.value = true
                                                         isLoading.value = false
                                                     }
@@ -442,8 +445,7 @@ fun EMailMainScreen(navController: NavController) {
                                                     onSuccess = {
 
                                                     },
-                                                    onError = {
-                                                            error ->
+                                                    onError = { error ->
                                                         isError.value = true
                                                         isLoading.value = false
                                                     }

@@ -37,13 +37,13 @@ import br.com.fiap.locawebmailapp.components.user.UserSelectorDalog
 import br.com.fiap.locawebmailapp.database.repository.UsuarioRepository
 import br.com.fiap.locawebmailapp.model.EmailComAlteracao
 import br.com.fiap.locawebmailapp.model.Usuario
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiListarUsuariosNaoSelecionados
 import br.com.fiap.locawebmailapp.utils.byteArrayToBitmap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 @Composable
 fun <T> RowSearchBar(
-    modifier: Modifier = Modifier,
     drawerState: DrawerState,
     scope: CoroutineScope,
     openDialogUserPicker: MutableState<Boolean>,
@@ -51,10 +51,11 @@ fun <T> RowSearchBar(
     applyStateListUserSelectorDialog: () -> Unit = {},
     usuarioSelecionado: MutableState<Usuario?>,
     stateEmailList: SnapshotStateList<T> = mutableStateListOf(),
-    usuarioRepository: UsuarioRepository = UsuarioRepository(LocalContext.current),
     placeholderTextFieldSearch: String,
-    selectedDrawerPasta: MutableState<String>,
-    navController: NavController
+    navController: NavController,
+    isLoading: MutableState<Boolean>,
+    isError: MutableState<Boolean>,
+    listUsuariosNaoAutenticados: SnapshotStateList<Usuario>
 
     ) {
     Row(
@@ -92,6 +93,22 @@ fun <T> RowSearchBar(
                 IconButton(
                     onClick = {
                         openDialogUserPicker.value = !openDialogUserPicker.value
+                        if (openDialogUserPicker.value) {
+                            callLocaMailApiListarUsuariosNaoSelecionados(
+                                onSuccess = { listUsuarioRetornado ->
+
+                                    if (listUsuarioRetornado != null) {
+                                        listUsuariosNaoAutenticados.addAll(listUsuarioRetornado)
+                                    }
+                                },
+                                onError = { error ->
+                                    isError.value = true
+                                    isLoading.value = false
+
+                                }
+                            )
+
+                        }
                     }
                 ) {
                     if (usuarioSelecionado.value != null) {
@@ -136,8 +153,10 @@ fun <T> RowSearchBar(
         usuarioSelecionado = usuarioSelecionado,
         stateList = stateEmailList,
         applyStateList = applyStateListUserSelectorDialog,
-        usuarioRepository = usuarioRepository,
-        selectedDrawerPasta = selectedDrawerPasta,
-        navController = navController
+        navController = navController,
+        isLoading = isLoading,
+        isError = isError,
+        listUsuariosNaoAutenticados = listUsuariosNaoAutenticados
+
     )
 }

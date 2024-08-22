@@ -20,7 +20,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -40,8 +39,11 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import br.com.fiap.locawebmailapp.R
-import br.com.fiap.locawebmailapp.database.repository.UsuarioRepository
 import br.com.fiap.locawebmailapp.model.Usuario
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiAtualizaAutenticaUsuario
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiDesselecionarUsuarioSelecionadoAtual
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiListarUsuariosAutenticados
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiSelecionarUsuario
 import br.com.fiap.locawebmailapp.utils.byteArrayToBitmap
 
 @Composable
@@ -50,10 +52,10 @@ fun <T> UserSelectorDalog(
     usuarioSelecionado: MutableState<Usuario?>,
     stateList: SnapshotStateList<T> = mutableStateListOf(),
     applyStateList: () -> Unit = {},
-    usuarioRepository: UsuarioRepository,
     navController: NavController,
-    selectedDrawerPasta: MutableState<String>
-
+    isLoading: MutableState<Boolean>,
+    isError: MutableState<Boolean>,
+    listUsuariosNaoAutenticados: SnapshotStateList<Usuario>
 ) {
     if (openDialogUserPicker.value) {
         Dialog(onDismissRequest = { openDialogUserPicker.value = false }) {
@@ -88,31 +90,67 @@ fun <T> UserSelectorDalog(
                     ) {
                         Button(
                             onClick = {
-                                usuarioRepository.atualizaAutenticaUsuario(
+                                isLoading.value = true
+                                openDialogUserPicker.value = false
+                                callLocaMailApiAtualizaAutenticaUsuario(
                                     usuarioSelecionado.value!!.id_usuario,
-                                    false
+                                    false,
+                                    onSuccess = {
+                                        callLocaMailApiDesselecionarUsuarioSelecionadoAtual(
+                                            onSuccess = {
+                                                callLocaMailApiListarUsuariosAutenticados(
+                                                    onSuccess = { listaUsuarioRetornado ->
+
+                                                        val usuariosAutenticados =
+                                                            listaUsuarioRetornado
+
+                                                        if (usuariosAutenticados!!.isNotEmpty()) {
+
+                                                            callLocaMailApiSelecionarUsuario(
+                                                                usuariosAutenticados.last().id_usuario,
+                                                                onSuccess = {
+                                                                    isLoading.value = false
+                                                                    navController.navigate("emailmainscreen") {
+                                                                        popUpTo(navController.graph.id) {
+                                                                            inclusive = true
+                                                                        }
+                                                                    }
+                                                                },
+                                                                onError = { error ->
+                                                                    isLoading.value = false
+                                                                    isError.value = true
+
+                                                                }
+                                                            )
+                                                        } else {
+                                                            isLoading.value = false
+                                                            openDialogUserPicker.value = false
+                                                            navController.navigate("loginscreen") {
+                                                                popUpTo(navController.graph.id) {
+                                                                    inclusive = true
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    onError = { error ->
+                                                        isLoading.value = false
+                                                        isError.value = true
+
+                                                    }
+                                                )
+                                            },
+                                            onError = { error ->
+                                                isLoading.value = false
+                                                isError.value = true
+                                            }
+                                        )
+                                    },
+                                    onError = { error ->
+                                        isLoading.value = false
+                                        isError.value = true
+
+                                    }
                                 )
-                                usuarioRepository.desselecionarUsuarioSelecionadoAtual()
-
-                                val usuariosAutenticados =
-                                    usuarioRepository.listarUsuariosAutenticados()
-
-                                if (usuariosAutenticados.isNotEmpty()) {
-                                    usuarioRepository.selecionarUsuario(usuariosAutenticados.last().id_usuario)
-                                    navController.navigate("emailmainscreen") {
-                                        popUpTo(navController.graph.startDestinationId) {
-                                            inclusive = true
-                                        }
-                                    }
-                                } else {
-                                    openDialogUserPicker.value = false
-                                    navController.navigate("loginscreen") {
-                                        popUpTo(navController.graph.startDestinationId) {
-                                            inclusive = true
-                                        }
-                                    }
-
-                                }
                             },
                             colors = ButtonDefaults.buttonColors(colorResource(id = R.color.lcweb_red_1)),
                             shape = RoundedCornerShape(10.dp),
@@ -160,40 +198,42 @@ fun <T> UserSelectorDalog(
                             .fillMaxWidth()
                     ) {
 
-                        Image(
-                            bitmap = byteArrayToBitmap(usuarioSelecionado.value!!.profile_image).asImageBitmap(),
-                            contentDescription = stringResource(id = R.string.content_desc_iconregister),
-                            modifier = Modifier
-                                .size(50.dp)
-                                .clip(shape = CircleShape)
-                        )
-
-                        Column {
-
-                            Text(
-                                text = if (usuarioSelecionado.value!!.nome.length > 25) {
-                                    "${
-                                        usuarioSelecionado.value!!.nome.take(
-                                            25
-                                        )
-                                    }..."
-                                } else {
-                                    usuarioSelecionado.value!!.nome
-                                },
-                                color = colorResource(id = R.color.lcweb_gray_1)
+                        if (usuarioSelecionado.value != null) {
+                            Image(
+                                bitmap = byteArrayToBitmap(usuarioSelecionado.value!!.profile_image).asImageBitmap(),
+                                contentDescription = stringResource(id = R.string.content_desc_iconregister),
+                                modifier = Modifier
+                                    .size(50.dp)
+                                    .clip(shape = CircleShape)
                             )
-                            Text(
-                                text = if (usuarioSelecionado.value!!.email.length > 25) {
-                                    "${
-                                        usuarioSelecionado.value!!.email.take(
-                                            25
-                                        )
-                                    }..."
-                                } else {
-                                    usuarioSelecionado.value!!.email
-                                },
-                                color = colorResource(id = R.color.lcweb_gray_1)
-                            )
+
+                            Column {
+                                Text(
+                                    text = if (usuarioSelecionado.value!!.nome.length > 25) {
+                                        "${
+                                            usuarioSelecionado.value!!.nome.take(
+                                                25
+                                            )
+                                        }..."
+                                    } else {
+                                        usuarioSelecionado.value!!.nome
+                                    },
+                                    color = colorResource(id = R.color.lcweb_gray_1)
+                                )
+                                Text(
+                                    text = if (usuarioSelecionado.value!!.email.length > 25) {
+                                        "${
+                                            usuarioSelecionado.value!!.email.take(
+                                                25
+                                            )
+                                        }..."
+                                    } else {
+                                        usuarioSelecionado.value!!.email
+                                    },
+                                    color = colorResource(id = R.color.lcweb_gray_1)
+                                )
+                            }
+
                         }
                     }
 
@@ -202,87 +242,122 @@ fun <T> UserSelectorDalog(
                     )
 
 
-                    LazyColumn(
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        items(usuarioRepository.listarUsuariosNaoSelecionados()) {
-                            Button(
-                                onClick = {
-                                    openDialogUserPicker.value = false
-                                    val usuariosAutenticados =
-                                        usuarioRepository.listarUsuariosAutenticados()
 
-                                    if (usuariosAutenticados.any { usuarioAutenticado ->
-                                            usuarioAutenticado.email == it.email
-                                        }) {
+                    if (!listUsuariosNaoAutenticados.isEmpty()) {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            items(listUsuariosNaoAutenticados) {
+                                Button(
+                                    onClick = {
+                                        openDialogUserPicker.value = false
 
-                                        usuarioRepository.desselecionarUsuarioSelecionadoAtual()
-                                        usuarioRepository.selecionarUsuario(it.id_usuario)
-                                        usuarioSelecionado.value = it
+                                        callLocaMailApiListarUsuariosAutenticados(
+                                            onSuccess = { listUsuarioRetornado ->
 
-                                        stateList.clear()
-                                        applyStateList()
+                                                val usuariosAutenticados = listUsuarioRetornado
 
-                                        navController.navigate("emailmainscreen") {
-                                            popUpTo(navController.graph.startDestinationId) {
-                                                inclusive = true
+                                                if (usuariosAutenticados!!.any { usuarioAutenticado ->
+                                                        usuarioAutenticado.email == it.email
+                                                    }) {
+
+                                                    val usuario = it
+
+
+                                                    callLocaMailApiDesselecionarUsuarioSelecionadoAtual(
+                                                        onSuccess = {
+
+                                                            callLocaMailApiSelecionarUsuario(
+                                                                usuario.id_usuario,
+                                                                onSuccess = {
+                                                                    usuarioSelecionado.value =
+                                                                        usuario
+                                                                    stateList.clear()
+                                                                    applyStateList()
+                                                                    navController.navigate("emailmainscreen") {
+                                                                        popUpTo(navController.graph.id) {
+                                                                            inclusive = true
+                                                                        }
+                                                                    }
+                                                                },
+                                                                onError = { error ->
+                                                                    isError.value = true
+                                                                    isLoading.value = false
+                                                                }
+                                                            )
+                                                        },
+                                                        onError = { error ->
+                                                            isError.value = true
+                                                            isLoading.value = false
+                                                        }
+                                                    )
+                                                } else {
+                                                    navController.navigate("loginscreen")
+                                                }
+
+
+                                            },
+                                            onError = { error ->
+                                                isLoading.value = false
+                                                isError.value = true
                                             }
-                                        }
-                                    } else {
-                                        navController.navigate("loginscreen")
-                                    }
-                                },
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color.Transparent,
-                                    contentColor = colorResource(id = R.color.lcweb_gray_1)
-                                ),
-                                shape = RectangleShape,
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    modifier = Modifier
-                                        .padding(horizontal = 20.dp)
-                                        .fillMaxWidth()
-                                ) {
-                                    Image(
-                                        bitmap = byteArrayToBitmap(it.profile_image).asImageBitmap(),
-                                        contentDescription = stringResource(id = R.string.content_desc_iconregister),
-                                        modifier = Modifier
-                                            .size(50.dp)
-                                            .clip(shape = CircleShape)
-                                    )
+                                        )
 
-                                    Column {
-                                        Text(
-                                            text = if (it.nome.length > 25) {
-                                                "${
-                                                    it.nome.take(
-                                                        25
-                                                    )
-                                                }..."
-                                            } else {
-                                                it.nome
-                                            },
-                                            color = colorResource(id = R.color.lcweb_gray_1)
+
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color.Transparent,
+                                        contentColor = colorResource(id = R.color.lcweb_gray_1)
+                                    ),
+                                    shape = RectangleShape,
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        modifier = Modifier
+                                            .padding(horizontal = 20.dp)
+                                            .fillMaxWidth()
+                                    ) {
+                                        Image(
+                                            bitmap = byteArrayToBitmap(it.profile_image).asImageBitmap(),
+                                            contentDescription = stringResource(id = R.string.content_desc_iconregister),
+                                            modifier = Modifier
+                                                .size(50.dp)
+                                                .clip(shape = CircleShape)
                                         )
-                                        Text(
-                                            text = if (it.email.length > 25) {
-                                                "${
-                                                    it.email.take(
-                                                        25
-                                                    )
-                                                }..."
-                                            } else {
-                                                it.email
-                                            },
-                                            color = colorResource(id = R.color.lcweb_gray_1)
-                                        )
+
+                                        Column {
+                                            Text(
+                                                text = if (it.nome.length > 25) {
+                                                    "${
+                                                        it.nome.take(
+                                                            25
+                                                        )
+                                                    }..."
+                                                } else {
+                                                    it.nome
+                                                },
+                                                color = colorResource(id = R.color.lcweb_gray_1)
+                                            )
+                                            Text(
+                                                text = if (it.email.length > 25) {
+                                                    "${
+                                                        it.email.take(
+                                                            25
+                                                        )
+                                                    }..."
+                                                } else {
+                                                    it.email
+                                                },
+                                                color = colorResource(id = R.color.lcweb_gray_1)
+                                            )
+                                        }
                                     }
                                 }
                             }
                         }
+
                     }
                 }
             }

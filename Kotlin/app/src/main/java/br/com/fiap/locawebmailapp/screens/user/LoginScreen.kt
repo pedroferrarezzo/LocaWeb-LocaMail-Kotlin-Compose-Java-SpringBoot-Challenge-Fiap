@@ -343,7 +343,7 @@ fun LoginScreen(navController: NavController) {
                                                                     onSuccess = {
                                                                         isLoading.value = false
                                                                         navController.navigate("emailmainscreen") {
-                                                                            popUpTo(navController.graph.startDestinationId) {
+                                                                            popUpTo(navController.graph.id) {
                                                                                 inclusive = true
                                                                             }
                                                                         }
