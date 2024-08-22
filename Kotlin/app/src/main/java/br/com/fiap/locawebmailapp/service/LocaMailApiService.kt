@@ -1,5 +1,6 @@
 package br.com.fiap.locawebmailapp.service
 
+import br.com.fiap.locawebmailapp.model.Agenda
 import br.com.fiap.locawebmailapp.model.Alteracao
 import br.com.fiap.locawebmailapp.model.Convidado
 import br.com.fiap.locawebmailapp.model.Email
@@ -41,6 +42,12 @@ interface LocaMailApiService {
     @POST("/email/criarEmail")
     fun criarEmail(@Body email: Email): Call<Email?>
 
+    @GET("/email/listarEmailPorId")
+    fun listarEmailPorId(@Query("idEmail") id_email: Long): Call<Email?>
+
+    @GET("/alteracao/listarAlteracaoPorIdEmailEIdUsuario")
+    fun listarAlteracaoPorIdEmailEIdUsuario(@Query("idEmail") id_email: Long, @Query("idUsuario") id_usuario: Long): Call<Alteracao?>
+
     @GET("/email/listarEmailsPorDestinatario")
     fun listarEmailsPorDestinatario(@Query("destinatario") destinatario: String, @Query("idUsuario") id_usuario: Long): Call<List<EmailComAlteracao>?>
 
@@ -59,8 +66,18 @@ interface LocaMailApiService {
     @DELETE("/pasta/excluirPasta")
     fun excluirPasta(@Query("pasta") pasta: Long): Call<Unit>
 
+    @DELETE("/alteracao/excluiAlteracaoPorIdEmailEIdUsuario")
+    fun excluiAlteracaoPorIdEmailEIdUsuario(@Query("idEmail") id_email: Long, @Query("idUsuario") id_usuario: Long): Call<Unit>
+
     @GET("/anexo/listarAnexosIdEmail")
     fun listarAnexosIdEmail(): Call<List<Long>?>
+
+    @GET("/anexo/listarAnexosArraybytePorIdEmail")
+    fun listarAnexosArraybytePorIdEmail(@Query("idEmail") id_email: Long): Call<List<ByteArray>?>
+
+    @GET("/agenda/listarAgendaPorIdEmailEIdUsuario")
+    fun listarAgendaPorIdEmailEIdUsuario(@Query("idEmail") id_email: Long, @Query("idUsuario") id_usuario: Long): Call<List<Agenda>?>
+
 
     @GET("/respostaEmail/listarRespostasEmailPorIdEmail")
     fun listarRespostasEmailPorIdEmail(@Query("idEmail") id_email: Long): Call<List<RespostaEmail>?>

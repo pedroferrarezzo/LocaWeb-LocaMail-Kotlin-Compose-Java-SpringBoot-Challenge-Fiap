@@ -7,8 +7,6 @@ import br.com.fiap.locawebmailapp.model.Email
 
 fun atualizarIsImportantParaUsuariosRelacionados(
     todosDestinatarios: List<String>,
-    usuarioRepository: UsuarioRepository,
-    alteracaoRepository: AlteracaoRepository,
     isImportant: MutableState<Boolean>,
     email: Email
 ) {
@@ -49,8 +47,6 @@ fun atualizarIsImportantParaUsuariosRelacionados(
 
 fun atualizarisArchiveParaUsuariosRelacionados(
     todosDestinatarios: List<String>,
-    usuarioRepository: UsuarioRepository,
-    alteracaoRepository: AlteracaoRepository,
     isArchive: MutableState<Boolean>,
     email: Email
 ) {
@@ -91,8 +87,6 @@ fun atualizarisArchiveParaUsuariosRelacionados(
 
 fun atualizarisSpamParaUsuariosRelacionados(
     todosDestinatarios: List<String>,
-    usuarioRepository: UsuarioRepository,
-    alteracaoRepository: AlteracaoRepository,
     isSpam: MutableState<Boolean>,
     email: Email
 ) {
@@ -134,8 +128,6 @@ fun atualizarisSpamParaUsuariosRelacionados(
 
 fun atualizarisExcluidoParaUsuariosRelacionados(
     todosDestinatarios: List<String>,
-    usuarioRepository: UsuarioRepository,
-    alteracaoRepository: AlteracaoRepository,
     isExcluido: MutableState<Boolean>,
     email: Email
 ) {
@@ -176,8 +168,6 @@ fun atualizarisExcluidoParaUsuariosRelacionados(
 
 fun atualizarisReadParaUsuariosRelacionados(
     todosDestinatarios: List<String>,
-    usuarioRepository: UsuarioRepository,
-    alteracaoRepository: AlteracaoRepository,
     isRead: MutableState<Boolean>,
     email: Email
 ) {

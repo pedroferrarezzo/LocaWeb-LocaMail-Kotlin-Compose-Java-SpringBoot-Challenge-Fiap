@@ -53,4 +53,16 @@ public class AlteracaoController {
     public List<AlteracaoExibicaoDto> listarAlteracaoPorIdUsuarioEIdPasta(@RequestParam("idUsuario") Long id_usuario, @RequestParam("pasta") Long pasta) {
         return alteracaoService.listarAlteracaoPorIdUsuarioEIdPasta(id_usuario, pasta);
     }
+
+    @GetMapping("/listarAlteracaoPorIdEmailEIdUsuario")
+    @ResponseStatus(HttpStatus.OK)
+    public AlteracaoExibicaoDto listarAlteracaoPorIdEmailEIdUsuario(@RequestParam("idEmail") Long id_email, @RequestParam("idUsuario") Long id_usuario) {
+        return alteracaoService.listarAlteracaoPorIdEmailEIdUsuario(id_email, id_usuario);
+    }
+
+    @DeleteMapping("/excluiAlteracaoPorIdEmailEIdUsuario")
+    @ResponseStatus(HttpStatus.OK)
+    public void excluiAlteracaoPorIdEmailEIdUsuario(@RequestParam("idEmail") Long id_email, @RequestParam("idUsuario") Long id_usuario) {
+        alteracaoService.excluiAlteracaoPorIdEmailEIdUsuario(id_email, id_usuario);
+    }
 }

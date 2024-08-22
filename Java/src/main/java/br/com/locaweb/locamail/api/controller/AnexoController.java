@@ -3,10 +3,7 @@ package br.com.locaweb.locamail.api.controller;
 import br.com.locaweb.locamail.api.service.AnexoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -23,4 +20,14 @@ public class AnexoController {
     public List<Long> listarAnexosIdEmail() {
         return anexoService.listarAnexosIdEmail();
     }
+
+    @GetMapping("listarAnexosArraybytePorIdEmail")
+    @ResponseStatus(HttpStatus.OK)
+    public List<byte[]> listarAnexosArraybytePorIdEmail(@RequestParam("idEmail") Long id_email) {
+
+        return anexoService.listarAnexosArraybytePorIdEmail(id_email);
+    }
+
+
+
 }

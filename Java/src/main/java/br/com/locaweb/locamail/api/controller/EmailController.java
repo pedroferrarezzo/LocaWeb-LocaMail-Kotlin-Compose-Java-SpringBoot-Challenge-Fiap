@@ -30,5 +30,11 @@ public class EmailController {
         return emailService.listarEmailsPorDestinatario(destinatario, id_usuario);
     }
 
+    @GetMapping("/listarEmailPorId")
+    @ResponseStatus(HttpStatus.OK)
+    public EmailExibicaoDto listarEmailPorId(@RequestParam("idEmail") Long id_email) {
+        return emailService.listarEmailPorId(id_email);
+    }
+
 
 }
