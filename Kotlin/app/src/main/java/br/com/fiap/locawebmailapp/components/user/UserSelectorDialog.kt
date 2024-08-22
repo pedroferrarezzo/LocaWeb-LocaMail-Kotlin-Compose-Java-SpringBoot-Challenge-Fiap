@@ -316,7 +316,7 @@ fun <T> UserSelectorDalog(
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                         modifier = Modifier
-                                            .padding(horizontal = 20.dp)
+                                            .padding(horizontal = 5.dp)
                                             .fillMaxWidth()
                                     ) {
                                         Image(
