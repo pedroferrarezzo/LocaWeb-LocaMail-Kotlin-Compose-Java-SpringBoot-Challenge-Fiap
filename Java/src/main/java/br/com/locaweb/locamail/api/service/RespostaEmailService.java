@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,11 +37,16 @@ public class RespostaEmailService {
         respostaEmailRepository.save(respostaEmail);
     }
 
-    public void excluirRespostaEmail(RespostaEmailCadastroDto respostaEmailCadastroDto) {
-        RespostaEmail respostaEmail = new RespostaEmail();
-        BeanUtils.copyProperties(respostaEmailCadastroDto, respostaEmail);
-        respostaEmailRepository.delete(respostaEmail);
+    public void excluirRespostaEmail(Long id_resposta_email) throws Exception {
 
+        Optional<RespostaEmail> repostaEmail = respostaEmailRepository.findById(id_resposta_email);
+
+        if (repostaEmail.isPresent()) {
+            respostaEmailRepository.deleteById(id_resposta_email);
+        }
+        else {
+            throw new Exception("Resposta Email não encontrada");
+        }
     }
     public List<RespostaEmailExibicaoDto> listarRespostasEmailPorIdEmail(Long id_email) {
         List<RespostaEmail> respostaEmails = respostaEmailRepository.listarRespostasEmailPorIdEmail(id_email);

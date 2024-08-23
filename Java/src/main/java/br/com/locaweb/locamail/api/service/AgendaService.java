@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -57,10 +58,18 @@ public class AgendaService {
         agendaRepository.atualizaVisivelPorIdAgenda(id_agenda, visivel);
     }
 
-    public void excluiAgenda(AgendaCadastroDto agendaCadastroDto) {
-        Agenda agenda = new Agenda();
-        BeanUtils.copyProperties(agendaCadastroDto, agenda);
-        agendaRepository.delete(agenda);
+    public void excluiAgenda(Long id_agenda) throws Exception {
+
+        Optional<Agenda> agenda = agendaRepository.findById(id_agenda);
+
+        if (agenda.isPresent()) {
+            agendaRepository.deleteById(id_agenda);
+        }
+        else {
+            throw new Exception(("Agenda não encontrada"));
+        }
+
+
     }
 
     public void excluirPorGrupoRepeticaoExcetoData(Integer grupo_repeticao, String data) {

@@ -21,6 +21,7 @@ import java.sql.Clob;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static br.com.locaweb.locamail.api.utils.ListUtils.stringParaLista;
@@ -45,10 +46,17 @@ public class EmailService {
         return new EmailExibicaoDto(emailPersistido);
     }
 
-    public void excluirEmail(EmailCadastroDto emailCadastroDto) {
-        Email email = new Email();
-        BeanUtils.copyProperties(emailCadastroDto, email);
-        emailRepository.delete(email);
+    public void excluirEmail(Long id_email) throws Exception {
+
+        Optional<Email> email = emailRepository.findById(id_email);
+
+        if (email.isPresent()) {
+            emailRepository.deleteById(id_email);
+
+        }
+        else {
+            throw new Exception("Email não encontrado");
+        }
     }
 
     public void atualizarEmail(EmailCadastroDto emailCadastroDto) {

@@ -14,19 +14,26 @@ public class AnexoController {
     @Autowired
     private AnexoService anexoService;
 
-
-    @GetMapping("listarAnexosIdEmail")
+    @GetMapping("/listarAnexosIdEmail")
     @ResponseStatus(HttpStatus.OK)
     public List<Long> listarAnexosIdEmail() {
         return anexoService.listarAnexosIdEmail();
     }
 
-    @GetMapping("listarAnexosArraybytePorIdEmail")
+    @GetMapping("/listarAnexosArraybytePorIdEmail")
     @ResponseStatus(HttpStatus.OK)
     public List<byte[]> listarAnexosArraybytePorIdEmail(@RequestParam("idEmail") Long id_email) {
 
         return anexoService.listarAnexosArraybytePorIdEmail(id_email);
     }
+
+    @DeleteMapping("/excluirAnexoPorIdEmail")
+    @ResponseStatus(HttpStatus.OK)
+    public void excluirAnexoPorIdEmail(@RequestParam("idEmail") Long id_email) {
+        anexoService.excluirAnexoPorIdEmail(id_email);
+    }
+
+
 
 
 

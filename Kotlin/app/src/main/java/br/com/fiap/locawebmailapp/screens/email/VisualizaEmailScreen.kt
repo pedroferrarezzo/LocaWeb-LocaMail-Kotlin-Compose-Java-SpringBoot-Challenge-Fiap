@@ -1,5 +1,6 @@
 package br.com.fiap.locawebmailapp.screens.email
 
+import android.graphics.Bitmap
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
@@ -14,6 +15,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TimePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshots.SnapshotStateList
@@ -30,26 +32,32 @@ import br.com.fiap.locawebmailapp.R
 import br.com.fiap.locawebmailapp.components.email.ColumnEmailDetails
 import br.com.fiap.locawebmailapp.components.email.RowTopOptionsViewEmail
 import br.com.fiap.locawebmailapp.components.general.ErrorComponent
-import br.com.fiap.locawebmailapp.database.repository.AgendaConvidadoRepository
-import br.com.fiap.locawebmailapp.database.repository.AgendaRepository
-import br.com.fiap.locawebmailapp.database.repository.AlteracaoRepository
-import br.com.fiap.locawebmailapp.database.repository.AnexoRepository
-import br.com.fiap.locawebmailapp.database.repository.AnexoRespostaEmailRepository
-import br.com.fiap.locawebmailapp.database.repository.EmailRepository
-import br.com.fiap.locawebmailapp.database.repository.RespostaEmailRepository
-import br.com.fiap.locawebmailapp.database.repository.UsuarioRepository
 import br.com.fiap.locawebmailapp.model.Agenda
 import br.com.fiap.locawebmailapp.model.Alteracao
 import br.com.fiap.locawebmailapp.model.Email
 import br.com.fiap.locawebmailapp.model.RespostaEmail
 import br.com.fiap.locawebmailapp.model.Usuario
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiAtualizaVisivelPorIdAgenda
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiAtualizarArquivadoPorIdEmailEIdusuario
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiAtualizarExcluidoPorIdEmailEIdusuario
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiAtualizarImportantePorIdEmail
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiAtualizarSpamPorIdEmailEIdusuario
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiExcluiAgenda
 import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiExcluiAlteracaoPorIdEmailEIdUsuario
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiExcluirAnexoPorIdEmail
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiExcluirAnexoPorIdRespostaEmail
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiExcluirEmail
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiExcluirPorIdAgenda
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiExcluirRespostaEmail
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiExcluirRespostaEmailPorIdEmail
 import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiListarAgendaPorIdEmailEIdUsuario
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiListarAlteracaoPorIdEmail
 import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiListarAlteracaoPorIdEmailEIdUsuario
 import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiListarAnexosArraybytePorIdEmail
 import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiListarEmailPorId
 import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiListarRespostasEmailPorIdEmail
 import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiListarUsuarioSelecionado
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiRetornaUsarioPorEmail
 import br.com.fiap.locawebmailapp.utils.atualizarIsImportantParaUsuariosRelacionados
 import br.com.fiap.locawebmailapp.utils.atualizarTodosDestinatariosList
 import br.com.fiap.locawebmailapp.utils.atualizarisArchiveParaUsuariosRelacionados
@@ -93,6 +101,8 @@ fun VisualizaEmailScreen(
         mutableStateOf<Usuario?>(null)
     }
 
+    var anexoBitMapList: List<Bitmap> = listOf()
+
     var agendaEmailStateList: SnapshotStateList<Agenda>? = null
 
     var agendaEmailList: List<Agenda>? = null
@@ -103,13 +113,11 @@ fun VisualizaEmailScreen(
         callLocaMailApiListarAlteracaoPorIdEmailEIdUsuario(
             idEmail,
             usuarioSelecionado.value!!.id_usuario,
-            onSuccess = {
-                    alteracaoRetornada ->
+            onSuccess = { alteracaoRetornada ->
 
                 alteracao = alteracaoRetornada
             },
-            onError = {
-                    error ->
+            onError = { error ->
                 isError.value = true
                 isLoading.value = false
             }
@@ -118,8 +126,7 @@ fun VisualizaEmailScreen(
         callLocaMailApiListarAgendaPorIdEmailEIdUsuario(
             idEmail,
             usuarioSelecionado.value!!.id_usuario,
-            onSuccess = {
-                listAgendaRetornado ->
+            onSuccess = { listAgendaRetornado ->
 
                 agendaEmailList = listAgendaRetornado
 
@@ -127,8 +134,7 @@ fun VisualizaEmailScreen(
                     agendaEmailStateList = agendaEmailList!!.toMutableStateList()
                 }
             },
-            onError = {
-                    error ->
+            onError = { error ->
                 isError.value = true
                 isLoading.value = false
             }
@@ -137,14 +143,15 @@ fun VisualizaEmailScreen(
 
     val todosDestinatarios = arrayListOf<String>()
 
-    var respostasEmailStateList: SnapshotStateList<RespostaEmail>? = null
+    var respostasEmailStateList: SnapshotStateList<RespostaEmail?> = remember {
+        mutableStateListOf<RespostaEmail?>()
+    }
     var respostasEmailList: List<RespostaEmail>? = null
 
 
     callLocaMailApiListarRespostasEmailPorIdEmail(
         idEmail,
-        onSuccess = {
-            repostaEmailRetornada ->
+        onSuccess = { repostaEmailRetornada ->
 
             if (repostaEmailRetornada != null) {
                 respostasEmailList = repostaEmailRetornada
@@ -152,8 +159,7 @@ fun VisualizaEmailScreen(
 
             }
         },
-        onError = {
-            error ->
+        onError = { error ->
             isError.value = true
             isLoading.value = false
         }
@@ -162,17 +168,16 @@ fun VisualizaEmailScreen(
 
     callLocaMailApiListarAnexosArraybytePorIdEmail(
         idEmail,
-        onSuccess = {
-            byteArrayListRetornado ->
+        onSuccess = { byteArrayListRetornado ->
             val anexoArrayByteList = byteArrayListRetornado;
+
             if (anexoArrayByteList != null) {
-                val anexoBitMapList = anexoArrayByteList.map {
+                anexoBitMapList = anexoArrayByteList.map {
                     byteArrayToBitmap(it)
                 }
             }
         },
-        onError = {
-                error ->
+        onError = { error ->
             isError.value = true
             isLoading.value = false
         }
@@ -206,12 +211,10 @@ fun VisualizaEmailScreen(
     }
 
     callLocaMailApiListarUsuarioSelecionado(
-        onSuccess = {
-                usuarioRetornado ->
+        onSuccess = { usuarioRetornado ->
             usuarioSelecionado.value = usuarioRetornado
         },
-        onError = {
-                error ->
+        onError = { error ->
             isError.value = true
             isLoading.value = false
 
@@ -222,8 +225,7 @@ fun VisualizaEmailScreen(
 
     callLocaMailApiListarEmailPorId(
         idEmail,
-        onSuccess = {
-                emailRetornado ->
+        onSuccess = { emailRetornado ->
             email = emailRetornado
 
             if (email != null) {
@@ -263,8 +265,7 @@ fun VisualizaEmailScreen(
 
             }
         },
-        onError = {
-                error ->
+        onError = { error ->
             isError.value = true
             isLoading.value = false
 
@@ -347,108 +348,201 @@ fun VisualizaEmailScreen(
                                 if (usuarioSelecionado.value != null) {
                                     callLocaMailApiExcluiAlteracaoPorIdEmailEIdUsuario(
                                         email!!.id_email,
-                                        usuarioSelecionado.value.id_usuario,
+                                        usuarioSelecionado.value!!.id_usuario,
                                         onSuccess = {
 
+                                            callLocaMailApiListarAlteracaoPorIdEmail(
+                                                email!!.id_email,
+                                                onSuccess = { listAlteracaoRetornado ->
+
+                                                    val alteracaoList = listAlteracaoRetornado
+
+                                                    if (alteracaoList!!.isEmpty()) {
+
+                                                        callLocaMailApiExcluirAnexoPorIdEmail(
+                                                            email!!.id_email,
+                                                            onSuccess = {
+                                                            },
+                                                            onError = { error ->
+                                                                isError.value = true
+                                                                isLoading.value = false
+                                                            }
+
+                                                        )
+
+                                                        callLocaMailApiListarRespostasEmailPorIdEmail(
+                                                            email!!.id_email,
+                                                            onSuccess = { listRespostaRetornado ->
+                                                                if (listRespostaRetornado != null) {
+                                                                    for (respostaEmail in listRespostaRetornado) {
+                                                                        callLocaMailApiExcluirAnexoPorIdRespostaEmail(
+                                                                            respostaEmail.id_resposta_email,
+                                                                            onSuccess = {
+
+                                                                            },
+                                                                            onError = { error ->
+                                                                                isError.value = true
+                                                                                isLoading.value =
+                                                                                    false
+                                                                            }
+                                                                        )
+                                                                    }
+
+                                                                }
+                                                            },
+                                                            onError = { error ->
+                                                                isError.value = true
+                                                                isLoading.value = false
+                                                            }
+                                                        )
+
+                                                        callLocaMailApiExcluirRespostaEmailPorIdEmail(
+                                                            email!!.id_email,
+                                                            onSuccess = {
+                                                            },
+                                                            onError = { error ->
+                                                                isError.value = true
+                                                                isLoading.value = false
+                                                            }
+                                                        )
+
+                                                        callLocaMailApiExcluirEmail(
+                                                            email!!.id_email,
+                                                            onSuccess = {
+                                                                Toast.makeText(
+                                                                    context,
+                                                                    toastMessageMailDeleted,
+                                                                    Toast.LENGTH_LONG
+                                                                ).show()
+
+                                                            },
+                                                            onError = { error ->
+                                                                isError.value = true
+                                                                isLoading.value = false
+                                                            }
+                                                        )
+                                                    }
+                                                },
+                                                onError = { error ->
+                                                    isError.value = true
+                                                    isLoading.value = false
+                                                }
+                                            )
                                         },
-                                        onError = {
-                                                error ->
+                                        onError = { error ->
                                             isError.value = true
                                             isLoading.value = false
                                         }
                                     )
-
                                 }
 
+                                if (agendaEmailStateList != null) {
+
+                                    if (agendaEmailStateList!!.isNotEmpty()) {
+
+                                        if (agendaEmailList != null) {
+
+                                            for (agenda in agendaEmailList!!) {
+
+                                                callLocaMailApiExcluirPorIdAgenda(
+                                                    agenda.id_agenda,
+                                                    onSuccess = {
+
+                                                    },
+                                                    onError = { error ->
+                                                        isError.value = true
+                                                        isLoading.value = false
+                                                    }
+                                                )
+
+                                                callLocaMailApiExcluiAgenda(
+                                                    agenda.id_agenda,
+                                                    onSuccess = {
+                                                        agendaEmailStateList!!.remove(agenda)
+
+                                                    },
+                                                    onError = { error ->
+                                                        isError.value = true
+                                                        isLoading.value = false
+                                                    }
+                                                )
+                                            }
+
+                                            Toast.makeText(
+                                                context,
+                                                toastMessageInviteDeleted,
+                                                Toast.LENGTH_LONG
+                                            ).show()
+
+                                        }
 
 
-
-
-
-                                alteracaoRepository.excluiAlteracaoPorIdEmailEIdUsuario(
-                                    email.id_email,
-                                    usuarioSelecionado.value.id_usuario
-                                )
-
-                                val alteracaoList =
-                                    alteracaoRepository.listarAlteracaoPorIdEmail(email!!.id_email)
-
-                                if (alteracaoList.isEmpty()) {
-                                    anexoRepository.excluirAnexoPorIdEmail(email.id_email)
-
-                                    for (respostaEmail in respostaEmailRepository.listarRespostasEmailPorIdEmail(
-                                        email.id_email
-                                    )) {
-                                        anexoRespostaEmailRepository.excluirAnexoPorIdRespostaEmail(
-                                            respostaEmail.id_resposta_email
-                                        )
                                     }
 
-                                    respostaEmailRepository.excluirRespostaEmailPorIdEmail(email.id_email)
-
-
-                                    emailRepository.excluirEmail(email = email)
                                 }
-
-                                Toast.makeText(context, toastMessageMailDeleted, Toast.LENGTH_LONG)
-                                    .show()
-
-
-
-                                if (agendaEmailStateList.isNotEmpty()) {
-                                    for (agenda in agendaEmailList) {
-                                        agendaConvidadoRepository.excluirPorIdAgenda(agenda.id_agenda)
-                                        agendaRepository.excluiAgenda(agenda)
-                                        agendaEmailStateList.remove(agenda)
-                                    }
-
-                                    Toast.makeText(
-                                        context,
-                                        toastMessageInviteDeleted,
-                                        Toast.LENGTH_LONG
-                                    ).show()
-                                }
-
                                 navController.popBackStack()
 
                             } else {
                                 if (isTodasContasScreen) {
                                     for (destinatario in todosDestinatarios) {
                                         if (destinatario.isNotBlank()) {
-                                            val usuario =
-                                                usuarioRepository.retornaUsarioPorEmail(
-                                                    destinatario
-                                                )
+                                            callLocaMailApiRetornaUsarioPorEmail(
+                                                destinatario,
+                                                onSuccess = { usuarioRetornado ->
 
-                                            val idDestinatario =
-                                                if (usuario != null) usuario.id_usuario else null
+                                                    val usuario = usuarioRetornado
 
-                                            if (idDestinatario != null) {
-                                                alteracaoRepository.atualizarExcluidoPorIdEmailEIdusuario(
-                                                    true,
-                                                    email.id_email,
-                                                    idDestinatario
-                                                )
-                                            }
+                                                    val idDestinatario =
+                                                        if (usuario != null) usuario.id_usuario else null
+
+                                                    if (idDestinatario != null) {
+
+                                                        callLocaMailApiAtualizarExcluidoPorIdEmailEIdusuario(
+                                                            true,
+                                                            email!!.id_email,
+                                                            idDestinatario,
+                                                            onSuccess = {
+                                                                Toast.makeText(
+                                                                    context,
+                                                                    toastMessageMailMovedToTrashBin,
+                                                                    Toast.LENGTH_LONG
+                                                                ).show()
+                                                            },
+                                                            onError = { error ->
+                                                                isError.value = true
+                                                                isLoading.value = false
+                                                            }
+                                                        )
+                                                    }
+                                                },
+                                                onError = { error ->
+                                                    isError.value = true
+                                                    isLoading.value = false
+                                                }
+                                            )
                                         }
                                     }
-                                    Toast.makeText(
-                                        context,
-                                        toastMessageMailMovedToTrashBin,
-                                        Toast.LENGTH_LONG
-                                    ).show()
                                 } else {
-                                    alteracaoRepository.atualizarExcluidoPorIdEmailEIdusuario(
-                                        true,
-                                        email.id_email,
-                                        usuarioSelecionado.value.id_usuario
-                                    )
 
-                                    Toast.makeText(
-                                        context,
-                                        toastMessageMailMovedToTrash,
-                                        Toast.LENGTH_LONG
-                                    ).show()
+                                    if (usuarioSelecionado.value != null) {
+                                        callLocaMailApiAtualizarExcluidoPorIdEmailEIdusuario(
+                                            true,
+                                            email!!.id_email,
+                                            usuarioSelecionado.value!!.id_usuario,
+                                            onSuccess = {
+                                                Toast.makeText(
+                                                    context,
+                                                    toastMessageMailMovedToTrash,
+                                                    Toast.LENGTH_LONG
+                                                ).show()
+                                            },
+                                            onError = { error ->
+                                                isError.value = true
+                                                isLoading.value = false
+
+                                            }
+                                        )
+                                    }
                                 }
                                 navController.popBackStack()
                             }
@@ -461,30 +555,60 @@ fun VisualizaEmailScreen(
                                 isSpam.value = !isSpam.value
                                 for (destinatario in todosDestinatarios) {
                                     if (destinatario.isNotBlank()) {
-                                        val usuario =
-                                            usuarioRepository.retornaUsarioPorEmail(
-                                                destinatario
-                                            )
 
-                                        val idDestinatario =
-                                            if (usuario != null) usuario.id_usuario else null
+                                        callLocaMailApiRetornaUsarioPorEmail(
+                                            destinatario,
+                                            onSuccess = { usuarioRetornado ->
 
-                                        if (idDestinatario != null) {
-                                            alteracaoRepository.atualizarSpamPorIdEmailEIdusuario(
-                                                isSpam.value,
-                                                email.id_email,
-                                                idDestinatario
-                                            )
-                                        }
+                                                val usuario = usuarioRetornado
+
+
+                                                val idDestinatario =
+                                                    if (usuario != null) usuario.id_usuario else null
+
+                                                if (idDestinatario != null) {
+
+                                                    callLocaMailApiAtualizarSpamPorIdEmailEIdusuario(
+                                                        isSpam.value,
+                                                        email!!.id_email,
+                                                        idDestinatario,
+                                                        onSuccess = {
+
+                                                        },
+                                                        onError = { error ->
+                                                            isError.value = true
+                                                            isLoading.value = false
+                                                        }
+                                                    )
+                                                }
+                                            },
+                                            onError = { error ->
+                                                isError.value = true
+                                                isLoading.value = false
+                                            }
+                                        )
+
+
                                     }
                                 }
                             } else {
                                 isSpam.value = !isSpam.value
-                                alteracaoRepository.atualizarSpamPorIdEmailEIdusuario(
-                                    isSpam.value,
-                                    email.id_email,
-                                    usuarioSelecionado.value.id_usuario
-                                )
+
+                                if (usuarioSelecionado.value != null) {
+                                    callLocaMailApiAtualizarSpamPorIdEmailEIdusuario(
+                                        isSpam.value,
+                                        email!!.id_email,
+                                        usuarioSelecionado.value!!.id_usuario,
+                                        onSuccess = {
+
+                                        },
+                                        onError = { error ->
+                                            isError.value = true
+                                            isLoading.value = false
+                                        }
+                                    )
+
+                                }
                             }
                         },
                         onClickFavorite = {
@@ -493,30 +617,58 @@ fun VisualizaEmailScreen(
                                 for (destinatario in todosDestinatarios) {
                                     if (destinatario.isNotBlank()) {
 
-                                        val usuario =
-                                            usuarioRepository.retornaUsarioPorEmail(
-                                                destinatario
-                                            )
+                                        callLocaMailApiRetornaUsarioPorEmail(
+                                            destinatario,
+                                            onSuccess = { usuarioRetornado ->
 
-                                        val idDestinatario =
-                                            if (usuario != null) usuario.id_usuario else null
+                                                val usuario = usuarioRetornado
 
-                                        if (idDestinatario != null) {
-                                            alteracaoRepository.atualizarImportantePorIdEmail(
-                                                isImportant.value,
-                                                email.id_email,
-                                                idDestinatario
-                                            )
-                                        }
+                                                val idDestinatario =
+                                                    if (usuario != null) usuario.id_usuario else null
+
+                                                if (idDestinatario != null) {
+
+                                                    callLocaMailApiAtualizarImportantePorIdEmail(
+                                                        isImportant.value,
+                                                        email!!.id_email,
+                                                        idDestinatario,
+                                                        onSuccess = {
+                                                        },
+                                                        onError = { error ->
+                                                            isError.value = true
+                                                            isLoading.value = false
+                                                        }
+                                                    )
+
+                                                }
+
+                                            },
+                                            onError = { error ->
+                                                isError.value = true
+                                                isLoading.value = false
+                                            }
+                                        )
+
+
                                     }
                                 }
                             } else {
                                 isImportant.value = !isImportant.value
-                                alteracaoRepository.atualizarImportantePorIdEmail(
-                                    isImportant.value,
-                                    email!!.id_email,
-                                    usuarioSelecionado.value.id_usuario
-                                )
+
+                                if (usuarioSelecionado.value != null) {
+                                    callLocaMailApiAtualizarImportantePorIdEmail(
+                                        isImportant.value,
+                                        email!!.id_email,
+                                        usuarioSelecionado.value!!.id_usuario,
+                                        onSuccess = {
+                                        },
+                                        onError = { error ->
+                                            isError.value = true
+                                            isLoading.value = false
+                                        }
+                                    )
+
+                                }
                             }
                         },
                         onClickArchive = {
@@ -524,30 +676,60 @@ fun VisualizaEmailScreen(
                                 isArchive.value = !isArchive.value
                                 for (destinatario in todosDestinatarios) {
                                     if (destinatario.isNotBlank()) {
-                                        val usuario =
-                                            usuarioRepository.retornaUsarioPorEmail(
-                                                destinatario
-                                            )
 
-                                        val idDestinatario =
-                                            if (usuario != null) usuario.id_usuario else null
 
-                                        if (idDestinatario != null) {
-                                            alteracaoRepository.atualizarArquivadoPorIdEmailEIdusuario(
-                                                isArchive.value,
-                                                email.id_email,
-                                                idDestinatario
-                                            )
-                                        }
+                                        callLocaMailApiRetornaUsarioPorEmail(
+                                            destinatario,
+                                            onSuccess = { usuarioRetornado ->
+
+                                                val usuario = usuarioRetornado
+
+                                                val idDestinatario =
+                                                    if (usuario != null) usuario.id_usuario else null
+
+                                                if (idDestinatario != null) {
+
+                                                    callLocaMailApiAtualizarArquivadoPorIdEmailEIdusuario(
+                                                        isArchive.value,
+                                                        email!!.id_email,
+                                                        idDestinatario,
+                                                        onSuccess = {
+
+                                                        },
+                                                        onError = { error ->
+                                                            isError.value = true
+                                                            isLoading.value = false
+                                                        }
+                                                    )
+                                                }
+
+                                            },
+                                            onError = { error ->
+                                                isError.value = true
+                                                isLoading.value = false
+                                            }
+                                        )
+
+
                                     }
                                 }
                             } else {
                                 isArchive.value = !isArchive.value
-                                alteracaoRepository.atualizarArquivadoPorIdEmailEIdusuario(
-                                    isArchive.value,
-                                    email!!.id_email,
-                                    usuarioSelecionado.value.id_usuario
-                                )
+                                if (usuarioSelecionado.value != null) {
+
+                                    callLocaMailApiAtualizarArquivadoPorIdEmailEIdusuario(
+                                        isArchive.value,
+                                        email!!.id_email,
+                                        usuarioSelecionado.value!!.id_usuario,
+                                        onSuccess = {
+
+                                        },
+                                        onError = { error ->
+                                            isError.value = true
+                                            isLoading.value = false
+                                        }
+                                    )
+                                }
                             }
                         },
                         isSpam = isSpam,
@@ -559,17 +741,35 @@ fun VisualizaEmailScreen(
 
                     ColumnEmailDetails(
                         onClickDraftRespostaEmailDelete = { respostaEmail ->
-                            anexoRespostaEmailRepository.excluirAnexoPorIdRespostaEmail(
-                                respostaEmail.id_resposta_email
-                            )
-                            respostaEmailRepository.excluirRespostaEmail(respostaEmail)
-                            respostasEmailStateList.remove(respostaEmail)
-                            Toast.makeText(
-                                context,
-                                toastMessageDraftMailDeleted,
-                                Toast.LENGTH_LONG
-                            ).show()
 
+                            callLocaMailApiExcluirAnexoPorIdRespostaEmail(
+                                respostaEmail.id_resposta_email,
+                                onSuccess = {
+
+                                },
+                                onError = { error ->
+                                    isError.value = true
+                                    isLoading.value = false
+                                }
+                            )
+
+                            callLocaMailApiExcluirRespostaEmail(
+                                respostaEmail.id_resposta_email,
+                                onSuccess = {
+                                    if (respostasEmailStateList != null) {
+                                        respostasEmailStateList!!.remove(respostaEmail)
+                                        Toast.makeText(
+                                            context,
+                                            toastMessageDraftMailDeleted,
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                    }
+                                },
+                                onError = {
+                                    isError.value = true
+                                    isLoading.value = false
+                                }
+                            )
                         },
                         onClickDraftRespostaEmailEdit = { respostaEmail ->
                             navController.navigate("editarespostaemailscreen/${respostaEmail.id_resposta_email}")
@@ -578,7 +778,6 @@ fun VisualizaEmailScreen(
                         anexoBitMapList = anexoBitMapList,
                         timeState = timeState,
                         usuarioSelecionado = usuarioSelecionado,
-                        anexoRespostaEmailRepository = anexoRespostaEmailRepository,
                         respostasEmailStateList = respostasEmailStateList,
                         isTodasContasScreen = isTodasContasScreen,
                         onClickReply = {
@@ -586,33 +785,70 @@ fun VisualizaEmailScreen(
                         },
                         isAgendaAtrelada = isAgendaAtrelada,
                         onClickAcceptInviteButton = {
-                            for (agenda in agendaEmailList) {
-                                agendaRepository.atualizaVisivelPorIdAgenda(agenda.id_agenda, true)
-                                agendaEmailStateList.remove(agenda)
+                            if (agendaEmailList != null) {
+                                for (agenda in agendaEmailList!!) {
+
+                                    callLocaMailApiAtualizaVisivelPorIdAgenda(
+                                        agenda.id_agenda,
+                                        true,
+                                        onSuccess = {
+                                            if (agendaEmailStateList != null) {
+                                                agendaEmailStateList!!.remove(agenda)
+                                            }
+                                        },
+                                        onError = {
+                                            isError.value = true
+                                            isLoading.value = false
+                                        }
+                                    )
+                                }
+
+                                Toast.makeText(
+                                    context,
+                                    toastMessageInviteAccepted,
+                                    Toast.LENGTH_LONG
+                                ).show()
                             }
-
-                            Toast.makeText(
-                                context,
-                                toastMessageInviteAccepted,
-                                Toast.LENGTH_LONG
-                            ).show()
-
                         },
                         onClickRejectInviteButton = {
-                            for (agenda in agendaEmailList) {
-                                agendaConvidadoRepository.excluirPorIdAgenda(agenda.id_agenda)
-                                agendaRepository.excluiAgenda(agenda)
-                                agendaEmailStateList.remove(agenda)
+
+                            if (agendaEmailList != null) {
+                                for (agenda in agendaEmailList!!) {
+
+                                    callLocaMailApiExcluirPorIdAgenda(
+                                        agenda.id_agenda,
+                                        onSuccess = {
+
+                                        },
+                                        onError = {
+                                            isError.value = true
+                                            isLoading.value = false
+                                        }
+                                    )
+
+                                    callLocaMailApiExcluiAgenda(
+                                        agenda.id_agenda,
+                                        onSuccess = {
+                                            if (agendaEmailStateList != null){
+                                                agendaEmailStateList!!.remove(agenda)
+                                            }
+                                        },
+                                        onError = {
+                                            isError.value = true
+                                            isLoading.value = false
+                                        }
+                                    )
+                                }
+                                Toast.makeText(
+                                    context,
+                                    toastMessageInviteDeleted,
+                                    Toast.LENGTH_LONG
+                                ).show()
                             }
-
-                            Toast.makeText(
-                                context,
-                                toastMessageInviteDeleted,
-                                Toast.LENGTH_LONG
-                            ).show()
-
                         },
-                        agendaEmailStateList = agendaEmailStateList
+                        agendaEmailStateList = agendaEmailStateList,
+                        isLoading = isLoading,
+                        isError = isError
                     )
                 }
             }

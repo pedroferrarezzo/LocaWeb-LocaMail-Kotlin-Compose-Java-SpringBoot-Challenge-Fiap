@@ -36,5 +36,11 @@ public class EmailController {
         return emailService.listarEmailPorId(id_email);
     }
 
+    @GetMapping("/excluirEmail")
+    @ResponseStatus(HttpStatus.OK)
+    public void excluirEmail(@RequestParam("idEmail") Long id_email) throws Exception {
+        emailService.excluirEmail(id_email);
+    }
+
 
 }

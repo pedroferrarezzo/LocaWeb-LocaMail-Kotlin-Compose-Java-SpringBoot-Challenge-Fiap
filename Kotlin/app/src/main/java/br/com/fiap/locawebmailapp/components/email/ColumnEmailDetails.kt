@@ -43,6 +43,8 @@ import br.com.fiap.locawebmailapp.model.Agenda
 import br.com.fiap.locawebmailapp.model.Email
 import br.com.fiap.locawebmailapp.model.RespostaEmail
 import br.com.fiap.locawebmailapp.model.Usuario
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiListarAnexosArrayBytePorIdRespostaEmail
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiListarAnexosArraybytePorIdEmail
 import br.com.fiap.locawebmailapp.utils.byteArrayToBitmap
 import br.com.fiap.locawebmailapp.utils.convertTo12Hours
 import br.com.fiap.locawebmailapp.utils.dateToCompleteStringDate
@@ -56,21 +58,22 @@ fun ColumnEmailDetails(
     onClickDraftRespostaEmailDelete: (respostaEmail: RespostaEmail) -> Unit,
     onClickDraftRespostaEmailEdit: (respostaEmail: RespostaEmail) -> Unit,
     email: Email,
-    anexoBitMapList: List<Bitmap>,
+    anexoBitMapList: List<Bitmap?>,
     timeState: TimePickerState,
-    usuarioSelecionado: MutableState<Usuario>,
-    anexoRespostaEmailRepository: AnexoRespostaEmailRepository,
-    respostasEmailStateList: SnapshotStateList<RespostaEmail>,
+    usuarioSelecionado: MutableState<Usuario?>,
+    respostasEmailStateList: SnapshotStateList<RespostaEmail?>,
     isTodasContasScreen: Boolean,
     onClickReply: (respostaEmail: RespostaEmail) -> Unit,
-    isAgendaAtrelada: MutableState<Boolean>,
+    isAgendaAtrelada: MutableState<Boolean?>,
     onClickRejectInviteButton: () -> Unit,
     onClickAcceptInviteButton: () -> Unit,
-    agendaEmailStateList: SnapshotStateList<Agenda>
+    agendaEmailStateList: SnapshotStateList<Agenda>?,
+    isLoading: MutableState<Boolean>,
+    isError: MutableState<Boolean>
 ) {
     LazyColumn {
 
-        if (isAgendaAtrelada.value) {
+        if (isAgendaAtrelada.value == true) {
             item {
                 if (email.assunto.isNotBlank()) {
                     Text(
@@ -124,40 +127,43 @@ fun ColumnEmailDetails(
                     color = colorResource(id = R.color.lcweb_red_1)
                 )
 
-                if (usuarioSelecionado.value.email != email.remetente && !isTodasContasScreen && agendaEmailStateList.isNotEmpty()) {
-                    Row(
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Button(
-                            onClick = onClickRejectInviteButton,
-                            shape = RoundedCornerShape(5.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = colorResource(id = R.color.lcweb_red_1)
-                            ),
-                            contentPadding = PaddingValues(5.dp)
+                if (usuarioSelecionado.value != null && agendaEmailStateList != null) {
+                    if (usuarioSelecionado.value!!.email != email.remetente && !isTodasContasScreen && agendaEmailStateList.isNotEmpty()) {
+                        Row(
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text(text = stringResource(id = R.string.mail_event_reject))
+                            Button(
+                                onClick = onClickRejectInviteButton,
+                                shape = RoundedCornerShape(5.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = colorResource(id = R.color.lcweb_red_1)
+                                ),
+                                contentPadding = PaddingValues(5.dp)
+                            ) {
+                                Text(text = stringResource(id = R.string.mail_event_reject))
+                            }
+
+
+                            Button(
+                                onClick = onClickAcceptInviteButton,
+                                shape = RoundedCornerShape(5.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = colorResource(id = R.color.lcweb_red_1)
+                                ),
+                                contentPadding = PaddingValues(5.dp),
+                                modifier = Modifier.padding(horizontal = 2.dp)
+                            ) {
+                                Text(text = stringResource(id = R.string.mail_event_accept))
+                            }
+
                         }
-
-
-                        Button(
-                            onClick = onClickAcceptInviteButton,
-                            shape = RoundedCornerShape(5.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = colorResource(id = R.color.lcweb_red_1)
-                            ),
-                            contentPadding = PaddingValues(5.dp),
-                            modifier = Modifier.padding(horizontal = 2.dp)
-                        ) {
-                            Text(text = stringResource(id = R.string.mail_event_accept))
-                        }
-
+                        HorizontalDivider(
+                            color = colorResource(id = R.color.lcweb_red_1)
+                        )
                     }
-                    HorizontalDivider(
-                        color = colorResource(id = R.color.lcweb_red_1)
-                    )
+
                 }
 
                 if (email.corpo.isNotBlank()) {
@@ -189,20 +195,25 @@ fun ColumnEmailDetails(
                 }
 
                 LazyRow(modifier = Modifier.padding(bottom = 5.dp)) {
-                    items(anexoBitMapList) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier.padding(horizontal = 5.dp, vertical = 5.dp)
-                        ) {
-                            Image(
-                                bitmap = it.asImageBitmap(),
-                                contentDescription = stringResource(id = R.string.content_desc_img_selected),
-                                modifier = Modifier
-                                    .width(70.dp)
-                                    .height(70.dp)
-                            )
+
+                    if (!anexoBitMapList.isEmpty()) {
+                        items(anexoBitMapList) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.padding(horizontal = 5.dp, vertical = 5.dp)
+                            ) {
+                                Image(
+                                    bitmap = it!!.asImageBitmap(),
+                                    contentDescription = stringResource(id = R.string.content_desc_img_selected),
+                                    modifier = Modifier
+                                        .width(70.dp)
+                                        .height(70.dp)
+                                )
+                            }
                         }
                     }
+
+
                 }
 
 
@@ -311,339 +322,372 @@ fun ColumnEmailDetails(
                 )
             }
 
-            items(respostasEmailStateList) { respostaEmail ->
+            if (!respostasEmailStateList.isEmpty()) {
+                items(respostasEmailStateList) { respostaEmail ->
 
-                val anexoRespostaEmailArrayByteList =
-                    anexoRespostaEmailRepository.listarAnexosArrayBytePorIdRespostaEmail(
-                        respostaEmail.id_resposta_email
+                    var anexoRespostaEmailBitMapList: List<Bitmap?> = listOf<Bitmap>()
+
+                    callLocaMailApiListarAnexosArrayBytePorIdRespostaEmail(
+                        respostaEmail!!.id_resposta_email,
+                        onSuccess = {
+                            listArrayRetornado ->
+                            val anexoRespostaEmailArrayByteList = listArrayRetornado
+
+                            if (anexoRespostaEmailArrayByteList != null) {
+                                anexoRespostaEmailBitMapList = anexoRespostaEmailArrayByteList.map {
+                                    byteArrayToBitmap(it)
+                                }
+                            }
+                        },
+                        onError = {
+                            isLoading.value = false
+                            isError.value = true
+
+                        }
                     )
-                val anexoRespostaEmailBitMapList = anexoRespostaEmailArrayByteList.map {
-                    byteArrayToBitmap(it)
-                }
 
 
-                if (
-                    stringParaLista(respostaEmail.destinatario).contains(usuarioSelecionado.value.email) ||
-                    stringParaLista(respostaEmail.remetente).contains(usuarioSelecionado.value.email) ||
-                    stringParaLista(respostaEmail.cc).contains(usuarioSelecionado.value.email) ||
-                    stringParaLista(respostaEmail.cco).contains(usuarioSelecionado.value.email)
-                ) {
-                    Spacer(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(20.dp)
-                    )
-
-                    if (respostaEmail.editavel && usuarioSelecionado.value.id_usuario == respostaEmail.id_usuario) {
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically
+                    if (usuarioSelecionado.value != null) {
+                        if (
+                            stringParaLista(respostaEmail.destinatario).contains(usuarioSelecionado.value!!.email) ||
+                            stringParaLista(respostaEmail.remetente).contains(usuarioSelecionado.value!!.email) ||
+                            stringParaLista(respostaEmail.cc).contains(usuarioSelecionado.value!!.email) ||
+                            stringParaLista(respostaEmail.cco).contains(usuarioSelecionado.value!!.email)
                         ) {
-
-                            Button(
-                                onClick = { onClickDraftRespostaEmailDelete(respostaEmail) },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color.Transparent,
-                                    contentColor = colorResource(id = R.color.lcweb_gray_1)
-                                ),
-                                shape = RectangleShape
-                            ) {
-                                Text(text = stringResource(id = R.string.mail_generic_delete))
-                            }
-
-
-                            Button(
-                                onClick = { onClickDraftRespostaEmailEdit(respostaEmail) },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color.Transparent,
-                                    contentColor = colorResource(id = R.color.lcweb_gray_1)
-                                ),
-                                shape = RectangleShape
-                            ) {
-                                Text(text = stringResource(id = R.string.mail_generic_edit))
-                            }
-
-                        }
-
-                        if (respostaEmail.assunto.isNotBlank()) {
-                            Text(
-                                text = respostaEmail.assunto,
-                                fontSize = 30.sp,
-                                lineHeight = 30.sp,
-                                color = colorResource(id = R.color.lcweb_gray_1),
-                                modifier = Modifier.padding(5.dp)
+                            Spacer(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(20.dp)
                             )
-                        }
 
-                        LazyRow(modifier = Modifier.padding(bottom = 5.dp)) {
-                            items(anexoRespostaEmailBitMapList) {
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    modifier = Modifier.padding(
-                                        horizontal = 5.dp,
-                                        vertical = 5.dp
-                                    )
+                            if (respostaEmail.editavel && usuarioSelecionado.value!!.id_usuario == respostaEmail.id_usuario) {
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Image(
-                                        bitmap = it.asImageBitmap(),
-                                        contentDescription = stringResource(id = R.string.content_desc_img_selected),
-                                        modifier = Modifier
-                                            .width(70.dp)
-                                            .height(70.dp)
+
+                                    Button(
+                                        onClick = { onClickDraftRespostaEmailDelete(respostaEmail) },
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = Color.Transparent,
+                                            contentColor = colorResource(id = R.color.lcweb_gray_1)
+                                        ),
+                                        shape = RectangleShape
+                                    ) {
+                                        Text(text = stringResource(id = R.string.mail_generic_delete))
+                                    }
+
+
+                                    Button(
+                                        onClick = { onClickDraftRespostaEmailEdit(respostaEmail) },
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = Color.Transparent,
+                                            contentColor = colorResource(id = R.color.lcweb_gray_1)
+                                        ),
+                                        shape = RectangleShape
+                                    ) {
+                                        Text(text = stringResource(id = R.string.mail_generic_edit))
+                                    }
+
+                                }
+
+                                if (respostaEmail.assunto.isNotBlank()) {
+                                    Text(
+                                        text = respostaEmail.assunto,
+                                        fontSize = 30.sp,
+                                        lineHeight = 30.sp,
+                                        color = colorResource(id = R.color.lcweb_gray_1),
+                                        modifier = Modifier.padding(5.dp)
                                     )
                                 }
-                            }
-                        }
+
+                                LazyRow(modifier = Modifier.padding(bottom = 5.dp)) {
+
+                                    if (!anexoRespostaEmailBitMapList.isEmpty()) {
+                                        items(anexoRespostaEmailBitMapList) {
+                                            Column(
+                                                horizontalAlignment = Alignment.CenterHorizontally,
+                                                modifier = Modifier.padding(
+                                                    horizontal = 5.dp,
+                                                    vertical = 5.dp
+                                                )
+                                            ) {
+                                                Image(
+                                                    bitmap = it!!.asImageBitmap(),
+                                                    contentDescription = stringResource(id = R.string.content_desc_img_selected),
+                                                    modifier = Modifier
+                                                        .width(70.dp)
+                                                        .height(70.dp)
+                                                )
+                                            }
+                                        }
+                                    }
 
 
-                        HorizontalDivider(
-                            color = colorResource(id = R.color.lcweb_red_1)
-                        )
+                                }
 
-                        Row {
-                            Text(
-                                text = stringResource(id = R.string.mail_generic_from),
-                                fontSize = 15.sp,
-                                color = colorResource(id = R.color.lcweb_red_1),
-                                modifier = Modifier.padding(5.dp)
-                            )
-                            Text(
-                                text = respostaEmail.remetente,
-                                fontSize = 15.sp,
-                                color = colorResource(id = R.color.lcweb_gray_1),
-                                modifier = Modifier.padding(5.dp)
 
-                            )
-                        }
-
-                        HorizontalDivider(
-                            color = colorResource(id = R.color.lcweb_red_1)
-                        )
-
-                        Row {
-                            Text(
-                                text = stringResource(id = R.string.mail_generic_to),
-                                fontSize = 15.sp,
-                                color = colorResource(id = R.color.lcweb_red_1),
-                                modifier = Modifier.padding(5.dp)
-                            )
-                            Text(
-                                text = respostaEmail.destinatario,
-                                fontSize = 15.sp,
-                                color = colorResource(id = R.color.lcweb_gray_1),
-                                modifier = Modifier.padding(5.dp)
-
-                            )
-                        }
-
-                        HorizontalDivider(
-                            color = colorResource(id = R.color.lcweb_red_1)
-                        )
-
-                        if (respostaEmail.cc.isNotBlank()) {
-                            Row {
-                                Text(
-                                    text = stringResource(id = R.string.mail_generic_cc),
-                                    fontSize = 15.sp,
-                                    color = colorResource(id = R.color.lcweb_red_1),
-                                    modifier = Modifier.padding(5.dp)
+                                HorizontalDivider(
+                                    color = colorResource(id = R.color.lcweb_red_1)
                                 )
-                                Text(
-                                    text = respostaEmail.cc,
-                                    fontSize = 15.sp,
-                                    color = colorResource(id = R.color.lcweb_gray_1),
-                                    modifier = Modifier.padding(5.dp)
-                                )
-                            }
-                            HorizontalDivider(
-                                color = colorResource(id = R.color.lcweb_red_1)
-                            )
-                        }
 
-                        Row {
-                            Text(
-                                text = stringResource(id = R.string.mail_generic_date),
-                                fontSize = 15.sp,
-                                color = colorResource(id = R.color.lcweb_red_1),
-                                modifier = Modifier.padding(5.dp)
-                            )
-                            Text(
-                                text = dateToCompleteStringDate(stringToLocalDate(email.data)) + " " + if (timeState.is24hour) email.horario else convertTo12Hours(
-                                    email.horario
-                                ),
-                                fontSize = 15.sp,
-                                color = colorResource(id = R.color.lcweb_gray_1),
-                                modifier = Modifier.padding(5.dp)
-                            )
-                        }
-                        HorizontalDivider(
-                            color = colorResource(id = R.color.lcweb_red_1)
-                        )
+                                Row {
+                                    Text(
+                                        text = stringResource(id = R.string.mail_generic_from),
+                                        fontSize = 15.sp,
+                                        color = colorResource(id = R.color.lcweb_red_1),
+                                        modifier = Modifier.padding(5.dp)
+                                    )
+                                    Text(
+                                        text = respostaEmail.remetente,
+                                        fontSize = 15.sp,
+                                        color = colorResource(id = R.color.lcweb_gray_1),
+                                        modifier = Modifier.padding(5.dp)
 
-
-                        if (respostaEmail.corpo.isNotBlank()) {
-                            Text(
-                                text = respostaEmail.corpo,
-                                fontSize = 15.sp,
-                                color = colorResource(id = R.color.lcweb_gray_1),
-                                modifier = Modifier.padding(5.dp),
-                                textAlign = TextAlign.Justify
-                            )
-                        }
-
-                    } else if (!respostaEmail.editavel) {
-
-                        Row(
-                            modifier = Modifier.padding(5.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            if (respostaEmail.assunto.isNotBlank()) {
-                                Text(
-                                    text = respostaEmail.assunto,
-                                    fontSize = 30.sp,
-                                    lineHeight = 30.sp,
-                                    color = colorResource(id = R.color.lcweb_gray_1)
-                                )
-                            }
-
-                            if (!isTodasContasScreen) {
-                                IconButton(onClick = { onClickReply(respostaEmail) }) {
-                                    Icon(
-                                        painter = painterResource(id = R.drawable.reply_solid),
-                                        contentDescription = stringResource(id = R.string.content_desc_lcweb_reply),
-                                        modifier = Modifier
-                                            .width(20.dp)
-                                            .height(20.dp),
-                                        tint = colorResource(id = R.color.lcweb_gray_1)
                                     )
                                 }
-                            }
-                        }
 
-                        LazyRow(modifier = Modifier.padding(bottom = 5.dp)) {
-                            items(anexoRespostaEmailBitMapList) {
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    modifier = Modifier.padding(
-                                        horizontal = 5.dp,
-                                        vertical = 5.dp
+                                HorizontalDivider(
+                                    color = colorResource(id = R.color.lcweb_red_1)
+                                )
+
+                                Row {
+                                    Text(
+                                        text = stringResource(id = R.string.mail_generic_to),
+                                        fontSize = 15.sp,
+                                        color = colorResource(id = R.color.lcweb_red_1),
+                                        modifier = Modifier.padding(5.dp)
                                     )
+                                    Text(
+                                        text = respostaEmail.destinatario,
+                                        fontSize = 15.sp,
+                                        color = colorResource(id = R.color.lcweb_gray_1),
+                                        modifier = Modifier.padding(5.dp)
+
+                                    )
+                                }
+
+                                HorizontalDivider(
+                                    color = colorResource(id = R.color.lcweb_red_1)
+                                )
+
+                                if (respostaEmail.cc.isNotBlank()) {
+                                    Row {
+                                        Text(
+                                            text = stringResource(id = R.string.mail_generic_cc),
+                                            fontSize = 15.sp,
+                                            color = colorResource(id = R.color.lcweb_red_1),
+                                            modifier = Modifier.padding(5.dp)
+                                        )
+                                        Text(
+                                            text = respostaEmail.cc,
+                                            fontSize = 15.sp,
+                                            color = colorResource(id = R.color.lcweb_gray_1),
+                                            modifier = Modifier.padding(5.dp)
+                                        )
+                                    }
+                                    HorizontalDivider(
+                                        color = colorResource(id = R.color.lcweb_red_1)
+                                    )
+                                }
+
+                                Row {
+                                    Text(
+                                        text = stringResource(id = R.string.mail_generic_date),
+                                        fontSize = 15.sp,
+                                        color = colorResource(id = R.color.lcweb_red_1),
+                                        modifier = Modifier.padding(5.dp)
+                                    )
+                                    Text(
+                                        text = dateToCompleteStringDate(stringToLocalDate(email.data)) + " " + if (timeState.is24hour) email.horario else convertTo12Hours(
+                                            email.horario
+                                        ),
+                                        fontSize = 15.sp,
+                                        color = colorResource(id = R.color.lcweb_gray_1),
+                                        modifier = Modifier.padding(5.dp)
+                                    )
+                                }
+                                HorizontalDivider(
+                                    color = colorResource(id = R.color.lcweb_red_1)
+                                )
+
+
+                                if (respostaEmail.corpo.isNotBlank()) {
+                                    Text(
+                                        text = respostaEmail.corpo,
+                                        fontSize = 15.sp,
+                                        color = colorResource(id = R.color.lcweb_gray_1),
+                                        modifier = Modifier.padding(5.dp),
+                                        textAlign = TextAlign.Justify
+                                    )
+                                }
+
+                            } else if (!respostaEmail.editavel) {
+
+                                Row(
+                                    modifier = Modifier.padding(5.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Image(
-                                        bitmap = it.asImageBitmap(),
-                                        contentDescription = stringResource(id = R.string.content_desc_img_selected),
-                                        modifier = Modifier
-                                            .width(70.dp)
-                                            .height(70.dp)
+                                    if (respostaEmail.assunto.isNotBlank()) {
+                                        Text(
+                                            text = respostaEmail.assunto,
+                                            fontSize = 30.sp,
+                                            lineHeight = 30.sp,
+                                            color = colorResource(id = R.color.lcweb_gray_1)
+                                        )
+                                    }
+
+                                    if (!isTodasContasScreen) {
+                                        IconButton(onClick = { onClickReply(respostaEmail) }) {
+                                            Icon(
+                                                painter = painterResource(id = R.drawable.reply_solid),
+                                                contentDescription = stringResource(id = R.string.content_desc_lcweb_reply),
+                                                modifier = Modifier
+                                                    .width(20.dp)
+                                                    .height(20.dp),
+                                                tint = colorResource(id = R.color.lcweb_gray_1)
+                                            )
+                                        }
+                                    }
+                                }
+
+                                LazyRow(modifier = Modifier.padding(bottom = 5.dp)) {
+
+                                    if (!anexoRespostaEmailBitMapList.isEmpty()) {
+                                        items(anexoRespostaEmailBitMapList) {
+                                            Column(
+                                                horizontalAlignment = Alignment.CenterHorizontally,
+                                                modifier = Modifier.padding(
+                                                    horizontal = 5.dp,
+                                                    vertical = 5.dp
+                                                )
+                                            ) {
+                                                Image(
+                                                    bitmap = it!!.asImageBitmap(),
+                                                    contentDescription = stringResource(id = R.string.content_desc_img_selected),
+                                                    modifier = Modifier
+                                                        .width(70.dp)
+                                                        .height(70.dp)
+                                                )
+                                            }
+                                        }
+                                    }
+
+
+                                }
+
+
+                                HorizontalDivider(
+                                    color = colorResource(id = R.color.lcweb_red_1)
+                                )
+
+                                Row {
+                                    Text(
+                                        text = stringResource(id = R.string.mail_generic_from),
+                                        fontSize = 15.sp,
+                                        color = colorResource(id = R.color.lcweb_red_1),
+                                        modifier = Modifier.padding(5.dp)
+                                    )
+                                    Text(
+                                        text = respostaEmail.remetente,
+                                        fontSize = 15.sp,
+                                        color = colorResource(id = R.color.lcweb_gray_1),
+                                        modifier = Modifier.padding(5.dp)
+
+                                    )
+                                }
+
+                                HorizontalDivider(
+                                    color = colorResource(id = R.color.lcweb_red_1)
+                                )
+
+                                Row {
+                                    Text(
+                                        text = stringResource(id = R.string.mail_generic_to),
+                                        fontSize = 15.sp,
+                                        color = colorResource(id = R.color.lcweb_red_1),
+                                        modifier = Modifier.padding(5.dp)
+                                    )
+                                    Text(
+                                        text = respostaEmail.destinatario,
+                                        fontSize = 15.sp,
+                                        color = colorResource(id = R.color.lcweb_gray_1),
+                                        modifier = Modifier.padding(5.dp)
+
+                                    )
+                                }
+
+                                HorizontalDivider(
+                                    color = colorResource(id = R.color.lcweb_red_1)
+                                )
+
+                                if (respostaEmail.cc.isNotBlank()) {
+                                    Row {
+                                        Text(
+                                            text = stringResource(id = R.string.mail_generic_cc),
+                                            fontSize = 15.sp,
+                                            color = colorResource(id = R.color.lcweb_red_1),
+                                            modifier = Modifier.padding(5.dp)
+                                        )
+                                        Text(
+                                            text = respostaEmail.cc,
+                                            fontSize = 15.sp,
+                                            color = colorResource(id = R.color.lcweb_gray_1),
+                                            modifier = Modifier.padding(5.dp)
+                                        )
+                                    }
+                                    HorizontalDivider(
+                                        color = colorResource(id = R.color.lcweb_red_1)
+                                    )
+                                }
+
+                                Row {
+                                    Text(
+                                        text = stringResource(id = R.string.mail_generic_date),
+                                        fontSize = 15.sp,
+                                        color = colorResource(id = R.color.lcweb_red_1),
+                                        modifier = Modifier.padding(5.dp)
+                                    )
+                                    Text(
+                                        text = dateToCompleteStringDate(stringToLocalDate(email.data)) + " " + if (timeState.is24hour) email.horario else convertTo12Hours(
+                                            email.horario
+                                        ),
+                                        fontSize = 15.sp,
+                                        color = colorResource(id = R.color.lcweb_gray_1),
+                                        modifier = Modifier.padding(5.dp)
+                                    )
+                                }
+                                HorizontalDivider(
+                                    color = colorResource(id = R.color.lcweb_red_1)
+                                )
+
+                                if (respostaEmail.corpo.isNotBlank()) {
+                                    Text(
+                                        text = respostaEmail.corpo,
+                                        fontSize = 15.sp,
+                                        color = colorResource(id = R.color.lcweb_gray_1),
+                                        modifier = Modifier.padding(5.dp),
+                                        textAlign = TextAlign.Justify
+                                    )
+
+                                    HorizontalDivider(
+                                        color = colorResource(id = R.color.lcweb_red_1)
                                     )
                                 }
                             }
                         }
 
-
-                        HorizontalDivider(
-                            color = colorResource(id = R.color.lcweb_red_1)
-                        )
-
-                        Row {
-                            Text(
-                                text = stringResource(id = R.string.mail_generic_from),
-                                fontSize = 15.sp,
-                                color = colorResource(id = R.color.lcweb_red_1),
-                                modifier = Modifier.padding(5.dp)
-                            )
-                            Text(
-                                text = respostaEmail.remetente,
-                                fontSize = 15.sp,
-                                color = colorResource(id = R.color.lcweb_gray_1),
-                                modifier = Modifier.padding(5.dp)
-
-                            )
-                        }
-
-                        HorizontalDivider(
-                            color = colorResource(id = R.color.lcweb_red_1)
-                        )
-
-                        Row {
-                            Text(
-                                text = stringResource(id = R.string.mail_generic_to),
-                                fontSize = 15.sp,
-                                color = colorResource(id = R.color.lcweb_red_1),
-                                modifier = Modifier.padding(5.dp)
-                            )
-                            Text(
-                                text = respostaEmail.destinatario,
-                                fontSize = 15.sp,
-                                color = colorResource(id = R.color.lcweb_gray_1),
-                                modifier = Modifier.padding(5.dp)
-
-                            )
-                        }
-
-                        HorizontalDivider(
-                            color = colorResource(id = R.color.lcweb_red_1)
-                        )
-
-                        if (respostaEmail.cc.isNotBlank()) {
-                            Row {
-                                Text(
-                                    text = stringResource(id = R.string.mail_generic_cc),
-                                    fontSize = 15.sp,
-                                    color = colorResource(id = R.color.lcweb_red_1),
-                                    modifier = Modifier.padding(5.dp)
-                                )
-                                Text(
-                                    text = respostaEmail.cc,
-                                    fontSize = 15.sp,
-                                    color = colorResource(id = R.color.lcweb_gray_1),
-                                    modifier = Modifier.padding(5.dp)
-                                )
-                            }
-                            HorizontalDivider(
-                                color = colorResource(id = R.color.lcweb_red_1)
-                            )
-                        }
-
-                        Row {
-                            Text(
-                                text = stringResource(id = R.string.mail_generic_date),
-                                fontSize = 15.sp,
-                                color = colorResource(id = R.color.lcweb_red_1),
-                                modifier = Modifier.padding(5.dp)
-                            )
-                            Text(
-                                text = dateToCompleteStringDate(stringToLocalDate(email.data)) + " " + if (timeState.is24hour) email.horario else convertTo12Hours(
-                                    email.horario
-                                ),
-                                fontSize = 15.sp,
-                                color = colorResource(id = R.color.lcweb_gray_1),
-                                modifier = Modifier.padding(5.dp)
-                            )
-                        }
-                        HorizontalDivider(
-                            color = colorResource(id = R.color.lcweb_red_1)
-                        )
-
-                        if (respostaEmail.corpo.isNotBlank()) {
-                            Text(
-                                text = respostaEmail.corpo,
-                                fontSize = 15.sp,
-                                color = colorResource(id = R.color.lcweb_gray_1),
-                                modifier = Modifier.padding(5.dp),
-                                textAlign = TextAlign.Justify
-                            )
-
-                            HorizontalDivider(
-                                color = colorResource(id = R.color.lcweb_red_1)
-                            )
-                        }
                     }
+
+
                 }
+
             }
+
+
 
         }
 

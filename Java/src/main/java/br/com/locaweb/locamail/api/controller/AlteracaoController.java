@@ -28,6 +28,24 @@ public class AlteracaoController {
         alteracaoService.atualizarLidoPorIdEmailEIdUsuario(lido, id_email, id_usuario);
     }
 
+    @PatchMapping("/atualizarExcluidoPorIdEmailEIdusuario")
+    @ResponseStatus(HttpStatus.OK)
+    public void atualizarExcluidoPorIdEmailEIdusuario(@RequestParam("excluido") Boolean excluido, @RequestParam("idEmail") Long id_email, @RequestParam("idUsuario") Long id_usuario) {
+        alteracaoService.atualizarLidoPorIdEmailEIdUsuario(excluido, id_email, id_usuario);
+    }
+
+    @PatchMapping("/atualizarSpamPorIdEmailEIdusuario")
+    @ResponseStatus(HttpStatus.OK)
+    public void atualizarSpamPorIdEmailEIdusuario(@RequestParam("spam") Boolean spam, @RequestParam("idEmail") Long id_email, @RequestParam("idUsuario") Long id_usuario) {
+        alteracaoService.atualizarSpamPorIdEmailEIdUsuario(spam, id_email, id_usuario);
+    }
+
+    @PatchMapping("/atualizarArquivadoPorIdEmailEIdusuario")
+    @ResponseStatus(HttpStatus.OK)
+    public void atualizarArquivadoPorIdEmailEIdusuario(@RequestParam("arquivado") Boolean arquivado, @RequestParam("idEmail") Long id_email, @RequestParam("idUsuario") Long id_usuario) {
+        alteracaoService.atualizarArquivadoPorIdEmailEIdUsuario(arquivado, id_email, id_usuario);
+    }
+
 
     @PatchMapping("/atualizarPastaPorIdEmailEIdUsuario")
     @ResponseStatus(HttpStatus.OK)
@@ -58,6 +76,12 @@ public class AlteracaoController {
     @ResponseStatus(HttpStatus.OK)
     public AlteracaoExibicaoDto listarAlteracaoPorIdEmailEIdUsuario(@RequestParam("idEmail") Long id_email, @RequestParam("idUsuario") Long id_usuario) {
         return alteracaoService.listarAlteracaoPorIdEmailEIdUsuario(id_email, id_usuario);
+    }
+
+    @GetMapping("/listarAlteracaoPorIdEmail")
+    @ResponseStatus(HttpStatus.OK)
+    public List<AlteracaoExibicaoDto> listarAlteracaoPorIdEmail(@RequestParam("idEmail") Long id_email) {
+        return alteracaoService.listarAlteracaoPorIdEmail(id_email);
     }
 
     @DeleteMapping("/excluiAlteracaoPorIdEmailEIdUsuario")

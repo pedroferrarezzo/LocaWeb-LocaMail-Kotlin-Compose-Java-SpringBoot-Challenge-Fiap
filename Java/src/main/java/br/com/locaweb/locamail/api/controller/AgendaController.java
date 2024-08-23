@@ -15,11 +15,22 @@ public class AgendaController {
     @Autowired
     private AgendaService agendaService;
 
-
     @GetMapping("/listarAgendaPorIdEmailEIdUsuario")
     @ResponseStatus(HttpStatus.OK)
     public List<AgendaExibicaoDto> listarAgendaPorIdEmailEIdUsuario(@RequestParam("idEmail") Long id_email, @RequestParam("idUsuario") Long id_usuario) {
         return agendaService.listarAgendaPorIdEmailEIdUsuario(id_email, id_usuario);
+    }
+
+    @DeleteMapping("/excluiAgenda")
+    @ResponseStatus(HttpStatus.OK)
+    public void excluiAgenda(@RequestParam("idAgenda") Long id_agenda) throws Exception {
+        agendaService.excluiAgenda(id_agenda);
+    }
+
+    @PatchMapping("/atualizaVisivelPorIdAgenda")
+    @ResponseStatus(HttpStatus.OK)
+    public void atualizaVisivelPorIdAgenda(@RequestParam("idAgenda") Long id_agenda, @RequestParam("visivel") Boolean visivel) {
+        agendaService.atualizaVisivelPorIdAgenda(id_agenda, visivel);
     }
 
 }
