@@ -31,7 +31,7 @@ public class AlteracaoController {
     @PatchMapping("/atualizarExcluidoPorIdEmailEIdusuario")
     @ResponseStatus(HttpStatus.OK)
     public void atualizarExcluidoPorIdEmailEIdusuario(@RequestParam("excluido") Boolean excluido, @RequestParam("idEmail") Long id_email, @RequestParam("idUsuario") Long id_usuario) {
-        alteracaoService.atualizarLidoPorIdEmailEIdUsuario(excluido, id_email, id_usuario);
+        alteracaoService.atualizarExcluidoPorIdEmailEIdUsuario(excluido, id_email, id_usuario);
     }
 
     @PatchMapping("/atualizarSpamPorIdEmailEIdusuario")
@@ -83,6 +83,39 @@ public class AlteracaoController {
     public List<AlteracaoExibicaoDto> listarAlteracaoPorIdEmail(@RequestParam("idEmail") Long id_email) {
         return alteracaoService.listarAlteracaoPorIdEmail(id_email);
     }
+
+
+    @GetMapping("/verificarLidoPorIdEmailEIdUsuario")
+    @ResponseStatus(HttpStatus.OK)
+    public Boolean verificarLidoPorIdEmailEIdUsuario(@RequestParam("idEmail") Long id_email, @RequestParam("idUsuario") Long id_usuario) {
+        return alteracaoService.verificarLidoPorIdEmailEIdUsuario(id_email, id_usuario);
+    }
+
+    @GetMapping("/verificarExcluidoPorIdEmailEIdUsuario")
+    @ResponseStatus(HttpStatus.OK)
+    public Boolean verificarExcluidoPorIdEmailEIdUsuario(@RequestParam("idEmail") Long id_email, @RequestParam("idUsuario") Long id_usuario) {
+        return alteracaoService.verificarExcluidoPorIdEmailEIdUsuario(id_email, id_usuario);
+    }
+
+    @GetMapping("/verificarSpamPorIdEmailEIdUsuario")
+    @ResponseStatus(HttpStatus.OK)
+    public Boolean verificarSpamPorIdEmailEIdUsuario(@RequestParam("idEmail") Long id_email, @RequestParam("idUsuario") Long id_usuario) {
+        return alteracaoService.verificarSpamPorIdEmailEIdUsuario(id_email, id_usuario);
+    }
+
+    @GetMapping("/verificarArquivadoPorIdEmailEIdUsuario")
+    @ResponseStatus(HttpStatus.OK)
+    public Boolean verificarArquivadoPorIdEmailEIdUsuario(@RequestParam("idEmail") Long id_email, @RequestParam("idUsuario") Long id_usuario) {
+        return alteracaoService.verificarArquivadoPorIdEmailEIdUsuario(id_email, id_usuario);
+    }
+
+    @GetMapping("/verificarImportantePorIdEmailEIdUsuario")
+    @ResponseStatus(HttpStatus.OK)
+    public Boolean verificarImportantePorIdEmailEIdUsuario(@RequestParam("idEmail") Long id_email, @RequestParam("idUsuario") Long id_usuario) {
+        return alteracaoService.verificarImportantePorIdEmailEIdUsuario(id_email, id_usuario);
+    }
+
+
 
     @DeleteMapping("/excluiAlteracaoPorIdEmailEIdUsuario")
     @ResponseStatus(HttpStatus.OK)

@@ -60,6 +60,24 @@ interface LocaMailApiService {
     @GET("/usuario/listarUsuariosAutenticados")
     fun listarUsuariosAutenticados(): Call<List<Usuario>?>
 
+    @GET("/alteracao/verificarLidoPorIdEmailEIdUsuario")
+    fun verificarLidoPorIdEmailEIdUsuario(@Query("idEmail") id_email: Long, @Query("idUsuario") id_usuario: Long): Call<Boolean?>
+
+
+    @GET("/alteracao/verificarExcluidoPorIdEmailEIdUsuario")
+    fun verificarExcluidoPorIdEmailEIdUsuario(@Query("idEmail") id_email: Long, @Query("idUsuario") id_usuario: Long): Call<Boolean?>
+
+
+    @GET("/alteracao/verificarSpamPorIdEmailEIdUsuario")
+    fun verificarSpamPorIdEmailEIdUsuario(@Query("idEmail") id_email: Long, @Query("idUsuario") id_usuario: Long): Call<Boolean?>
+
+    @GET("/alteracao/verificarArquivadoPorIdEmailEIdUsuario")
+    fun verificarArquivadoPorIdEmailEIdUsuario(@Query("idEmail") id_email: Long, @Query("idUsuario") id_usuario: Long): Call<Boolean?>
+
+    @GET("/alteracao/verificarImportantePorIdEmailEIdUsuario")
+    fun verificarImportantePorIdEmailEIdUsuario(@Query("idEmail") id_email: Long, @Query("idUsuario") id_usuario: Long): Call<Boolean?>
+
+
     @GET("/usuario/listarUsuariosNaoSelecionados")
     fun listarUsuariosNaoSelecionados(): Call<List<Usuario>?>
 

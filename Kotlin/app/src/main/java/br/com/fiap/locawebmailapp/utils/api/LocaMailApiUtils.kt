@@ -10,6 +10,7 @@ import br.com.fiap.locawebmailapp.model.RespostaEmail
 import br.com.fiap.locawebmailapp.model.Usuario
 import br.com.fiap.locawebmailapp.model.UsuarioSemSenha
 import br.com.fiap.locawebmailapp.service.LocaMailApiFactory
+import br.com.fiap.locawebmailapp.utils.getValidatedString
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -319,6 +320,13 @@ fun callLocaMailApiListarEmailPorId(
     call.enqueue(object : Callback<Email?> {
         override fun onResponse(call: Call<Email?>, response: Response<Email?>) {
             if (response.isSuccessful && response.body() != null) {
+
+                response.body()!!.cc = getValidatedString(response.body()!!.cc)
+                response.body()!!.cco = getValidatedString(response.body()!!.cco)
+                response.body()!!.corpo = getValidatedString(response.body()!!.corpo)
+                response.body()!!.destinatario = getValidatedString(response.body()!!.destinatario)
+                response.body()!!.assunto = getValidatedString(response.body()!!.assunto)
+
                 onSuccess(response.body()!!)
             } else if (response.isSuccessful == false) {
                 onError(Throwable())
@@ -698,6 +706,132 @@ fun callLocaMailApiExcluiAlteracaoPorIdEmailEIdUsuario(
         }
 
         override fun onFailure(call: Call<Unit>, t: Throwable) {
+            onError(t)
+        }
+    })
+}
+
+
+fun callLocaMailApiVerificarLidoPorIdEmailEIdUsuario(
+    id_email: Long,
+    id_usuario: Long,
+    onSuccess: (Boolean?) -> Unit,
+    onError: (Throwable) -> Unit
+) {
+    val callLocaMailApiService = LocaMailApiFactory().getLocaMailApiFactory().verificarLidoPorIdEmailEIdUsuario(id_email, id_usuario)
+
+    callLocaMailApiService.enqueue(object : Callback<Boolean?> {
+        override fun onResponse(call: Call<Boolean?>, response: Response<Boolean?>) {
+            if (response.isSuccessful && response.body() != null) {
+                onSuccess(response.body()!!)
+            } else if (response.isSuccessful == false) {
+                onError(Throwable())
+            } else {
+                onSuccess(null)
+            }
+        }
+
+        override fun onFailure(call: Call<Boolean?>, t: Throwable) {
+            onError(t)
+        }
+    })
+}
+
+fun callLocaMailApiVerificarExcluidoPorIdEmailEIdUsuario(
+    id_email: Long,
+    id_usuario: Long,
+    onSuccess: (Boolean?) -> Unit,
+    onError: (Throwable) -> Unit
+) {
+    val callLocaMailApiService = LocaMailApiFactory().getLocaMailApiFactory().verificarExcluidoPorIdEmailEIdUsuario(id_email, id_usuario)
+
+    callLocaMailApiService.enqueue(object : Callback<Boolean?> {
+        override fun onResponse(call: Call<Boolean?>, response: Response<Boolean?>) {
+            if (response.isSuccessful && response.body() != null) {
+                onSuccess(response.body()!!)
+            } else if (response.isSuccessful == false) {
+                onError(Throwable())
+            } else {
+                onSuccess(null)
+            }
+        }
+
+        override fun onFailure(call: Call<Boolean?>, t: Throwable) {
+            onError(t)
+        }
+    })
+}
+
+fun callLocaMailApiVerificarSpamPorIdEmailEIdUsuario(
+    id_email: Long,
+    id_usuario: Long,
+    onSuccess: (Boolean?) -> Unit,
+    onError: (Throwable) -> Unit
+) {
+    val callLocaMailApiService = LocaMailApiFactory().getLocaMailApiFactory().verificarSpamPorIdEmailEIdUsuario(id_email, id_usuario)
+
+    callLocaMailApiService.enqueue(object : Callback<Boolean?> {
+        override fun onResponse(call: Call<Boolean?>, response: Response<Boolean?>) {
+            if (response.isSuccessful && response.body() != null) {
+                onSuccess(response.body()!!)
+            } else if (response.isSuccessful == false) {
+                onError(Throwable())
+            } else {
+                onSuccess(null)
+            }
+        }
+
+        override fun onFailure(call: Call<Boolean?>, t: Throwable) {
+            onError(t)
+        }
+    })
+}
+
+fun callLocaMailApiVerificarArquivadoPorIdEmailEIdUsuario(
+    id_email: Long,
+    id_usuario: Long,
+    onSuccess: (Boolean?) -> Unit,
+    onError: (Throwable) -> Unit
+) {
+    val callLocaMailApiService = LocaMailApiFactory().getLocaMailApiFactory().verificarArquivadoPorIdEmailEIdUsuario(id_email, id_usuario)
+
+    callLocaMailApiService.enqueue(object : Callback<Boolean?> {
+        override fun onResponse(call: Call<Boolean?>, response: Response<Boolean?>) {
+            if (response.isSuccessful && response.body() != null) {
+                onSuccess(response.body()!!)
+            } else if (response.isSuccessful == false) {
+                onError(Throwable())
+            } else {
+                onSuccess(null)
+            }
+        }
+
+        override fun onFailure(call: Call<Boolean?>, t: Throwable) {
+            onError(t)
+        }
+    })
+}
+
+fun callLocaMailApiVerificarImportantePorIdEmailEIdUsuario(
+    id_email: Long,
+    id_usuario: Long,
+    onSuccess: (Boolean?) -> Unit,
+    onError: (Throwable) -> Unit
+) {
+    val callLocaMailApiService = LocaMailApiFactory().getLocaMailApiFactory().verificarImportantePorIdEmailEIdUsuario(id_email, id_usuario)
+
+    callLocaMailApiService.enqueue(object : Callback<Boolean?> {
+        override fun onResponse(call: Call<Boolean?>, response: Response<Boolean?>) {
+            if (response.isSuccessful && response.body() != null) {
+                onSuccess(response.body()!!)
+            } else if (response.isSuccessful == false) {
+                onError(Throwable())
+            } else {
+                onSuccess(null)
+            }
+        }
+
+        override fun onFailure(call: Call<Boolean?>, t: Throwable) {
             onError(t)
         }
     })

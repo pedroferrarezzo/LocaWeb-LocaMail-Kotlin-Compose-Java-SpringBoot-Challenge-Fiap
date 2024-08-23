@@ -15,6 +15,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TimePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -109,37 +111,6 @@ fun VisualizaEmailScreen(
 
     var alteracao: Alteracao? = null
 
-    if (usuarioSelecionado.value != null) {
-        callLocaMailApiListarAlteracaoPorIdEmailEIdUsuario(
-            idEmail,
-            usuarioSelecionado.value!!.id_usuario,
-            onSuccess = { alteracaoRetornada ->
-
-                alteracao = alteracaoRetornada
-            },
-            onError = { error ->
-                isError.value = true
-                isLoading.value = false
-            }
-        )
-
-        callLocaMailApiListarAgendaPorIdEmailEIdUsuario(
-            idEmail,
-            usuarioSelecionado.value!!.id_usuario,
-            onSuccess = { listAgendaRetornado ->
-
-                agendaEmailList = listAgendaRetornado
-
-                if (agendaEmailList != null) {
-                    agendaEmailStateList = agendaEmailList!!.toMutableStateList()
-                }
-            },
-            onError = { error ->
-                isError.value = true
-                isLoading.value = false
-            }
-        )
-    }
 
     val todosDestinatarios = arrayListOf<String>()
 
@@ -148,51 +119,13 @@ fun VisualizaEmailScreen(
     }
     var respostasEmailList: List<RespostaEmail>? = null
 
-
-    callLocaMailApiListarRespostasEmailPorIdEmail(
-        idEmail,
-        onSuccess = { repostaEmailRetornada ->
-
-            if (repostaEmailRetornada != null) {
-                respostasEmailList = repostaEmailRetornada
-                respostasEmailStateList = respostasEmailList!!.toMutableStateList()
-
-            }
-        },
-        onError = { error ->
-            isError.value = true
-            isLoading.value = false
-        }
-    )
-
-
-    callLocaMailApiListarAnexosArraybytePorIdEmail(
-        idEmail,
-        onSuccess = { byteArrayListRetornado ->
-            val anexoArrayByteList = byteArrayListRetornado;
-
-            if (anexoArrayByteList != null) {
-                anexoBitMapList = anexoArrayByteList.map {
-                    byteArrayToBitmap(it)
-                }
-            }
-        },
-        onError = { error ->
-            isError.value = true
-            isLoading.value = false
-        }
-    )
-
-
     val isAgendaAtrelada = remember {
         mutableStateOf<Boolean?>(null)
     }
 
     if (agendaEmailList != null) {
-        isAgendaAtrelada.value = if (agendaEmailList!!.isNotEmpty()) true else false
-
+        isAgendaAtrelada.value = if (agendaEmailList.isNotEmpty()) true else false
     }
-
 
     val isImportant = remember {
         if (alteracao != null) mutableStateOf(alteracao!!.importante) else mutableStateOf(false)
@@ -210,68 +143,148 @@ fun VisualizaEmailScreen(
         if (alteracao != null) mutableStateOf(alteracao!!.excluido) else mutableStateOf(false)
     }
 
-    callLocaMailApiListarUsuarioSelecionado(
-        onSuccess = { usuarioRetornado ->
-            usuarioSelecionado.value = usuarioRetornado
-        },
-        onError = { error ->
-            isError.value = true
-            isLoading.value = false
+
+    val email: MutableState<Email?> = remember {
+        mutableStateOf(null)
+    }
+
+
+    LaunchedEffect(key1 = Unit) {
+        if (usuarioSelecionado.value != null) {
+
+            callLocaMailApiListarAlteracaoPorIdEmailEIdUsuario(
+                idEmail,
+                usuarioSelecionado.value!!.id_usuario,
+                onSuccess = { alteracaoRetornada ->
+
+                    alteracao = alteracaoRetornada
+                },
+                onError = { error ->
+                    isError.value = true
+                    isLoading.value = false
+                }
+            )
+
+            callLocaMailApiListarAgendaPorIdEmailEIdUsuario(
+                idEmail,
+                usuarioSelecionado.value!!.id_usuario,
+                onSuccess = { listAgendaRetornado ->
+
+                    agendaEmailList = listAgendaRetornado
+
+                    if (agendaEmailList != null) {
+                        agendaEmailStateList = agendaEmailList!!.toMutableStateList()
+                    }
+                },
+                onError = { error ->
+                    isError.value = true
+                    isLoading.value = false
+                }
+            )
 
         }
-    )
+        callLocaMailApiListarRespostasEmailPorIdEmail(
+            idEmail,
+            onSuccess = { repostaEmailRetornada ->
 
-    var email: Email? = null
+                if (repostaEmailRetornada != null) {
+                    respostasEmailList = repostaEmailRetornada
+                    respostasEmailStateList = respostasEmailList!!.toMutableStateList()
 
-    callLocaMailApiListarEmailPorId(
-        idEmail,
-        onSuccess = { emailRetornado ->
-            email = emailRetornado
-
-            if (email != null) {
-                if (isTodasContasScreen) {
-                    if (respostasEmailList != null) {
-                        atualizarTodosDestinatariosList(
-                            todosDestinatarios,
-                            email!!,
-                            respostasEmailList!!
-                        )
-                    }
-                    atualizarIsImportantParaUsuariosRelacionados(
-                        todosDestinatarios,
-                        isImportant,
-                        email!!
-                    )
-
-                    atualizarisArchiveParaUsuariosRelacionados(
-                        todosDestinatarios,
-                        isArchive,
-                        email!!
-                    )
-
-
-                    atualizarisSpamParaUsuariosRelacionados(
-                        todosDestinatarios,
-                        isSpam,
-                        email!!
-                    )
-
-                    atualizarisExcluidoParaUsuariosRelacionados(
-                        todosDestinatarios,
-                        isExcluido,
-                        email!!
-                    )
                 }
+            },
+            onError = { error ->
+                isError.value = true
+                isLoading.value = false
+            }
+        )
+
+        callLocaMailApiListarAnexosArraybytePorIdEmail(
+            idEmail,
+            onSuccess = { byteArrayListRetornado ->
+                val anexoArrayByteList = byteArrayListRetornado;
+
+                if (anexoArrayByteList != null) {
+                    anexoBitMapList = anexoArrayByteList.map {
+                        byteArrayToBitmap(it)
+                    }
+                }
+            },
+            onError = { error ->
+                isError.value = true
+                isLoading.value = false
+            }
+        )
+
+        callLocaMailApiListarUsuarioSelecionado(
+            onSuccess = { usuarioRetornado ->
+                usuarioSelecionado.value = usuarioRetornado
+            },
+            onError = { error ->
+                isError.value = true
+                isLoading.value = false
 
             }
-        },
-        onError = { error ->
-            isError.value = true
-            isLoading.value = false
+        )
 
-        }
-    )
+        callLocaMailApiListarEmailPorId(
+            idEmail,
+            onSuccess = { emailRetornado ->
+                email.value = emailRetornado
 
+                if (email.value != null) {
+                    isLoading.value = false
+                    if (isTodasContasScreen) {
+                        if (respostasEmailList != null) {
+                            atualizarTodosDestinatariosList(
+                                todosDestinatarios,
+                                email.value!!,
+                                respostasEmailList!!
+                            )
+                        }
+                        atualizarIsImportantParaUsuariosRelacionados(
+                            todosDestinatarios,
+                            isImportant,
+                            email.value!!,
+                            isLoading = isLoading,
+                            isError = isError
+                        )
+
+                        atualizarisArchiveParaUsuariosRelacionados(
+                            todosDestinatarios,
+                            isArchive,
+                            email.value!!,
+                            isLoading = isLoading,
+                            isError = isError
+                        )
+
+
+                        atualizarisSpamParaUsuariosRelacionados(
+                            todosDestinatarios,
+                            isSpam,
+                            email.value!!,
+                            isLoading = isLoading,
+                            isError = isError
+                        )
+
+                        atualizarisExcluidoParaUsuariosRelacionados(
+                            todosDestinatarios,
+                            isExcluido,
+                            email.value!!,
+                            isLoading = isLoading,
+                            isError = isError
+                        )
+                    }
+
+                }
+            },
+            onError = { error ->
+                isError.value = true
+                isLoading.value = false
+
+            }
+        )
+    }
 
     if (isLoading.value) {
         BackHandler {
@@ -334,7 +347,7 @@ fun VisualizaEmailScreen(
             }
         } else {
 
-            if (email != null) {
+            if (email.value != null) {
                 Column(
                     modifier = Modifier.fillMaxSize()
                 ) {
@@ -347,12 +360,12 @@ fun VisualizaEmailScreen(
 
                                 if (usuarioSelecionado.value != null) {
                                     callLocaMailApiExcluiAlteracaoPorIdEmailEIdUsuario(
-                                        email!!.id_email,
+                                        email.value!!.id_email,
                                         usuarioSelecionado.value!!.id_usuario,
                                         onSuccess = {
 
                                             callLocaMailApiListarAlteracaoPorIdEmail(
-                                                email!!.id_email,
+                                                email.value!!.id_email,
                                                 onSuccess = { listAlteracaoRetornado ->
 
                                                     val alteracaoList = listAlteracaoRetornado
@@ -360,7 +373,7 @@ fun VisualizaEmailScreen(
                                                     if (alteracaoList!!.isEmpty()) {
 
                                                         callLocaMailApiExcluirAnexoPorIdEmail(
-                                                            email!!.id_email,
+                                                            email.value!!.id_email,
                                                             onSuccess = {
                                                             },
                                                             onError = { error ->
@@ -371,7 +384,7 @@ fun VisualizaEmailScreen(
                                                         )
 
                                                         callLocaMailApiListarRespostasEmailPorIdEmail(
-                                                            email!!.id_email,
+                                                            email.value!!.id_email,
                                                             onSuccess = { listRespostaRetornado ->
                                                                 if (listRespostaRetornado != null) {
                                                                     for (respostaEmail in listRespostaRetornado) {
@@ -397,7 +410,7 @@ fun VisualizaEmailScreen(
                                                         )
 
                                                         callLocaMailApiExcluirRespostaEmailPorIdEmail(
-                                                            email!!.id_email,
+                                                            email.value!!.id_email,
                                                             onSuccess = {
                                                             },
                                                             onError = { error ->
@@ -407,7 +420,7 @@ fun VisualizaEmailScreen(
                                                         )
 
                                                         callLocaMailApiExcluirEmail(
-                                                            email!!.id_email,
+                                                            email.value!!.id_email,
                                                             onSuccess = {
                                                                 Toast.makeText(
                                                                     context,
@@ -499,7 +512,7 @@ fun VisualizaEmailScreen(
 
                                                         callLocaMailApiAtualizarExcluidoPorIdEmailEIdusuario(
                                                             true,
-                                                            email!!.id_email,
+                                                            email.value!!.id_email,
                                                             idDestinatario,
                                                             onSuccess = {
                                                                 Toast.makeText(
@@ -527,7 +540,7 @@ fun VisualizaEmailScreen(
                                     if (usuarioSelecionado.value != null) {
                                         callLocaMailApiAtualizarExcluidoPorIdEmailEIdusuario(
                                             true,
-                                            email!!.id_email,
+                                            email.value!!.id_email,
                                             usuarioSelecionado.value!!.id_usuario,
                                             onSuccess = {
                                                 Toast.makeText(
@@ -570,7 +583,7 @@ fun VisualizaEmailScreen(
 
                                                     callLocaMailApiAtualizarSpamPorIdEmailEIdusuario(
                                                         isSpam.value,
-                                                        email!!.id_email,
+                                                        email.value!!.id_email,
                                                         idDestinatario,
                                                         onSuccess = {
 
@@ -597,7 +610,7 @@ fun VisualizaEmailScreen(
                                 if (usuarioSelecionado.value != null) {
                                     callLocaMailApiAtualizarSpamPorIdEmailEIdusuario(
                                         isSpam.value,
-                                        email!!.id_email,
+                                        email.value!!.id_email,
                                         usuarioSelecionado.value!!.id_usuario,
                                         onSuccess = {
 
@@ -630,7 +643,7 @@ fun VisualizaEmailScreen(
 
                                                     callLocaMailApiAtualizarImportantePorIdEmail(
                                                         isImportant.value,
-                                                        email!!.id_email,
+                                                        email.value!!.id_email,
                                                         idDestinatario,
                                                         onSuccess = {
                                                         },
@@ -658,7 +671,7 @@ fun VisualizaEmailScreen(
                                 if (usuarioSelecionado.value != null) {
                                     callLocaMailApiAtualizarImportantePorIdEmail(
                                         isImportant.value,
-                                        email!!.id_email,
+                                        email.value!!.id_email,
                                         usuarioSelecionado.value!!.id_usuario,
                                         onSuccess = {
                                         },
@@ -691,7 +704,7 @@ fun VisualizaEmailScreen(
 
                                                     callLocaMailApiAtualizarArquivadoPorIdEmailEIdusuario(
                                                         isArchive.value,
-                                                        email!!.id_email,
+                                                        email.value!!.id_email,
                                                         idDestinatario,
                                                         onSuccess = {
 
@@ -719,7 +732,7 @@ fun VisualizaEmailScreen(
 
                                     callLocaMailApiAtualizarArquivadoPorIdEmailEIdusuario(
                                         isArchive.value,
-                                        email!!.id_email,
+                                        email.value!!.id_email,
                                         usuarioSelecionado.value!!.id_usuario,
                                         onSuccess = {
 
@@ -757,7 +770,7 @@ fun VisualizaEmailScreen(
                                 respostaEmail.id_resposta_email,
                                 onSuccess = {
                                     if (respostasEmailStateList != null) {
-                                        respostasEmailStateList!!.remove(respostaEmail)
+                                        respostasEmailStateList.remove(respostaEmail)
                                         Toast.makeText(
                                             context,
                                             toastMessageDraftMailDeleted,
@@ -774,7 +787,7 @@ fun VisualizaEmailScreen(
                         onClickDraftRespostaEmailEdit = { respostaEmail ->
                             navController.navigate("editarespostaemailscreen/${respostaEmail.id_resposta_email}")
                         },
-                        email = email!!,
+                        email = email.value!!,
                         anexoBitMapList = anexoBitMapList,
                         timeState = timeState,
                         usuarioSelecionado = usuarioSelecionado,
@@ -829,7 +842,7 @@ fun VisualizaEmailScreen(
                                     callLocaMailApiExcluiAgenda(
                                         agenda.id_agenda,
                                         onSuccess = {
-                                            if (agendaEmailStateList != null){
+                                            if (agendaEmailStateList != null) {
                                                 agendaEmailStateList!!.remove(agenda)
                                             }
                                         },

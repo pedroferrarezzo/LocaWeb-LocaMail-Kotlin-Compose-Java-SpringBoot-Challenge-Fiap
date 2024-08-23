@@ -71,6 +71,7 @@ fun ColumnEmailDetails(
     isLoading: MutableState<Boolean>,
     isError: MutableState<Boolean>
 ) {
+
     LazyColumn {
 
         if (isAgendaAtrelada.value == true) {
