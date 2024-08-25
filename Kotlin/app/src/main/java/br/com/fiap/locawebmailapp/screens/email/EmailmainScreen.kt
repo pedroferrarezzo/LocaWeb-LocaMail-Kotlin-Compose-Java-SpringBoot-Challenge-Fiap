@@ -18,6 +18,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -117,6 +118,86 @@ fun EMailMainScreen(navController: NavController) {
         mutableStateListOf<Usuario>()
     }
 
+    val usuarioSelecionado = remember {
+        mutableStateOf<Usuario?>(null)
+    }
+
+    val listPastaState = remember {
+        mutableStateListOf<Pasta>()
+    }
+
+    val receivedStateEmailList = remember {
+        mutableStateListOf<EmailComAlteracao>()
+    }
+
+    val attachEmailList = remember {
+        mutableStateListOf<Long?>()
+    }
+
+    LaunchedEffect(key1 = Unit) {
+        callLocaMailApiListarUsuarioSelecionado(
+            onSuccess = { usuarioRetornado ->
+                usuarioSelecionado.value = usuarioRetornado
+
+                if (usuarioSelecionado.value != null) {
+
+                    var receivedEmailList: List<EmailComAlteracao>?
+
+                    callLocaMailApiListarEmailsPorDestinatario(
+                        usuarioSelecionado.value!!.email,
+                        usuarioSelecionado.value!!.id_usuario,
+                        onSuccess = { listMailRetornado ->
+                            receivedEmailList = listMailRetornado
+
+                            if (receivedEmailList != null) {
+
+                                receivedEmailList!!.forEach { email ->
+                                    if (!receivedStateEmailList.contains(email)) {
+                                        receivedStateEmailList.add(email)
+                                    }
+                                }
+
+                                callLocaMailApiListarPastasPorIdUsuario(
+                                    usuarioSelecionado.value!!.id_usuario,
+                                    onSuccess = { listPastaRetornado ->
+
+                                        listPastaState.addAll(listPastaRetornado!!)
+
+                                        callLocaMailApiListarAnexosIdEmail(
+                                            onSuccess = { listLongRetornado ->
+
+                                                if (listLongRetornado != null) {
+                                                    attachEmailList.addAll(listLongRetornado)
+                                                }
+
+                                            },
+                                            onError = { error ->
+                                                isError.value = true
+                                                isLoading.value = false
+                                            }
+                                        )
+                                    },
+                                    onError = { error ->
+                                        isError.value = true
+                                        isLoading.value = false
+                                    }
+                                )
+                            }
+                        },
+                        onError = { error ->
+                            isError.value = true
+                            isLoading.value = false
+                        }
+                    )
+                }
+            },
+            onError = { error ->
+                isError.value = true
+                isLoading.value = false
+            }
+        )
+    }
+
     if (isLoading.value) {
         BackHandler {
             Toast.makeText(
@@ -177,80 +258,6 @@ fun EMailMainScreen(navController: NavController) {
                 )
             }
         } else {
-
-            val usuarioSelecionado = remember {
-                mutableStateOf<Usuario?>(null)
-            }
-
-            val listPastaState = remember {
-                mutableStateListOf<Pasta>()
-            }
-
-            val receivedStateEmailList = remember {
-                mutableStateListOf<EmailComAlteracao>()
-            }
-
-            var attachEmailList: List<Long>? = null
-
-            callLocaMailApiListarUsuarioSelecionado(
-                onSuccess = { usuarioRetornado ->
-                    usuarioSelecionado.value = usuarioRetornado
-
-                    if (usuarioSelecionado.value != null) {
-
-                        var receivedEmailList: List<EmailComAlteracao>?
-
-                        callLocaMailApiListarEmailsPorDestinatario(
-                            usuarioSelecionado.value!!.email,
-                            usuarioSelecionado.value!!.id_usuario,
-                            onSuccess = { listMailRetornado ->
-                                receivedEmailList = listMailRetornado
-
-                                if (receivedEmailList != null) {
-
-                                    receivedEmailList!!.forEach { email ->
-                                        if (!receivedStateEmailList.contains(email)) {
-                                            receivedStateEmailList.add(email)
-                                        }
-                                    }
-
-                                    callLocaMailApiListarPastasPorIdUsuario(
-                                        usuarioSelecionado.value!!.id_usuario,
-                                        onSuccess = { listPastaRetornado ->
-
-                                            listPastaState.addAll(listPastaRetornado!!)
-
-                                            callLocaMailApiListarAnexosIdEmail(
-                                                onSuccess = { listLongRetornado ->
-                                                    attachEmailList = listLongRetornado
-
-                                                },
-                                                onError = { error ->
-                                                    isError.value = true
-                                                    isLoading.value = false
-                                                }
-                                            )
-                                        },
-                                        onError = { error ->
-                                            isError.value = true
-                                            isLoading.value = false
-                                        }
-                                    )
-                                }
-                            },
-                            onError = { error ->
-                                isError.value = true
-                                isLoading.value = false
-                            }
-                        )
-                    }
-                },
-                onError = { error ->
-                    isError.value = true
-                    isLoading.value = false
-                }
-            )
-
 
             ModalNavDrawer(
                 selectedDrawer = selectedDrawer,
@@ -344,7 +351,7 @@ fun EMailMainScreen(navController: NavController) {
                         if (!receivedStateEmailList.isEmpty()) {
 
                             LazyColumn() {
-                                items(receivedStateEmailList.reversed(), key = {
+                                items(receivedStateEmailList, key = {
                                     it.id_alteracao
                                 }) {
 

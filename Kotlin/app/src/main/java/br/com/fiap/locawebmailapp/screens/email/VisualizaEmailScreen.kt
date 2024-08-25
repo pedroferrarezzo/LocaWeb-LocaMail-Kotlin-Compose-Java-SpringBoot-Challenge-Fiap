@@ -1,6 +1,7 @@
 package br.com.fiap.locawebmailapp.screens.email
 
 import android.graphics.Bitmap
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
@@ -103,7 +104,9 @@ fun VisualizaEmailScreen(
         mutableStateOf<Usuario?>(null)
     }
 
-    var anexoBitMapList: List<Bitmap> = listOf()
+    val anexoBitMapList = remember {
+        mutableStateListOf<Bitmap?>()
+    }
 
     var agendaEmailStateList: SnapshotStateList<Agenda>? = null
 
@@ -114,7 +117,7 @@ fun VisualizaEmailScreen(
 
     val todosDestinatarios = arrayListOf<String>()
 
-    var respostasEmailStateList: SnapshotStateList<RespostaEmail?> = remember {
+    val respostasEmailStateList: SnapshotStateList<RespostaEmail?> = remember {
         mutableStateListOf<RespostaEmail?>()
     }
     var respostasEmailList: List<RespostaEmail>? = null
@@ -189,8 +192,11 @@ fun VisualizaEmailScreen(
 
                 if (repostaEmailRetornada != null) {
                     respostasEmailList = repostaEmailRetornada
-                    respostasEmailStateList = respostasEmailList!!.toMutableStateList()
-
+                    respostasEmailList!!.forEach { resposta ->
+                        if (!respostasEmailStateList.contains(resposta)) {
+                            respostasEmailStateList.add(resposta)
+                        }
+                    }
                 }
             },
             onError = { error ->
@@ -205,9 +211,9 @@ fun VisualizaEmailScreen(
                 val anexoArrayByteList = byteArrayListRetornado;
 
                 if (anexoArrayByteList != null) {
-                    anexoBitMapList = anexoArrayByteList.map {
+                    anexoBitMapList.addAll(anexoArrayByteList.map {
                         byteArrayToBitmap(it)
-                    }
+                    })
                 }
             },
             onError = { error ->

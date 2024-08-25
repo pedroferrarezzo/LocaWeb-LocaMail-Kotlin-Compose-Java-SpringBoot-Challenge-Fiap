@@ -59,10 +59,13 @@ public class EmailService {
         }
     }
 
-    public void atualizarEmail(EmailCadastroDto emailCadastroDto) {
+    public EmailExibicaoDto atualizarEmail(EmailCadastroDto emailCadastroDto) {
         Email email = new Email();
         BeanUtils.copyProperties(emailCadastroDto, email);
-        emailRepository.save(email);
+
+
+
+        return new EmailExibicaoDto(emailRepository.save(email));
     }
 
     public EmailExibicaoDto listarEmailPorId(Long id_email) {
@@ -123,6 +126,8 @@ public class EmailService {
                 .filter(email -> {
                     List<RespostaEmail> respostaEmailList =
                             respostaEmailRepository.listarRespostasEmailPorIdEmail(email.getId_email());
+
+
 
                     return stringParaLista(email.getDestinatario()).contains(destinatario) ||
                             stringParaLista(email.getCc()).contains(destinatario) ||

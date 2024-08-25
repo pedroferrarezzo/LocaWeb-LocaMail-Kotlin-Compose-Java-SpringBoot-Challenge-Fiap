@@ -1,8 +1,13 @@
 package br.com.locaweb.locamail.api.controller;
 
 
+import br.com.locaweb.locamail.api.dto.anexo.AnexoCadastroDto;
+import br.com.locaweb.locamail.api.dto.anexo.AnexoExibicaoDto;
+import br.com.locaweb.locamail.api.dto.anexoRespostaEmail.AnexoRespostaEmailCadastroDto;
+import br.com.locaweb.locamail.api.dto.anexoRespostaEmail.AnexoRespostaEmailExibicaoDto;
 import br.com.locaweb.locamail.api.model.AnexoRespostaEmail;
 import br.com.locaweb.locamail.api.service.AnexoRespostaEmailService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +20,12 @@ public class AnexoRespostaEmailController {
 
     @Autowired
     private AnexoRespostaEmailService anexoRespostaEmailService;
+
+    @PostMapping("/criarAnexo")
+    @ResponseStatus(HttpStatus.CREATED)
+    public AnexoRespostaEmailExibicaoDto criarAnexo(@RequestBody @Valid AnexoRespostaEmailCadastroDto anexoRespostaEmailCadastroDto) {
+        return anexoRespostaEmailService.criarAnexo(anexoRespostaEmailCadastroDto);
+    }
 
     @DeleteMapping("/excluirAnexoPorIdRespostaEmail")
     @ResponseStatus(HttpStatus.OK)

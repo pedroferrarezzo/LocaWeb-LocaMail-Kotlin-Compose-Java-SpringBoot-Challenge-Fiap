@@ -2,6 +2,8 @@ package br.com.fiap.locawebmailapp.service
 
 import br.com.fiap.locawebmailapp.model.Agenda
 import br.com.fiap.locawebmailapp.model.Alteracao
+import br.com.fiap.locawebmailapp.model.Anexo
+import br.com.fiap.locawebmailapp.model.AnexoRespostaEmail
 import br.com.fiap.locawebmailapp.model.Convidado
 import br.com.fiap.locawebmailapp.model.Email
 import br.com.fiap.locawebmailapp.model.EmailComAlteracao
@@ -9,14 +11,13 @@ import br.com.fiap.locawebmailapp.model.Pasta
 import br.com.fiap.locawebmailapp.model.RespostaEmail
 import br.com.fiap.locawebmailapp.model.Usuario
 import br.com.fiap.locawebmailapp.model.UsuarioSemSenha
-import br.com.fiap.locawebmailapp.model.ai.GeminiRequest
-import br.com.fiap.locawebmailapp.model.ai.GeminiResponse
 import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.PATCH
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Query
 
 interface LocaMailApiService {
@@ -29,6 +30,24 @@ interface LocaMailApiService {
 
     @POST("/usuario/criarUsuario")
     fun criarUsuario(@Body usuario: Usuario): Call<UsuarioSemSenha?>
+
+    @POST("/respostaEmail/criarRespostaEmail")
+    fun criarRespostaEmail(@Body respostaEmail: RespostaEmail): Call<RespostaEmail?>
+
+    @POST("/anexoRespostaEmail/criarAnexo")
+    fun criarAnexoRespostaEmail(@Body anexoRespostaEmail: AnexoRespostaEmail): Call<AnexoRespostaEmail?>
+
+    @POST("/anexo/criarAnexo")
+    fun criarAnexo(@Body anexo: Anexo): Call<Anexo?>
+
+    @PUT("/email/atualizarEmail")
+    fun atualizarEmail(@Body email: Email): Call<Email?>
+
+    @PUT("/respostaEmail/atualizarRespostaEmail")
+    fun atualizarRespostaEmail(@Body respostaEmail: RespostaEmail): Call<RespostaEmail?>
+
+    @GET("/usuario/listarUsuarios")
+    fun listarUsuarios(): Call<List<Usuario>?>
 
     @POST("/alteracao/criarAlteracao")
     fun criarAlteracao(@Body alteracao: Alteracao): Call<Alteracao?>
@@ -143,6 +162,16 @@ interface LocaMailApiService {
 
     @GET("/respostaEmail/listarRespostasEmailPorIdEmail")
     fun listarRespostasEmailPorIdEmail(@Query("idEmail") id_email: Long): Call<List<RespostaEmail>?>
+
+
+    @GET("/respostaEmail/listarRespostaEmailPorIdRespostaEmail")
+    fun listarRespostaEmailPorIdRespostaEmail(@Query("idRespostaEmail") id_resposta_email: Long): Call<RespostaEmail?>
+
+
+
+    @GET("/alteracao/listarAltIdUsuarioPorIdEmail")
+    fun listarAltIdUsuarioPorIdEmail(@Query("idEmail") id_email: Long): Call<List<Long>?>
+
 
     @GET("/alteracao/listarAlteracaoPorIdUsuarioEIdPasta")
     fun listarAlteracaoPorIdUsuarioEIdPasta(@Query("idUsuario") id_usuario: Long, @Query("pasta") pasta: Long): Call<List<Alteracao>?>

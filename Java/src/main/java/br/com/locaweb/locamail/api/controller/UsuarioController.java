@@ -23,6 +23,12 @@ public class UsuarioController {
         return usuarioService.retornaUsarioPorEmail(email);
     }
 
+    @GetMapping("/listarUsuarios")
+    @ResponseStatus(HttpStatus.OK)
+    public List<UsuarioExibicaoDto> listarUsuarios() {
+        return usuarioService.listarUsuarios();
+    }
+
     @GetMapping("/listarUsuariosAutenticados")
     @ResponseStatus(HttpStatus.OK)
     public List<UsuarioExibicaoDto> listarUsuariosAutenticados() {

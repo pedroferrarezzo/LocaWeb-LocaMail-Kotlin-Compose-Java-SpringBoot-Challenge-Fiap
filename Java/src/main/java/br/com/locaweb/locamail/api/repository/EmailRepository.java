@@ -17,7 +17,7 @@ public interface EmailRepository extends JpaRepository<Email, Long> {
     @Query(value = "SELECT * FROM T_LCW_EMAIL INNER JOIN T_LCW_ALTERACAO ON T_LCW_EMAIL.id_email = T_LCW_ALTERACAO.alt_id_email WHERE T_LCW_ALTERACAO.alt_id_usuario = :id_usuario AND remetente = :remetente AND editavel = 0 AND arquivado = 0 AND excluido = 0 AND spam = 0", nativeQuery = true)
     List<Object[]> listarEmailsEnviadosPorRemetente(@Param("remetente") String remetente, @Param("id_usuario") Long id_usuario);
 
-    @Query(value = "SELECT * FROM T_LCW_EMAIL INNER JOIN T_LCW_ALTERACAO ON T_LCW_EMAIL.id_email = T_LCW_ALTERACAO.alt_id_email WHERE T_LCW_ALTERACAO.alt_id_usuario = :id_usuario AND editavel = 0 AND arquivado = 0 AND excluido = 0 AND spam = 0 AND id_pasta IS NULL", nativeQuery = true)
+    @Query(value = "SELECT * FROM T_LCW_EMAIL INNER JOIN T_LCW_ALTERACAO ON T_LCW_EMAIL.id_email = T_LCW_ALTERACAO.alt_id_email WHERE T_LCW_ALTERACAO.alt_id_usuario = :id_usuario AND editavel = 0 AND arquivado = 0 AND excluido = 0 AND spam = 0 AND id_pasta IS NULL ORDER BY T_LCW_EMAIL.data DESC, T_LCW_EMAIL.horario DESC", nativeQuery = true)
     List<Object[]> listarEmailsPorDestinatario(@Param("id_usuario") Long id_usuario);
 
     @Query(value = "SELECT * FROM T_LCW_EMAIL INNER JOIN T_LCW_ALTERACAO ON T_LCW_EMAIL.id_email = T_LCW_ALTERACAO.alt_id_email WHERE T_LCW_ALTERACAO.alt_id_usuario = :id_usuario AND editavel = 0", nativeQuery = true)

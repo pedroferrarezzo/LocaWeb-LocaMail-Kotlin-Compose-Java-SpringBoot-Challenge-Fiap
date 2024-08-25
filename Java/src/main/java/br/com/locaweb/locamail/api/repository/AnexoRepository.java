@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Blob;
 import java.util.List;
 
 
@@ -22,7 +23,7 @@ public interface AnexoRepository extends JpaRepository<Anexo, Long> {
     public Long verificarAnexoExistentePorIdEmail(@Param("id_email") Long id_email);
 
     @Query(value = "SELECT anexo FROM T_LCW_ANEXO where id_email = :id_email", nativeQuery = true)
-    public List<byte[]> listarAnexosArrayBytePorIdEmail(@Param("id_email") Long id_email);
+    public List<Blob> listarAnexosArrayBytePorIdEmail(@Param("id_email") Long id_email);
 
     @Transactional
     @Modifying

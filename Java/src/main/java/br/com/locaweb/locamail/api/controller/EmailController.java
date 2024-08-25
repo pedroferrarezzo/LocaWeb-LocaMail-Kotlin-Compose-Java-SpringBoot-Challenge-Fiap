@@ -23,6 +23,12 @@ public class EmailController {
         return emailService.criarEmail(emailCadastroDto);
     }
 
+    @PutMapping("/atualizarEmail")
+    @ResponseStatus(HttpStatus.OK)
+    public EmailExibicaoDto atualizarEmail (@RequestBody @Valid EmailCadastroDto emailCadastroDto) {
+        return emailService.atualizarEmail(emailCadastroDto);
+    }
+
     @GetMapping("/listarEmailsPorDestinatario")
     @ResponseStatus(HttpStatus.OK)
     public List<EmailComAlteracaoDto> listarEmailsPorDestinatario(@RequestParam("destinatario") String destinatario,
@@ -36,7 +42,7 @@ public class EmailController {
         return emailService.listarEmailPorId(id_email);
     }
 
-    @GetMapping("/excluirEmail")
+    @DeleteMapping("/excluirEmail")
     @ResponseStatus(HttpStatus.OK)
     public void excluirEmail(@RequestParam("idEmail") Long id_email) throws Exception {
         emailService.excluirEmail(id_email);

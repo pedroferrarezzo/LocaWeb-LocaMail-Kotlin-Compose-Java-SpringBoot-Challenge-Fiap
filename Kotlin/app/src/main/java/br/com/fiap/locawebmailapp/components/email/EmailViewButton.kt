@@ -53,7 +53,7 @@ fun EmailViewButton(
     onClickPastaPastaPickerDialog: (pasta: Pasta) -> Unit = {},
     onClickImportantButton: () -> Unit = {},
     isImportant: MutableState<Boolean> = mutableStateOf(false),
-    attachEmailList: List<Long>?,
+    attachEmailList: SnapshotStateList<Long?>,
     listPastaState: SnapshotStateList<Pasta> = mutableStateListOf(),
     timeState: TimePickerState,
     openDialogPastaPicker: MutableState<Boolean> = mutableStateOf(false),

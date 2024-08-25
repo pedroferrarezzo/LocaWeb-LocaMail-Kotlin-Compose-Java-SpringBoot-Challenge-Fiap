@@ -31,10 +31,10 @@ public class RespostaEmailService {
         return new RespostaEmailExibicaoDto(respostaEmailRepository.listarRespostaEmailPorIdRespostaEmail(id_resposta_email));
     }
 
-    public void atualizarRespostaEmail(RespostaEmailCadastroDto respostaEmailCadastroDto) {
+    public RespostaEmailExibicaoDto atualizarRespostaEmail(RespostaEmailCadastroDto respostaEmailCadastroDto) {
         RespostaEmail respostaEmail = new RespostaEmail();
         BeanUtils.copyProperties(respostaEmailCadastroDto, respostaEmail);
-        respostaEmailRepository.save(respostaEmail);
+        return new RespostaEmailExibicaoDto(respostaEmailRepository.save(respostaEmail));
     }
 
     public void excluirRespostaEmail(Long id_resposta_email) throws Exception {

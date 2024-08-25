@@ -58,7 +58,7 @@ fun ColumnEmailDetails(
     onClickDraftRespostaEmailDelete: (respostaEmail: RespostaEmail) -> Unit,
     onClickDraftRespostaEmailEdit: (respostaEmail: RespostaEmail) -> Unit,
     email: Email,
-    anexoBitMapList: List<Bitmap?>,
+    anexoBitMapList: SnapshotStateList<Bitmap?>,
     timeState: TimePickerState,
     usuarioSelecionado: MutableState<Usuario?>,
     respostasEmailStateList: SnapshotStateList<RespostaEmail?>,

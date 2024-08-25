@@ -17,6 +17,9 @@ public class ListUtils {
     }
 
     public static List<String> stringParaLista(String str) {
+        if (str == null) {
+            str = "";
+        }
         return List.of(str.split(", "));
     }
 

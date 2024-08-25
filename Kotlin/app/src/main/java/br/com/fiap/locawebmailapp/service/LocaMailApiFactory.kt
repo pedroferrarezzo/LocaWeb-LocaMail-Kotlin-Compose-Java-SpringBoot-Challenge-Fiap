@@ -13,7 +13,7 @@ import java.lang.reflect.Type
 
 
 class LocaMailApiFactory {
-    private val URL = "http://192.168.98.168/"
+    private val URL = "http://192.168.1.3/"
     val nullOnEmptyConverterFactory = object : Converter.Factory() {
         fun converterFactory() = this
         override fun responseBodyConverter(type: Type, annotations: Array<out Annotation>, retrofit: Retrofit) = object : Converter<ResponseBody, Any?> {
@@ -21,8 +21,10 @@ class LocaMailApiFactory {
             override fun convert(value: ResponseBody) = if (value.contentLength() != 0L) nextResponseBodyConverter.convert(value) else null
         }
     }
+
     val gson: Gson = GsonBuilder()
         .registerTypeAdapter(ByteArray::class.java, ByteArrayBase64Adapter())
+        .setLenient()
         .create()
 // APENAS PARA DESENVOLVIMENTO (LOG INTERCEPTOR OKHTTP)
     val intercepter = HttpLoggingInterceptor().apply {

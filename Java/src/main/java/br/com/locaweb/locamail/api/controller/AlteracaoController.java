@@ -72,6 +72,12 @@ public class AlteracaoController {
         return alteracaoService.listarAlteracaoPorIdUsuarioEIdPasta(id_usuario, pasta);
     }
 
+    @GetMapping("/listarAltIdUsuarioPorIdEmail")
+    @ResponseStatus(HttpStatus.OK)
+    public List<Long> listarAltIdUsuarioPorIdEmail(@RequestParam("idEmail") Long id_email) {
+        return alteracaoService.listarAltIdUsuarioPorIdEmail(id_email);
+    }
+
     @GetMapping("/listarAlteracaoPorIdEmailEIdUsuario")
     @ResponseStatus(HttpStatus.OK)
     public AlteracaoExibicaoDto listarAlteracaoPorIdEmailEIdUsuario(@RequestParam("idEmail") Long id_email, @RequestParam("idUsuario") Long id_usuario) {
