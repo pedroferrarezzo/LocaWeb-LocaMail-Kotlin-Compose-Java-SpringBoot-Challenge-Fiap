@@ -8,6 +8,9 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.sql.Blob;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -33,9 +36,19 @@ public class AnexoRespostaEmailService {
 
 
     public List<byte[]> listarAnexosArrayBytePorIdRespostaEmail(Long id_resposta_email)
-
     {
-        return anexoRespostaEmailRepository.listarAnexosArrayBytePorIdRespostaEmail(id_resposta_email);
+        List<Blob> blobList = anexoRespostaEmailRepository.listarAnexosArrayBytePorIdRespostaEmail(id_resposta_email);
+        List<byte[]> anexos = new ArrayList<>();
+
+        for (Blob blob : blobList) {
+            try {
+                byte[] bytes = blob.getBytes(1, (int) blob.length());
+                anexos.add(bytes);
+            } catch (SQLException ignored) {
+            }
+        }
+
+        return anexos;
 
     }
 

@@ -1,7 +1,6 @@
 package br.com.fiap.locawebmailapp.screens.email
 
 import android.graphics.Bitmap
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
@@ -123,7 +122,7 @@ fun VisualizaEmailScreen(
     var respostasEmailList: List<RespostaEmail>? = null
 
     val isAgendaAtrelada = remember {
-        mutableStateOf<Boolean?>(null)
+        mutableStateOf<Boolean>(false)
     }
 
     if (agendaEmailList != null) {

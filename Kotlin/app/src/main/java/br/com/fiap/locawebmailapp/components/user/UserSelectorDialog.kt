@@ -58,7 +58,10 @@ fun <T> UserSelectorDalog(
     listUsuariosNaoAutenticados: SnapshotStateList<Usuario>
 ) {
     if (openDialogUserPicker.value) {
-        Dialog(onDismissRequest = { openDialogUserPicker.value = false }) {
+        Dialog(onDismissRequest = {
+            openDialogUserPicker.value = false
+            listUsuariosNaoAutenticados.clear()
+        }) {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()

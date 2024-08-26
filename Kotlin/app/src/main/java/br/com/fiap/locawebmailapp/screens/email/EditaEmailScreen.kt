@@ -92,8 +92,12 @@ fun EditaEmailScreen(navController: NavController, idEmail: Long) {
         mutableStateOf<Usuario?>(null)
     }
 
-    var anexoArrayByteList: List<ByteArray> = listOf()
-    var bitmapList = remember { mutableStateListOf<Bitmap>() }
+    val anexoArrayByteList = remember {
+        mutableStateListOf<ByteArray>()
+    }
+    val bitmapList = remember {
+        mutableStateListOf<Bitmap>()
+    }
 
     LaunchedEffect(key1 = Unit) {
         callLocaMailApiListarEmailPorId(
@@ -105,8 +109,6 @@ fun EditaEmailScreen(navController: NavController, idEmail: Long) {
                 if (emailRetornado != null) {
                     isLoading.value = false
                     email.value = emailRetornado
-
-
                 }
 
             },
@@ -133,10 +135,10 @@ fun EditaEmailScreen(navController: NavController, idEmail: Long) {
             onSuccess = { listArrayByteRetornado ->
 
                 if (listArrayByteRetornado != null) {
-                    anexoArrayByteList = listArrayByteRetornado
-                    bitmapList = anexoArrayByteList.map {
+                    anexoArrayByteList.addAll(listArrayByteRetornado)
+                    bitmapList.addAll(anexoArrayByteList.map {
                         byteArrayToBitmap(it)
-                    }.toMutableStateList()
+                    })
                 }
             },
             onError = {
@@ -319,31 +321,8 @@ fun EditaEmailScreen(navController: NavController, idEmail: Long) {
                                     onSuccess = {
                                         isLoading.value = false
 
-                                    },
-                                    onError = {
-                                        isError.value = true
-                                        isLoading.value = false
-                                    }
-                                )
-
-                                callLocaMailApiExcluirAnexoPorIdEmail(
-                                    anexo.id_email,
-                                    onSuccess = {
-
-                                    },
-                                    onError = {
-                                        isError.value = true
-                                        isLoading.value = false
-                                    }
-                                )
-
-                                if (bitmapList.isNotEmpty()) {
-                                    for (bitmap in bitmapList) {
-                                        val byteArray = bitmapToByteArray(bitmap = bitmap)
-                                        anexo.anexo = byteArray
-
-                                        callLocaMailApiCriarAnexo(
-                                            anexo,
+                                        callLocaMailApiExcluirAnexoPorIdEmail(
+                                            anexo.id_email,
                                             onSuccess = {
 
                                             },
@@ -352,12 +331,32 @@ fun EditaEmailScreen(navController: NavController, idEmail: Long) {
                                                 isLoading.value = false
                                             }
                                         )
-                                    }
-                                }
-                                Toast.makeText(context, toastMessageDraftSaved, Toast.LENGTH_LONG)
-                                    .show()
-                                navController.popBackStack()
 
+                                        if (bitmapList.isNotEmpty()) {
+                                            for (bitmap in bitmapList) {
+                                                val byteArray = bitmapToByteArray(bitmap = bitmap)
+                                                anexo.anexo = byteArray
+                                                callLocaMailApiCriarAnexo(
+                                                    anexo,
+                                                    onSuccess = {
+
+                                                    },
+                                                    onError = {
+                                                        isError.value = true
+                                                        isLoading.value = false
+                                                    }
+                                                )
+                                            }
+                                        }
+                                        Toast.makeText(context, toastMessageDraftSaved, Toast.LENGTH_LONG)
+                                            .show()
+                                        navController.popBackStack()
+                                    },
+                                    onError = {
+                                        isError.value = true
+                                        isLoading.value = false
+                                    }
+                                )
                             } else {
                                 navController.popBackStack()
                             }
@@ -389,16 +388,37 @@ fun EditaEmailScreen(navController: NavController, idEmail: Long) {
                                     onSuccess = {
                                         isLoading.value = false
 
-                                    },
-                                    onError = {
-                                        isError.value = true
-                                        isLoading.value = false
-                                    }
-                                )
+                                        if (bitmapList.isNotEmpty()) {
+                                            callLocaMailApiExcluirAnexoPorIdEmail(
+                                                anexo.id_email,
+                                                onSuccess = {
 
-                                callLocaMailApiExcluirAnexoPorIdEmail(
-                                    anexo.id_email,
-                                    onSuccess = {
+                                                },
+                                                onError = {
+                                                    isError.value = true
+                                                    isLoading.value = false
+                                                }
+                                            )
+
+                                            for (bitmap in bitmapList) {
+                                                val byteArray = bitmapToByteArray(bitmap = bitmap)
+                                                anexo.anexo = byteArray
+                                                callLocaMailApiCriarAnexo(
+                                                    anexo,
+                                                    onSuccess = {
+
+                                                    },
+                                                    onError = {
+                                                        isError.value = true
+                                                        isLoading.value = false
+                                                    }
+                                                )
+                                            }
+                                        }
+
+                                        Toast.makeText(context, toastMessageMailSent, Toast.LENGTH_LONG)
+                                            .show()
+                                        navController.popBackStack()
 
                                     },
                                     onError = {
@@ -416,14 +436,12 @@ fun EditaEmailScreen(navController: NavController, idEmail: Long) {
                                     email.value!!.remetente
                                 )
 
-
                                 callLocaMailApiListarUsuarios(
                                     onSuccess = { listUsuarioRetornado ->
 
                                         if (listUsuarioRetornado != null) {
                                             for (usuario in listUsuarioRetornado) {
                                                 if (todosDestinatarios.contains(usuario.email)) {
-
                                                     callLocaMailApiCriarAlteracao(
                                                         Alteracao(
                                                             alt_id_email = email.value!!.id_email,
@@ -483,33 +501,10 @@ fun EditaEmailScreen(navController: NavController, idEmail: Long) {
                                         }
                                     )
                                 }
-
-                                if (bitmapList.isNotEmpty()) {
-                                    for (bitmap in bitmapList) {
-                                        val byteArray = bitmapToByteArray(bitmap = bitmap)
-                                        anexo.anexo = byteArray
-                                        callLocaMailApiCriarAnexo(
-                                            anexo,
-                                            onSuccess = {
-
-                                            },
-                                            onError = {
-                                                isError.value = true
-                                                isLoading.value = false
-                                            }
-                                        )
-                                    }
-
-                                }
-
-                                Toast.makeText(context, toastMessageMailSent, Toast.LENGTH_LONG)
-                                    .show()
-                                navController.popBackStack()
                             } else {
                                 Toast.makeText(context, toastMessageMailDest, Toast.LENGTH_LONG)
                                     .show()
                             }
-
                         },
                         bitmapList = bitmapList,
                         isDraft = true,

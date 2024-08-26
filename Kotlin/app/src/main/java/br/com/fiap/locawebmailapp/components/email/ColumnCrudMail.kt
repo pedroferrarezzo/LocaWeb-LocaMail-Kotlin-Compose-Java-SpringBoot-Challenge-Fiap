@@ -326,7 +326,6 @@ fun ColumnCrudMail(
 
         LazyRow() {
             items(ccos) { cco ->
-
                 Button(
                     onClick = { onClickRemoveCco(cco) },
                     colors = ButtonDefaults.buttonColors(

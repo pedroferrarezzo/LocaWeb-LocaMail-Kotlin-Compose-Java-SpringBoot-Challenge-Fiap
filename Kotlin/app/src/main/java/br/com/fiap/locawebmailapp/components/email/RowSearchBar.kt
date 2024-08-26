@@ -96,9 +96,12 @@ fun <T> RowSearchBar(
                         if (openDialogUserPicker.value) {
                             callLocaMailApiListarUsuariosNaoSelecionados(
                                 onSuccess = { listUsuarioRetornado ->
-
                                     if (listUsuarioRetornado != null) {
-                                        listUsuariosNaoAutenticados.addAll(listUsuarioRetornado)
+                                        listUsuarioRetornado.forEach { usuario ->
+                                            if (!listUsuariosNaoAutenticados.contains(usuario)) {
+                                                listUsuariosNaoAutenticados.add(usuario)
+                                            }
+                                        }
                                     }
                                 },
                                 onError = { error ->

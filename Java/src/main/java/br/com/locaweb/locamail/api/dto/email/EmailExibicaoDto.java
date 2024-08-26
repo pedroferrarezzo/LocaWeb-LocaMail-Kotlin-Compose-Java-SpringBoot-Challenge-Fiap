@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 public record EmailExibicaoDto(
 
         Long id_email,
+        Long id_usuario,
         String remetente,
         String destinatario,
         String cc,
@@ -22,6 +23,7 @@ public record EmailExibicaoDto(
         public EmailExibicaoDto(Email email) {
                 this(
                         email.getId_email(),
+                        email.getId_usuario(),
                         email.getRemetente(),
                         email.getDestinatario(),
                         email.getCc(),

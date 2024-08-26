@@ -37,7 +37,7 @@ fun RowTopOptionsViewEmail(
     isSpam: MutableState<Boolean>,
     isImportant: MutableState<Boolean>,
     isArchive: MutableState<Boolean>,
-    isAgendaAtrelada: MutableState<Boolean?>
+    isAgendaAtrelada: MutableState<Boolean>
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,

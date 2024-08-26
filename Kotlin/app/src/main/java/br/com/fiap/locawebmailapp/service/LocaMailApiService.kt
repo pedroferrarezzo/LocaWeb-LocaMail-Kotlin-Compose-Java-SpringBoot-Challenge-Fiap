@@ -73,6 +73,11 @@ interface LocaMailApiService {
     @GET("/email/listarEmailsPorDestinatario")
     fun listarEmailsPorDestinatario(@Query("destinatario") destinatario: String, @Query("idUsuario") id_usuario: Long): Call<List<EmailComAlteracao>?>
 
+
+    @GET("/email/listarEmailsEditaveisPorRemetente")
+    fun listarEmailsEditaveisPorRemetente(@Query("remetente") remetente: String): Call<List<Email>?>
+
+
     @GET("/pasta/listarPastasPorIdUsuario")
     fun listarPastasPorIdUsuario(@Query("idUsuario") id_usuario: Long): Call<List<Pasta>?>
 
@@ -111,7 +116,6 @@ interface LocaMailApiService {
 
     @DELETE("/anexoRespostaEmail/excluirAnexoPorIdRespostaEmail")
     fun excluirAnexoPorIdRespostaEmail(@Query("idRespostaEmail") id_resposta_email: Long): Call<Unit>
-
 
     @DELETE("/respostaEmail/excluirRespostaEmailPorIdEmail")
     fun excluirRespostaEmailPorIdEmail(@Query("idEmail") id_email: Long): Call<Unit>

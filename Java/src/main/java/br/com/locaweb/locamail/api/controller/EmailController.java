@@ -36,6 +36,12 @@ public class EmailController {
         return emailService.listarEmailsPorDestinatario(destinatario, id_usuario);
     }
 
+    @GetMapping("/listarEmailsEditaveisPorRemetente")
+    @ResponseStatus(HttpStatus.OK)
+    public List<EmailExibicaoDto> listarEmailsEditaveisPorRemetente(@RequestParam("remetente") String remetente) {
+        return emailService.listarEmailsEditaveisPorRemetente(remetente);
+    }
+
     @GetMapping("/listarEmailPorId")
     @ResponseStatus(HttpStatus.OK)
     public EmailExibicaoDto listarEmailPorId(@RequestParam("idEmail") Long id_email) {

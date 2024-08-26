@@ -73,12 +73,21 @@ fun callLocaMailApiListarEmailsPorDestinatario(
     val call = LocaMailApiFactory().getLocaMailApiFactory()
         .listarEmailsPorDestinatario(destinatario, id_usuario)
 
+
+
     call.enqueue(object : Callback<List<EmailComAlteracao>?> {
         override fun onResponse(
             call: Call<List<EmailComAlteracao>?>,
             response: Response<List<EmailComAlteracao>?>
         ) {
             if (response.isSuccessful && response.body() != null) {
+                response.body()!!.forEach {
+                    it.cc = getValidatedString(it.cc)
+                    it.cco = getValidatedString(it.cco)
+                    it.corpo = getValidatedString(it.corpo)
+                    it.destinatario = getValidatedString(it.destinatario)
+                    it.assunto = getValidatedString(it.assunto)
+                }
                 onSuccess(response.body()!!)
             } else if (response.isSuccessful == false) {
                 onError(Throwable())
@@ -92,6 +101,43 @@ fun callLocaMailApiListarEmailsPorDestinatario(
         }
     })
 }
+
+
+fun callLocaMailApiListarEmailsEditaveisPorRemetente(
+    remetente: String,
+    onSuccess: (List<Email>?) -> Unit,
+    onError: (Throwable) -> Unit
+) {
+    val call = LocaMailApiFactory().getLocaMailApiFactory()
+        .listarEmailsEditaveisPorRemetente(remetente)
+
+    call.enqueue(object : Callback<List<Email>?> {
+        override fun onResponse(
+            call: Call<List<Email>?>,
+            response: Response<List<Email>?>
+        ) {
+            if (response.isSuccessful && response.body() != null) {
+                response.body()!!.forEach {
+                    it.cc = getValidatedString(it.cc)
+                    it.cco = getValidatedString(it.cco)
+                    it.corpo = getValidatedString(it.corpo)
+                    it.destinatario = getValidatedString(it.destinatario)
+                    it.assunto = getValidatedString(it.assunto)
+                }
+                onSuccess(response.body()!!)
+            } else if (response.isSuccessful == false) {
+                onError(Throwable())
+            } else {
+                onSuccess(null)
+            }
+        }
+
+        override fun onFailure(call: Call<List<Email>?>, t: Throwable) {
+            onError(t)
+        }
+    })
+}
+
 
 fun callLocaMailApiListarPastasPorIdUsuario(
     id_usuario: Long,
@@ -169,12 +215,13 @@ fun callLocaMailApiListarAnexosArraybytePorIdEmail(
 }
 
 fun callLocaMailApiListarAnexosArrayBytePorIdRespostaEmail(
-id_resposta_email: Long,
-onSuccess: (List<ByteArray>?) -> Unit,
-onError: (Throwable) -> Unit
+    id_resposta_email: Long,
+    onSuccess: (List<ByteArray>?) -> Unit,
+    onError: (Throwable) -> Unit
 ) {
     val call =
-        LocaMailApiFactory().getLocaMailApiFactory().listarAnexosArrayBytePorIdRespostaEmail(id_resposta_email)
+        LocaMailApiFactory().getLocaMailApiFactory()
+            .listarAnexosArrayBytePorIdRespostaEmail(id_resposta_email)
 
     call.enqueue(object : Callback<List<ByteArray>?> {
         override fun onResponse(
@@ -204,7 +251,8 @@ fun callLocaMailApiListarAgendaPorIdEmailEIdUsuario(
     onError: (Throwable) -> Unit
 ) {
     val call =
-        LocaMailApiFactory().getLocaMailApiFactory().listarAgendaPorIdEmailEIdUsuario(id_email, id_usuario)
+        LocaMailApiFactory().getLocaMailApiFactory()
+            .listarAgendaPorIdEmailEIdUsuario(id_email, id_usuario)
 
     call.enqueue(object : Callback<List<Agenda>?> {
         override fun onResponse(
@@ -227,7 +275,6 @@ fun callLocaMailApiListarAgendaPorIdEmailEIdUsuario(
 }
 
 
-
 fun callLocaMailApiListarRespostasEmailPorIdEmail(
     id_email: Long,
     onSuccess: (List<RespostaEmail>?) -> Unit,
@@ -241,6 +288,13 @@ fun callLocaMailApiListarRespostasEmailPorIdEmail(
             response: Response<List<RespostaEmail>?>
         ) {
             if (response.isSuccessful && response.body() != null) {
+                response.body()!!.forEach {
+                    it.cc = getValidatedString(it.cc)
+                    it.cco = getValidatedString(it.cco)
+                    it.corpo = getValidatedString(it.corpo)
+                    it.destinatario = getValidatedString(it.destinatario)
+                    it.assunto = getValidatedString(it.assunto)
+                }
                 onSuccess(response.body()!!)
             } else if (response.isSuccessful == false) {
                 onError(Throwable())
@@ -260,7 +314,8 @@ fun callLocaMailApiListarRespostaEmailPorIdRespostaEmail(
     onSuccess: (RespostaEmail?) -> Unit,
     onError: (Throwable) -> Unit
 ) {
-    val call = LocaMailApiFactory().getLocaMailApiFactory().listarRespostaEmailPorIdRespostaEmail(id_resposta_email)
+    val call = LocaMailApiFactory().getLocaMailApiFactory()
+        .listarRespostaEmailPorIdRespostaEmail(id_resposta_email)
 
     call.enqueue(object : Callback<RespostaEmail?> {
         override fun onResponse(
@@ -551,13 +606,13 @@ fun callLocaMailApiExcluirPasta(
 }
 
 
-
 fun callLocaMailApiExcluirAnexoPorIdEmail(
     id_email: Long,
     onSuccess: (Unit?) -> Unit,
     onError: (Throwable) -> Unit
 ) {
-    val callLocaMailApiService = LocaMailApiFactory().getLocaMailApiFactory().excluirAnexoPorIdEmail(id_email)
+    val callLocaMailApiService =
+        LocaMailApiFactory().getLocaMailApiFactory().excluirAnexoPorIdEmail(id_email)
 
     callLocaMailApiService.enqueue(object : Callback<Unit> {
         override fun onResponse(call: Call<Unit>, response: Response<Unit>) {
@@ -581,7 +636,8 @@ fun callLocaMailApiExcluirAnexoPorIdRespostaEmail(
     onSuccess: (Unit?) -> Unit,
     onError: (Throwable) -> Unit
 ) {
-    val callLocaMailApiService = LocaMailApiFactory().getLocaMailApiFactory().excluirAnexoPorIdRespostaEmail(id_resposta_email)
+    val callLocaMailApiService = LocaMailApiFactory().getLocaMailApiFactory()
+        .excluirAnexoPorIdRespostaEmail(id_resposta_email)
 
     callLocaMailApiService.enqueue(object : Callback<Unit> {
         override fun onResponse(call: Call<Unit>, response: Response<Unit>) {
@@ -605,7 +661,8 @@ fun callLocaMailApiExcluirRespostaEmailPorIdEmail(
     onSuccess: (Unit?) -> Unit,
     onError: (Throwable) -> Unit
 ) {
-    val callLocaMailApiService = LocaMailApiFactory().getLocaMailApiFactory().excluirRespostaEmailPorIdEmail(id_email)
+    val callLocaMailApiService =
+        LocaMailApiFactory().getLocaMailApiFactory().excluirRespostaEmailPorIdEmail(id_email)
 
     callLocaMailApiService.enqueue(object : Callback<Unit> {
         override fun onResponse(call: Call<Unit>, response: Response<Unit>) {
@@ -653,7 +710,8 @@ fun callLocaMailApiExcluirPorIdAgenda(
     onSuccess: (Unit?) -> Unit,
     onError: (Throwable) -> Unit
 ) {
-    val callLocaMailApiService = LocaMailApiFactory().getLocaMailApiFactory().excluirPorIdAgenda(id_agenda)
+    val callLocaMailApiService =
+        LocaMailApiFactory().getLocaMailApiFactory().excluirPorIdAgenda(id_agenda)
 
     callLocaMailApiService.enqueue(object : Callback<Unit> {
         override fun onResponse(call: Call<Unit>, response: Response<Unit>) {
@@ -677,7 +735,8 @@ fun callLocaMailApiExcluiAgenda(
     onSuccess: (Unit?) -> Unit,
     onError: (Throwable) -> Unit
 ) {
-    val callLocaMailApiService = LocaMailApiFactory().getLocaMailApiFactory().excluiAgenda(id_agenda)
+    val callLocaMailApiService =
+        LocaMailApiFactory().getLocaMailApiFactory().excluiAgenda(id_agenda)
 
     callLocaMailApiService.enqueue(object : Callback<Unit> {
         override fun onResponse(call: Call<Unit>, response: Response<Unit>) {
@@ -701,7 +760,8 @@ fun callLocaMailApiExcluirRespostaEmail(
     onSuccess: (Unit?) -> Unit,
     onError: (Throwable) -> Unit
 ) {
-    val callLocaMailApiService = LocaMailApiFactory().getLocaMailApiFactory().excluirRespostaEmail(id_resposta_email)
+    val callLocaMailApiService =
+        LocaMailApiFactory().getLocaMailApiFactory().excluirRespostaEmail(id_resposta_email)
 
     callLocaMailApiService.enqueue(object : Callback<Unit> {
         override fun onResponse(call: Call<Unit>, response: Response<Unit>) {
@@ -726,7 +786,8 @@ fun callLocaMailApiAtualizaVisivelPorIdAgenda(
     onSuccess: (Unit?) -> Unit,
     onError: (Throwable) -> Unit
 ) {
-    val callLocaMailApiService = LocaMailApiFactory().getLocaMailApiFactory().atualizaVisivelPorIdAgenda(id_agenda, visivel)
+    val callLocaMailApiService =
+        LocaMailApiFactory().getLocaMailApiFactory().atualizaVisivelPorIdAgenda(id_agenda, visivel)
 
     callLocaMailApiService.enqueue(object : Callback<Unit> {
         override fun onResponse(call: Call<Unit>, response: Response<Unit>) {
@@ -752,7 +813,8 @@ fun callLocaMailApiExcluiAlteracaoPorIdEmailEIdUsuario(
     onSuccess: (Unit?) -> Unit,
     onError: (Throwable) -> Unit
 ) {
-    val callLocaMailApiService = LocaMailApiFactory().getLocaMailApiFactory().excluiAlteracaoPorIdEmailEIdUsuario(id_email, id_usuario)
+    val callLocaMailApiService = LocaMailApiFactory().getLocaMailApiFactory()
+        .excluiAlteracaoPorIdEmailEIdUsuario(id_email, id_usuario)
 
     callLocaMailApiService.enqueue(object : Callback<Unit> {
         override fun onResponse(call: Call<Unit>, response: Response<Unit>) {
@@ -778,7 +840,8 @@ fun callLocaMailApiVerificarLidoPorIdEmailEIdUsuario(
     onSuccess: (Boolean?) -> Unit,
     onError: (Throwable) -> Unit
 ) {
-    val callLocaMailApiService = LocaMailApiFactory().getLocaMailApiFactory().verificarLidoPorIdEmailEIdUsuario(id_email, id_usuario)
+    val callLocaMailApiService = LocaMailApiFactory().getLocaMailApiFactory()
+        .verificarLidoPorIdEmailEIdUsuario(id_email, id_usuario)
 
     callLocaMailApiService.enqueue(object : Callback<Boolean?> {
         override fun onResponse(call: Call<Boolean?>, response: Response<Boolean?>) {
@@ -803,7 +866,8 @@ fun callLocaMailApiVerificarExcluidoPorIdEmailEIdUsuario(
     onSuccess: (Boolean?) -> Unit,
     onError: (Throwable) -> Unit
 ) {
-    val callLocaMailApiService = LocaMailApiFactory().getLocaMailApiFactory().verificarExcluidoPorIdEmailEIdUsuario(id_email, id_usuario)
+    val callLocaMailApiService = LocaMailApiFactory().getLocaMailApiFactory()
+        .verificarExcluidoPorIdEmailEIdUsuario(id_email, id_usuario)
 
     callLocaMailApiService.enqueue(object : Callback<Boolean?> {
         override fun onResponse(call: Call<Boolean?>, response: Response<Boolean?>) {
@@ -828,7 +892,8 @@ fun callLocaMailApiVerificarSpamPorIdEmailEIdUsuario(
     onSuccess: (Boolean?) -> Unit,
     onError: (Throwable) -> Unit
 ) {
-    val callLocaMailApiService = LocaMailApiFactory().getLocaMailApiFactory().verificarSpamPorIdEmailEIdUsuario(id_email, id_usuario)
+    val callLocaMailApiService = LocaMailApiFactory().getLocaMailApiFactory()
+        .verificarSpamPorIdEmailEIdUsuario(id_email, id_usuario)
 
     callLocaMailApiService.enqueue(object : Callback<Boolean?> {
         override fun onResponse(call: Call<Boolean?>, response: Response<Boolean?>) {
@@ -853,7 +918,8 @@ fun callLocaMailApiVerificarArquivadoPorIdEmailEIdUsuario(
     onSuccess: (Boolean?) -> Unit,
     onError: (Throwable) -> Unit
 ) {
-    val callLocaMailApiService = LocaMailApiFactory().getLocaMailApiFactory().verificarArquivadoPorIdEmailEIdUsuario(id_email, id_usuario)
+    val callLocaMailApiService = LocaMailApiFactory().getLocaMailApiFactory()
+        .verificarArquivadoPorIdEmailEIdUsuario(id_email, id_usuario)
 
     callLocaMailApiService.enqueue(object : Callback<Boolean?> {
         override fun onResponse(call: Call<Boolean?>, response: Response<Boolean?>) {
@@ -878,7 +944,8 @@ fun callLocaMailApiVerificarImportantePorIdEmailEIdUsuario(
     onSuccess: (Boolean?) -> Unit,
     onError: (Throwable) -> Unit
 ) {
-    val callLocaMailApiService = LocaMailApiFactory().getLocaMailApiFactory().verificarImportantePorIdEmailEIdUsuario(id_email, id_usuario)
+    val callLocaMailApiService = LocaMailApiFactory().getLocaMailApiFactory()
+        .verificarImportantePorIdEmailEIdUsuario(id_email, id_usuario)
 
     callLocaMailApiService.enqueue(object : Callback<Boolean?> {
         override fun onResponse(call: Call<Boolean?>, response: Response<Boolean?>) {
@@ -896,7 +963,6 @@ fun callLocaMailApiVerificarImportantePorIdEmailEIdUsuario(
         }
     })
 }
-
 
 
 fun callLocaMailApicriarUsuario(
@@ -1054,7 +1120,8 @@ fun callLocaMailApiAtualizarRespostaEmail(
     onSuccess: (RespostaEmail?) -> Unit,
     onError: (Throwable) -> Unit
 ) {
-    val callLocaMailApiService = LocaMailApiFactory().getLocaMailApiFactory().atualizarRespostaEmail(respostaEmail)
+    val callLocaMailApiService =
+        LocaMailApiFactory().getLocaMailApiFactory().atualizarRespostaEmail(respostaEmail)
 
     callLocaMailApiService.enqueue(object : Callback<RespostaEmail?> {
         override fun onResponse(call: Call<RespostaEmail?>, response: Response<RespostaEmail?>) {
@@ -1078,7 +1145,8 @@ fun callLocaMailApiCriarRespostaEmail(
     onSuccess: (RespostaEmail?) -> Unit,
     onError: (Throwable) -> Unit
 ) {
-    val callLocaMailApiService = LocaMailApiFactory().getLocaMailApiFactory().criarRespostaEmail(respostaEmail)
+    val callLocaMailApiService =
+        LocaMailApiFactory().getLocaMailApiFactory().criarRespostaEmail(respostaEmail)
 
     callLocaMailApiService.enqueue(object : Callback<RespostaEmail?> {
         override fun onResponse(call: Call<RespostaEmail?>, response: Response<RespostaEmail?>) {
@@ -1102,10 +1170,14 @@ fun callLocaMailApiCriarAnexoRespostaEmail(
     onSuccess: (AnexoRespostaEmail?) -> Unit,
     onError: (Throwable) -> Unit
 ) {
-    val callLocaMailApiService = LocaMailApiFactory().getLocaMailApiFactory().criarAnexoRespostaEmail(anexo)
+    val callLocaMailApiService =
+        LocaMailApiFactory().getLocaMailApiFactory().criarAnexoRespostaEmail(anexo)
 
     callLocaMailApiService.enqueue(object : Callback<AnexoRespostaEmail?> {
-        override fun onResponse(call: Call<AnexoRespostaEmail?>, response: Response<AnexoRespostaEmail?>) {
+        override fun onResponse(
+            call: Call<AnexoRespostaEmail?>,
+            response: Response<AnexoRespostaEmail?>
+        ) {
             if (response.isSuccessful && response.body() != null) {
                 onSuccess(response.body()!!)
             } else if (response.isSuccessful == false) {
@@ -1323,7 +1395,6 @@ fun callLocaMailApiAtualizarExcluidoPorIdEmailEIdusuario(
         }
     })
 }
-
 
 
 fun callLocaMailApiAtualizarSpamPorIdEmailEIdusuario(

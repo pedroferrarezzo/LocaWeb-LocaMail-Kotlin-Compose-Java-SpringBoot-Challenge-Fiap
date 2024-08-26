@@ -75,7 +75,7 @@ fun CriaRespostaEmailScreen(navController: NavController, idEmail: Long, idRespo
         mutableStateOf(checkInternetConnectivity(context))
     }
     val isLoading = remember {
-        mutableStateOf(false)
+        mutableStateOf(true)
     }
 
     val isError = remember {
@@ -87,7 +87,9 @@ fun CriaRespostaEmailScreen(navController: NavController, idEmail: Long, idRespo
 
     val respostaEmail = RespostaEmail()
 
-    var emailResponder: Email? = null
+    val emailResponder = remember {
+        mutableStateOf<Email?>(null)
+    }
 
     val anexoRespostaEmail = AnexoRespostaEmail()
     val convidado = Convidado()
@@ -101,7 +103,8 @@ fun CriaRespostaEmailScreen(navController: NavController, idEmail: Long, idRespo
         callLocaMailApiListarEmailPorId(
             idEmail,
             onSuccess = { emailRetornado ->
-                emailResponder = emailRetornado
+                emailResponder.value = emailRetornado
+                isLoading.value = false
             },
             onError = {
                 isError.value = true
@@ -115,7 +118,7 @@ fun CriaRespostaEmailScreen(navController: NavController, idEmail: Long, idRespo
                 onSuccess = { respostaEmailRetornado ->
 
                     if (respostaEmailRetornado != null) {
-                        emailResponder = respostaEmailParaEmail(
+                        emailResponder.value = respostaEmailParaEmail(
                             respostaEmailRetornado
                         )
                     }
@@ -161,12 +164,12 @@ fun CriaRespostaEmailScreen(navController: NavController, idEmail: Long, idRespo
 
     var destinatarios: SnapshotStateList<String>? = null
 
-    if (emailResponder != null && usuarioSelecionado.value != null) {
+    if (emailResponder.value != null && usuarioSelecionado.value != null) {
         destinatarios =
             remember {
-                if (emailResponder!!.id_usuario == usuarioSelecionado.value!!.id_usuario) stringParaLista(
-                    emailResponder!!.destinatario
-                ).toMutableStateList() else stringParaLista(emailResponder!!.remetente).toMutableStateList()
+                if (emailResponder.value!!.id_usuario == usuarioSelecionado.value!!.id_usuario) stringParaLista(
+                    emailResponder.value!!.destinatario
+                ).toMutableStateList() else stringParaLista(emailResponder.value!!.remetente).toMutableStateList()
             }
     }
 
@@ -299,7 +302,6 @@ fun CriaRespostaEmailScreen(navController: NavController, idEmail: Long, idRespo
                 Column(
                     modifier = Modifier.fillMaxSize()
                 ) {
-
                     RowCrudMail(
                         onClickBack = {
                             if (ccs.isNotEmpty() ||
@@ -329,7 +331,6 @@ fun CriaRespostaEmailScreen(navController: NavController, idEmail: Long, idRespo
                                 respostaEmail.enviado = false
                                 respostaEmail.editavel = true
                                 respostaEmail.id_email = idEmail
-
 
 
                                 callLocaMailApiCriarRespostaEmail(
@@ -566,7 +567,7 @@ fun CriaRespostaEmailScreen(navController: NavController, idEmail: Long, idRespo
                         bitmapList = bitmapList
                     )
 
-                    if (destinatarios != null && emailResponder != null) {
+                    if (destinatarios != null && emailResponder.value != null) {
                         ColumnCrudMail(
                             usuarioSelecionado = usuarioSelecionado,
                             destinatarios = destinatarios,
@@ -602,7 +603,7 @@ fun CriaRespostaEmailScreen(navController: NavController, idEmail: Long, idRespo
                                 if (!isErrorPara.value) destinatarios.add(destinatarioText.value.toLowerCase())
                             },
                             onClickRemoveDestinatario = {
-                                if (!stringParaLista(emailResponder!!.destinatario).contains(it) && !emailResponder!!.remetente.equals(
+                                if (!stringParaLista(emailResponder.value!!.destinatario).contains(it) && !emailResponder.value!!.remetente.equals(
                                         it
                                     )
                                 ) {
@@ -656,15 +657,13 @@ fun CriaRespostaEmailScreen(navController: NavController, idEmail: Long, idRespo
                             },
                             isRespostaEmail = true,
                             showClearButtonAppear = {
-                                (!stringParaLista(emailResponder!!.destinatario).contains(it) && !emailResponder!!.remetente.equals(
+                                (!stringParaLista(emailResponder.value!!.destinatario).contains(it) && !emailResponder.value!!.remetente.equals(
                                     it
                                 ))
                             }
                         )
 
                     }
-
-
                 }
             }
         }

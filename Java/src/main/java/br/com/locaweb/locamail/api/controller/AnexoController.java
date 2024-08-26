@@ -45,9 +45,4 @@ public class AnexoController {
     public void excluirAnexoPorIdEmail(@RequestParam("idEmail") Long id_email) {
         anexoService.excluirAnexoPorIdEmail(id_email);
     }
-
-
-
-
-
 }
