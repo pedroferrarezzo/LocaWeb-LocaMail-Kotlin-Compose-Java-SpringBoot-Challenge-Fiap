@@ -99,7 +99,6 @@ fun EmailsEditaveisScreen(navController: NavController) {
         mutableStateOf(listOf<Email>())
     }
 
-
     val editableEmailStateList = remember {
         mutableStateListOf<Email>()
     }
@@ -300,8 +299,6 @@ fun EmailsEditaveisScreen(navController: NavController) {
                                             isLoading.value = false
                                         }
                                     )
-
-
                                 }
                             },
                             usuarioSelecionado = usuarioSelecionado,

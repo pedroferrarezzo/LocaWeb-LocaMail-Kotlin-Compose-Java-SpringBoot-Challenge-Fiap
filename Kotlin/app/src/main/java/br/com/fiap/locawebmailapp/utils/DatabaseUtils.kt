@@ -2,6 +2,7 @@ package br.com.fiap.locawebmailapp.utils
 
 import androidx.compose.runtime.MutableState
 import br.com.fiap.locawebmailapp.model.Email
+import br.com.fiap.locawebmailapp.model.EmailComAlteracao
 import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiListarAlteracaoPorIdEmailEIdUsuario
 import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiRetornaUsarioPorEmail
 import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiVerificarArquivadoPorIdEmailEIdUsuario
@@ -13,7 +14,7 @@ import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiVerificarSpamPorIdEma
 fun atualizarIsImportantParaUsuariosRelacionados(
     todosDestinatarios: List<String>,
     isImportant: MutableState<Boolean>,
-    email: Email,
+    email: EmailComAlteracao,
     isLoading: MutableState<Boolean>,
     isError: MutableState<Boolean>
 ) {
@@ -284,7 +285,7 @@ fun atualizarisExcluidoParaUsuariosRelacionados(
 fun atualizarisReadParaUsuariosRelacionados(
     todosDestinatarios: List<String>,
     isRead: MutableState<Boolean>,
-    email: Email,
+    email: EmailComAlteracao,
     isLoading: MutableState<Boolean>,
     isError: MutableState<Boolean>
 ) {

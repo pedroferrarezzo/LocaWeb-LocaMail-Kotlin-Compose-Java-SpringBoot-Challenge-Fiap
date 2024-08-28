@@ -26,19 +26,19 @@ public interface AlteracaoRepository extends JpaRepository<Alteracao, Long> {
     List<Long> listarAltIdUsuarioPorIdEmail(@Param("id_email") Long id_email);
 
     @Query(value = "SELECT importante FROM T_LCW_ALTERACAO WHERE alt_id_email = :id_email AND alt_id_usuario = :id_usuario", nativeQuery = true)
-    Boolean verificarImportantePorIdEmailEIdUsuario(@Param("id_email") Long id_email, @Param("id_usuario") Long id_usuario);
+    Long verificarImportantePorIdEmailEIdUsuario(@Param("id_email") Long id_email, @Param("id_usuario") Long id_usuario);
 
     @Query(value = "SELECT lido FROM T_LCW_ALTERACAO WHERE alt_id_email = :id_email AND alt_id_usuario = :id_usuario", nativeQuery = true)
-    Boolean verificarLidoPorIdEmailEIdUsuario(@Param("id_email") Long id_email, @Param("id_usuario") Long id_usuario);
+    Long verificarLidoPorIdEmailEIdUsuario(@Param("id_email") Long id_email, @Param("id_usuario") Long id_usuario);
 
     @Query(value = "SELECT arquivado FROM T_LCW_ALTERACAO WHERE alt_id_email = :id_email AND alt_id_usuario = :id_usuario", nativeQuery = true)
-    Boolean verificarArquivadoPorIdEmailEIdUsuario(@Param("id_email") Long id_email, @Param("id_usuario") Long id_usuario);
+    Long verificarArquivadoPorIdEmailEIdUsuario(@Param("id_email") Long id_email, @Param("id_usuario") Long id_usuario);
 
     @Query(value = "SELECT excluido FROM T_LCW_ALTERACAO WHERE alt_id_email = :id_email AND alt_id_usuario = :id_usuario", nativeQuery = true)
-    Boolean verificarExcluidoPorIdEmailEIdUsuario(@Param("id_email") Long id_email, @Param("id_usuario") Long id_usuario);
+    Long verificarExcluidoPorIdEmailEIdUsuario(@Param("id_email") Long id_email, @Param("id_usuario") Long id_usuario);
 
     @Query(value = "SELECT spam FROM T_LCW_ALTERACAO WHERE alt_id_email = :id_email AND alt_id_usuario = :id_usuario", nativeQuery = true)
-    Boolean verificarSpamPorIdEmailEIdUsuario(@Param("id_email") Long id_email, @Param("id_usuario") Long id_usuario);
+    Long verificarSpamPorIdEmailEIdUsuario(@Param("id_email") Long id_email, @Param("id_usuario") Long id_usuario);
 
     @Query(value = "SELECT id_pasta FROM T_LCW_ALTERACAO WHERE alt_id_email = :id_email AND alt_id_usuario = :id_usuario", nativeQuery = true)
     Long verificarPastaPorIdEmailEIdUsuario(@Param("id_email") Long id_email, @Param("id_usuario") Long id_usuario);

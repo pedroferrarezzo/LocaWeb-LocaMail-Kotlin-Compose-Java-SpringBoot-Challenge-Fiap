@@ -37,6 +37,7 @@ import br.com.fiap.locawebmailapp.components.general.ErrorComponent
 import br.com.fiap.locawebmailapp.model.Agenda
 import br.com.fiap.locawebmailapp.model.Alteracao
 import br.com.fiap.locawebmailapp.model.Email
+import br.com.fiap.locawebmailapp.model.EmailComAlteracao
 import br.com.fiap.locawebmailapp.model.RespostaEmail
 import br.com.fiap.locawebmailapp.model.Usuario
 import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiAtualizaVisivelPorIdAgenda
@@ -111,14 +112,16 @@ fun VisualizaEmailScreen(
 
     var agendaEmailList: List<Agenda>? = null
 
-    var alteracao: Alteracao? = null
-
+    val alteracao = remember {
+        mutableStateOf<Alteracao?>(null)
+    }
 
     val todosDestinatarios = arrayListOf<String>()
 
     val respostasEmailStateList: SnapshotStateList<RespostaEmail?> = remember {
         mutableStateListOf<RespostaEmail?>()
     }
+
     var respostasEmailList: List<RespostaEmail>? = null
 
     val isAgendaAtrelada = remember {
@@ -130,21 +133,20 @@ fun VisualizaEmailScreen(
     }
 
     val isImportant = remember {
-        if (alteracao != null) mutableStateOf(alteracao!!.importante) else mutableStateOf(false)
+        if (alteracao.value != null) mutableStateOf(alteracao.value!!.importante) else mutableStateOf(false)
     }
 
     val isArchive = remember {
-        if (alteracao != null) mutableStateOf(alteracao!!.arquivado) else mutableStateOf(false)
+        if (alteracao.value != null) mutableStateOf(alteracao.value!!.arquivado) else mutableStateOf(false)
     }
 
     val isSpam = remember {
-        if (alteracao != null) mutableStateOf(alteracao!!.spam) else mutableStateOf(false)
+        if (alteracao.value != null) mutableStateOf(alteracao.value!!.spam) else mutableStateOf(false)
     }
 
     val isExcluido = remember {
-        if (alteracao != null) mutableStateOf(alteracao!!.excluido) else mutableStateOf(false)
+        if (alteracao.value != null) mutableStateOf(alteracao.value!!.excluido) else mutableStateOf(false)
     }
-
 
     val email: MutableState<Email?> = remember {
         mutableStateOf(null)
@@ -152,78 +154,49 @@ fun VisualizaEmailScreen(
 
 
     LaunchedEffect(key1 = Unit) {
-        if (usuarioSelecionado.value != null) {
-
-            callLocaMailApiListarAlteracaoPorIdEmailEIdUsuario(
-                idEmail,
-                usuarioSelecionado.value!!.id_usuario,
-                onSuccess = { alteracaoRetornada ->
-
-                    alteracao = alteracaoRetornada
-                },
-                onError = { error ->
-                    isError.value = true
-                    isLoading.value = false
-                }
-            )
-
-            callLocaMailApiListarAgendaPorIdEmailEIdUsuario(
-                idEmail,
-                usuarioSelecionado.value!!.id_usuario,
-                onSuccess = { listAgendaRetornado ->
-
-                    agendaEmailList = listAgendaRetornado
-
-                    if (agendaEmailList != null) {
-                        agendaEmailStateList = agendaEmailList!!.toMutableStateList()
-                    }
-                },
-                onError = { error ->
-                    isError.value = true
-                    isLoading.value = false
-                }
-            )
-
-        }
-        callLocaMailApiListarRespostasEmailPorIdEmail(
-            idEmail,
-            onSuccess = { repostaEmailRetornada ->
-
-                if (repostaEmailRetornada != null) {
-                    respostasEmailList = repostaEmailRetornada
-                    respostasEmailList!!.forEach { resposta ->
-                        if (!respostasEmailStateList.contains(resposta)) {
-                            respostasEmailStateList.add(resposta)
-                        }
-                    }
-                }
-            },
-            onError = { error ->
-                isError.value = true
-                isLoading.value = false
-            }
-        )
-
-        callLocaMailApiListarAnexosArraybytePorIdEmail(
-            idEmail,
-            onSuccess = { byteArrayListRetornado ->
-                val anexoArrayByteList = byteArrayListRetornado;
-
-                if (anexoArrayByteList != null) {
-                    anexoBitMapList.addAll(anexoArrayByteList.map {
-                        byteArrayToBitmap(it)
-                    })
-                }
-            },
-            onError = { error ->
-                isError.value = true
-                isLoading.value = false
-            }
-        )
 
         callLocaMailApiListarUsuarioSelecionado(
             onSuccess = { usuarioRetornado ->
                 usuarioSelecionado.value = usuarioRetornado
+
+                if (usuarioSelecionado.value != null) {
+
+                    callLocaMailApiListarAlteracaoPorIdEmailEIdUsuario(
+                        idEmail,
+                        usuarioSelecionado.value!!.id_usuario,
+                        onSuccess = { alteracaoRetornada ->
+                            alteracao.value = alteracaoRetornada
+                            if (alteracao.value != null) {
+                                isImportant.value = alteracao.value!!.importante
+                                isArchive.value = alteracao.value!!.arquivado
+                                isSpam.value = alteracao.value!!.spam
+                                isExcluido.value = alteracao.value!!.excluido
+                            }
+                        },
+                        onError = { error ->
+                            isError.value = true
+                            isLoading.value = false
+                        }
+                    )
+
+                    callLocaMailApiListarAgendaPorIdEmailEIdUsuario(
+                        idEmail,
+                        usuarioSelecionado.value!!.id_usuario,
+                        onSuccess = { listAgendaRetornado ->
+
+                            agendaEmailList = listAgendaRetornado
+
+                            if (agendaEmailList != null) {
+                                agendaEmailStateList = agendaEmailList!!.toMutableStateList()
+                            }
+                        },
+                        onError = { error ->
+                            isError.value = true
+                            isLoading.value = false
+                        }
+                    )
+
+                }
             },
             onError = { error ->
                 isError.value = true
@@ -240,17 +213,35 @@ fun VisualizaEmailScreen(
                 if (email.value != null) {
                     isLoading.value = false
                     if (isTodasContasScreen) {
+                        val emailComAlteracao = EmailComAlteracao(
+                            email.value!!.id_email,
+                            email.value!!.id_usuario,
+                            email.value!!.remetente,
+                            email.value!!.destinatario,
+                            email.value!!.cc,
+                            email.value!!.cco,
+                            email.value!!.assunto,
+                            email.value!!.corpo,
+                            email.value!!.editavel,
+                            email.value!!.enviado,
+                            email.value!!.horario,
+                            email.value!!.data,
+                            email.value!!.agenda_atrelada,
+                        )
+
                         if (respostasEmailList != null) {
+
                             atualizarTodosDestinatariosList(
                                 todosDestinatarios,
-                                email.value!!,
+                                emailComAlteracao,
                                 respostasEmailList!!
                             )
                         }
+
                         atualizarIsImportantParaUsuariosRelacionados(
                             todosDestinatarios,
                             isImportant,
-                            email.value!!,
+                            emailComAlteracao,
                             isLoading = isLoading,
                             isError = isError
                         )
@@ -287,6 +278,42 @@ fun VisualizaEmailScreen(
                 isError.value = true
                 isLoading.value = false
 
+            }
+        )
+
+        callLocaMailApiListarAnexosArraybytePorIdEmail(
+            idEmail,
+            onSuccess = { byteArrayListRetornado ->
+                val anexoArrayByteList = byteArrayListRetornado;
+
+                if (anexoArrayByteList != null) {
+                    anexoBitMapList.addAll(anexoArrayByteList.map {
+                        byteArrayToBitmap(it)
+                    })
+                }
+            },
+            onError = { error ->
+                isError.value = true
+                isLoading.value = false
+            }
+        )
+
+        callLocaMailApiListarRespostasEmailPorIdEmail(
+            idEmail,
+            onSuccess = { repostaEmailRetornada ->
+
+                if (repostaEmailRetornada != null) {
+                    respostasEmailList = repostaEmailRetornada
+                    respostasEmailList!!.forEach { resposta ->
+                        if (!respostasEmailStateList.contains(resposta)) {
+                            respostasEmailStateList.add(resposta)
+                        }
+                    }
+                }
+            },
+            onError = { error ->
+                isError.value = true
+                isLoading.value = false
             }
         )
     }

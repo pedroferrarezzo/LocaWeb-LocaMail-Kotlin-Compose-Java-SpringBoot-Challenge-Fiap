@@ -73,6 +73,29 @@ interface LocaMailApiService {
     @GET("/email/listarEmailsPorDestinatario")
     fun listarEmailsPorDestinatario(@Query("destinatario") destinatario: String, @Query("idUsuario") id_usuario: Long): Call<List<EmailComAlteracao>?>
 
+    @GET("/email/listarEmailsEnviadosPorRemetente")
+    fun listarEmailsEnviadosPorRemetente(@Query("remetente") remetente: String, @Query("idUsuario") id_usuario: Long): Call<List<EmailComAlteracao>?>
+
+
+    @GET("/email/listarEmailsImportantesPorIdUsuario")
+    fun listarEmailsImportantesPorIdUsuario(@Query("idUsuario") id_usuario: Long): Call<List<EmailComAlteracao>?>
+
+    @GET("/email/listarEmailsSpamPorIdUsuario")
+    fun listarEmailsSpamPorIdUsuario(@Query("idUsuario") id_usuario: Long): Call<List<EmailComAlteracao>?>
+
+    @GET("/email/listarEmailsSociaisPorIdUsuario")
+    fun listarEmailsSociaisPorIdUsuario(@Query("idUsuario") id_usuario: Long): Call<List<EmailComAlteracao>?>
+
+    @GET("/email/listarTodosEmails")
+    fun listarTodosEmails(): Call<List<EmailComAlteracao>?>
+
+    @GET("/email/listarEmailsArquivadosPorIdUsuario")
+    fun listarEmailsArquivadosPorIdUsuario(@Query("idUsuario") id_usuario: Long): Call<List<EmailComAlteracao>?>
+
+
+    @GET("/email/listarEmailsPorPastaEIdUsuario")
+    fun listarEmailsPorPastaEIdUsuario(@Query("idUsuario") id_usuario: Long, @Query("pasta") pasta: Long): Call<List<EmailComAlteracao>?>
+
     @GET("/email/listarEmailsLixeiraPorIdUsuario")
     fun listarEmailsLixeiraPorIdUsuario(@Query("idUsuario") id_usuario: Long): Call<List<EmailComAlteracao>?>
 
@@ -197,7 +220,7 @@ interface LocaMailApiService {
     fun atualizarLidoPorIdEmailEIdusuario(@Query("lido") lido: Boolean, @Query("idEmail") id_email: Long, @Query("idUsuario") id_usuario: Long): Call<Unit>
 
     @PATCH("/alteracao/atualizarPastaPorIdEmailEIdUsuario")
-    fun atualizarPastaPorIdEmailEIdUsuario(@Query("pasta") pasta: Long, @Query("idEmail") id_email: Long, @Query("idUsuario") id_usuario: Long): Call<Unit>
+    fun atualizarPastaPorIdEmailEIdUsuario(@Query("pasta") pasta: Long?, @Query("idEmail") id_email: Long, @Query("idUsuario") id_usuario: Long): Call<Unit>
 
     @PATCH("/alteracao/atualizarImportantePorIdEmail")
     fun atualizarImportantePorIdEmail(@Query("importante") pasta: Boolean, @Query("idEmail") id_email: Long, @Query("idUsuario") id_usuario: Long): Call<Unit>

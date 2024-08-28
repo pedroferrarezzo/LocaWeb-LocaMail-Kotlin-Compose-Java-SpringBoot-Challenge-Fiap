@@ -35,7 +35,9 @@ public class AlteracaoService {
     }
 
     public Boolean verificarLidoPorIdEmailEIdUsuario(Long idEmail, Long idUsuario) {
-        return alteracaoRepository.verificarLidoPorIdEmailEIdUsuario(idEmail, idUsuario);
+
+        Long longRetornado = alteracaoRepository.verificarLidoPorIdEmailEIdUsuario(idEmail, idUsuario);
+        return longRetornado == 1;
     }
 
     public List<AlteracaoExibicaoDto> listarAlteracaoPorIdEmail(Long idEmail) {
@@ -94,7 +96,9 @@ public class AlteracaoService {
     }
 
     public Boolean verificarImportantePorIdEmailEIdUsuario(Long idEmail, Long idUsuario) {
-        return alteracaoRepository.verificarImportantePorIdEmailEIdUsuario(idEmail, idUsuario);
+        Long longRetornado = alteracaoRepository.verificarImportantePorIdEmailEIdUsuario(idEmail, idUsuario);
+
+        return longRetornado == 1;
     }
 
     public Long verificarPastaPorIdEmailEIdUsuario(Long idEmail, Long idUsuario) {
@@ -102,14 +106,17 @@ public class AlteracaoService {
     }
 
     public Boolean verificarExcluidoPorIdEmailEIdUsuario(Long idEmail, Long idUsuario) {
-        return alteracaoRepository.verificarExcluidoPorIdEmailEIdUsuario(idEmail, idUsuario);
+        Long longRetornado = alteracaoRepository.verificarExcluidoPorIdEmailEIdUsuario(idEmail, idUsuario);
+        return longRetornado == 1;
     }
 
     public Boolean verificarArquivadoPorIdEmailEIdUsuario(Long idEmail, Long idUsuario) {
-        return alteracaoRepository.verificarArquivadoPorIdEmailEIdUsuario(idEmail, idUsuario);
+        Long longRetornado = alteracaoRepository.verificarArquivadoPorIdEmailEIdUsuario(idEmail, idUsuario);
+        return longRetornado == 1;
     }
 
     public Boolean verificarSpamPorIdEmailEIdUsuario(Long idEmail, Long idUsuario) {
-        return alteracaoRepository.verificarSpamPorIdEmailEIdUsuario(idEmail, idUsuario);
+        Long longRetornado = alteracaoRepository.verificarSpamPorIdEmailEIdUsuario(idEmail, idUsuario);
+        return longRetornado == 1;
     }
 }

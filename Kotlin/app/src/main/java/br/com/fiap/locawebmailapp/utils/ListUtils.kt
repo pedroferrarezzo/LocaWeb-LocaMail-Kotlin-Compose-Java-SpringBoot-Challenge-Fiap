@@ -4,7 +4,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import br.com.fiap.locawebmailapp.database.repository.ConvidadoRepository
 import br.com.fiap.locawebmailapp.model.Convidado
-import br.com.fiap.locawebmailapp.model.Email
+import br.com.fiap.locawebmailapp.model.EmailComAlteracao
 import br.com.fiap.locawebmailapp.model.IdConvidado
 import br.com.fiap.locawebmailapp.model.RespostaEmail
 
@@ -16,7 +16,7 @@ fun stringParaLista(str: String): List<String> {
     return str.split(", ")
 }
 
-fun atualizarTodosDestinatariosList(todosDestinatarios: ArrayList<String>, email: Email, respostaEmailList: List<RespostaEmail>){
+fun atualizarTodosDestinatariosList(todosDestinatarios: ArrayList<String>, email: EmailComAlteracao, respostaEmailList: List<RespostaEmail>){
 
     todosDestinatarios.addAll(stringParaLista(email.destinatario))
     todosDestinatarios.addAll(stringParaLista(email.cc))

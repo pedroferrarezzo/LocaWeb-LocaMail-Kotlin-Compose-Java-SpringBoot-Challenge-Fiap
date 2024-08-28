@@ -49,7 +49,7 @@ public class AlteracaoController {
 
     @PatchMapping("/atualizarPastaPorIdEmailEIdUsuario")
     @ResponseStatus(HttpStatus.OK)
-    public void atualizarPastaPorIdEmailEIdUsuario(@RequestParam("pasta") Long pasta, @RequestParam("idEmail") Long id_email, @RequestParam("idUsuario") Long id_usuario) {
+    public void atualizarPastaPorIdEmailEIdUsuario(@RequestParam(value = "pasta", required = false) Long pasta, @RequestParam("idEmail") Long id_email, @RequestParam("idUsuario") Long id_usuario) {
         alteracaoService.atualizarPastaPorIdEmailEIdUsuario(pasta, id_email, id_usuario);
     }
 

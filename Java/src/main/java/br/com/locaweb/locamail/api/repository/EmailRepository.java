@@ -44,6 +44,6 @@ public interface EmailRepository extends JpaRepository<Email, Long> {
     @Query(value = "SELECT * FROM T_LCW_EMAIL INNER JOIN T_LCW_ALTERACAO ON T_LCW_EMAIL.id_email = T_LCW_ALTERACAO.alt_id_email WHERE T_LCW_ALTERACAO.alt_id_usuario = :id_usuario AND excluido = 1 AND editavel = 0 ORDER BY T_LCW_EMAIL.data DESC, T_LCW_EMAIL.horario DESC", nativeQuery = true)
     List<Object[]> listarEmailsLixeiraPorIdUsuario(@Param("id_usuario") Long id_usuario);
 
-    @Query(value = "SELECT * FROM T_LCW_EMAIL INNER JOIN T_LCW_ALTERACAO ON T_LCW_EMAIL.id_email = T _LCW_ALTERACAO.alt_id_email WHERE T_LCW_ALTERACAO.alt_id_usuario = :id_usuario AND id_pasta = :id_pasta AND arquivado = 0 AND excluido = 0 AND spam = 0 AND editavel = 0 ORDER BY T_LCW_EMAIL.data DESC, T_LCW_EMAIL.horario DESC", nativeQuery = true)
+    @Query(value = "SELECT * FROM T_LCW_EMAIL INNER JOIN T_LCW_ALTERACAO ON T_LCW_EMAIL.id_email = T_LCW_ALTERACAO.alt_id_email WHERE T_LCW_ALTERACAO.alt_id_usuario = :id_usuario AND id_pasta = :id_pasta AND arquivado = 0 AND excluido = 0 AND spam = 0 AND editavel = 0 ORDER BY T_LCW_EMAIL.data DESC, T_LCW_EMAIL.horario DESC", nativeQuery = true)
     List<Object[]> listarEmailsPorPastaEIdUsuario(@Param("id_usuario") Long id_usuario, @Param("id_pasta") Long id_pasta);
 }

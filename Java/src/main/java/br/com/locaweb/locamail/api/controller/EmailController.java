@@ -36,16 +36,59 @@ public class EmailController {
         return emailService.listarEmailsPorDestinatario(destinatario, id_usuario);
     }
 
+    @GetMapping("/listarEmailsEnviadosPorRemetente")
+    @ResponseStatus(HttpStatus.OK)
+    public List<EmailComAlteracaoDto> listarEmailsEnviadosPorRemetente(@RequestParam("remetente") String remetente,
+                                                                  @RequestParam("idUsuario") Long id_usuario) {
+        return emailService.listarEmailsEnviadosPorRemetente(remetente, id_usuario);
+    }
+
+    @GetMapping("/listarEmailsImportantesPorIdUsuario")
+    @ResponseStatus(HttpStatus.OK)
+    public List<EmailComAlteracaoDto> listarEmailsImportantesPorIdUsuario(@RequestParam("idUsuario") Long id_usuario) {
+        return emailService.listarEmailsImportantesPorIdUsuario(id_usuario);
+    }
+
+    @GetMapping("/listarEmailsArquivadosPorIdUsuario")
+    @ResponseStatus(HttpStatus.OK)
+    public List<EmailComAlteracaoDto> listarEmailsArquivadosPorIdUsuario(@RequestParam("idUsuario") Long id_usuario) {
+        return emailService.listarEmailsArquivadosPorIdUsuario(id_usuario);
+    }
+
+    @GetMapping("/listarEmailsPorPastaEIdUsuario")
+    @ResponseStatus(HttpStatus.OK)
+    public List<EmailComAlteracaoDto> listarEmailsPorPastaEIdUsuario(@RequestParam("idUsuario") Long id_usuario, @RequestParam("pasta") Long pasta) {
+        return emailService.listarEmailsPorPastaEIdUsuario(id_usuario, pasta);
+    }
+
     @GetMapping("/listarEmailsLixeiraPorIdUsuario")
     @ResponseStatus(HttpStatus.OK)
     public List<EmailComAlteracaoDto> listarEmailsLixeiraPorIdUsuario(@RequestParam("idUsuario") Long id_usuario) {
         return emailService.listarEmailsLixeiraPorIdUsuario(id_usuario);
     }
 
+    @GetMapping("/listarEmailsSpamPorIdUsuario")
+    @ResponseStatus(HttpStatus.OK)
+    public List<EmailComAlteracaoDto> listarEmailsSpamPorIdUsuario(@RequestParam("idUsuario") Long id_usuario) {
+        return emailService.listarEmailsSpamPorIdUsuario(id_usuario);
+    }
+
+    @GetMapping("/listarEmailsSociaisPorIdUsuario")
+    @ResponseStatus(HttpStatus.OK)
+    public List<EmailComAlteracaoDto> listarEmailsSociaisPorIdUsuario(@RequestParam("idUsuario") Long id_usuario) {
+        return emailService.listarEmailsSociaisPorIdUsuario(id_usuario);
+    }
+
     @GetMapping("/listarEmailsEditaveisPorRemetente")
     @ResponseStatus(HttpStatus.OK)
     public List<EmailExibicaoDto> listarEmailsEditaveisPorRemetente(@RequestParam("remetente") String remetente) {
         return emailService.listarEmailsEditaveisPorRemetente(remetente);
+    }
+
+    @GetMapping("/listarTodosEmails")
+    @ResponseStatus(HttpStatus.OK)
+    public List<EmailComAlteracaoDto> listarTodosEmails() {
+        return emailService.listarTodosEmails();
     }
 
     @GetMapping("/listarEmailPorId")
