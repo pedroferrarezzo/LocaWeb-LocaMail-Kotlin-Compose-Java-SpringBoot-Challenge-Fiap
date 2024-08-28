@@ -13,7 +13,7 @@ import java.lang.reflect.Type
 
 
 class LocaMailApiFactory {
-    private val URL = "http://192.168.68.101/"
+    private val URL = "http://192.168.1.3/"
     val nullOnEmptyConverterFactory = object : Converter.Factory() {
         fun converterFactory() = this
         override fun responseBodyConverter(type: Type, annotations: Array<out Annotation>, retrofit: Retrofit) = object : Converter<ResponseBody, Any?> {
