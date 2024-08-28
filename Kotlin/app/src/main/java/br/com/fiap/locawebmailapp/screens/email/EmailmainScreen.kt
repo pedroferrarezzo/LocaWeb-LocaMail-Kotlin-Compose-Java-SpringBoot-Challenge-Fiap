@@ -372,14 +372,16 @@ fun EMailMainScreen(navController: NavController) {
                                             mutableStateOf(it.lido)
                                         }
 
-                                        var respostasEmail: List<RespostaEmail>? = null
+                                        val respostasEmail = remember {
+                                            mutableStateOf(listOf<RespostaEmail>())
+                                        }
 
                                         callLocaMailApiListarRespostasEmailPorIdEmail(
                                             it.id_email,
                                             onSuccess = { listRespostaRetornado ->
-
-                                                respostasEmail = listRespostaRetornado
-
+                                                if (listRespostaRetornado != null) {
+                                                    respostasEmail.value = listRespostaRetornado
+                                                }
                                             },
                                             onError = { error ->
                                                 isError.value = true
@@ -409,7 +411,7 @@ fun EMailMainScreen(navController: NavController) {
                                             },
                                             isRead = isRead,
                                             redLcWeb = redLcWeb,
-                                            respostasEmail = respostasEmail,
+                                            respostasEmail = respostasEmail.value,
                                             onClickPastaIconButton = {
                                                 openDialogPastaPicker.value =
                                                     !openDialogPastaPicker.value

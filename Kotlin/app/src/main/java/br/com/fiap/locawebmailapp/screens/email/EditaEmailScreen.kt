@@ -178,7 +178,6 @@ fun EditaEmailScreen(navController: NavController, idEmail: Long) {
 
     val launcher =
         rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { uri: Uri? ->
-
             imageUri = uri
             pickImageFromGallery(
                 context = context,
@@ -300,6 +299,7 @@ fun EditaEmailScreen(navController: NavController, idEmail: Long) {
                                 || assuntoText.value != email.value!!.assunto
                                 || corpoMailText.value != email.value!!.corpo
                                 || bitmapList.isNotEmpty()
+                                || bitmapList.isEmpty()
                                 || anexoArrayByteList.isNotEmpty()
                             ) {
                                 isLoading.value = true

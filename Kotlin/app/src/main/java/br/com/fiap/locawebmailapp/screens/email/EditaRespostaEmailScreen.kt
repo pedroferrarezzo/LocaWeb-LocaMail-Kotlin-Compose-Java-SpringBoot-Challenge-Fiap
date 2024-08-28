@@ -144,9 +144,9 @@ fun EditaRespostaEmailScreen(navController: NavController, idRespostaEmail: Long
                         onSuccess = { listArrayByteRetornado ->
                             if (listArrayByteRetornado != null) {
                                 anexoRespostaEmailArrayByteList = listArrayByteRetornado
-                                bitmapList = anexoRespostaEmailArrayByteList.map {
+                                bitmapList.addAll(anexoRespostaEmailArrayByteList.map {
                                     byteArrayToBitmap(it)
-                                }.toMutableStateList()
+                                })
                             }
                         },
                         onError = {
@@ -154,9 +154,7 @@ fun EditaRespostaEmailScreen(navController: NavController, idRespostaEmail: Long
                             isLoading.value = false
                         }
                     )
-
                 }
-
             },
             onError = {
                 isError.value = true
@@ -337,6 +335,7 @@ fun EditaRespostaEmailScreen(navController: NavController, idRespostaEmail: Long
                                 || assuntoText.value != respostaEmail.value!!.assunto
                                 || corpoMailText.value != respostaEmail.value!!.corpo
                                 || bitmapList.isNotEmpty()
+                                || bitmapList.isEmpty()
                                 || anexoRespostaEmailArrayByteList.isNotEmpty()
                             ) {
                                 respostaEmail.value!!.destinatario =
@@ -352,37 +351,13 @@ fun EditaRespostaEmailScreen(navController: NavController, idRespostaEmail: Long
                                 anexoRespostaEmail.id_resposta_email =
                                     respostaEmail.value!!.id_resposta_email
 
-
                                 callLocaMailApiAtualizarRespostaEmail(
                                     respostaEmail.value!!,
                                     onSuccess = {
                                         isLoading.value = false
 
-                                    },
-                                    onError = {
-                                        isError.value = true
-                                        isLoading.value = false
-                                    }
-                                )
-
-                                callLocaMailApiExcluirAnexoPorIdRespostaEmail(
-                                    anexoRespostaEmail.id_resposta_email,
-                                    onSuccess = {
-
-                                    },
-                                    onError = {
-                                        isError.value = true
-                                        isLoading.value = false
-                                    }
-                                )
-
-                                if (bitmapList.isNotEmpty()) {
-                                    for (bitmap in bitmapList) {
-                                        val byteArray = bitmapToByteArray(bitmap = bitmap)
-                                        anexoRespostaEmail.anexo = byteArray
-
-                                        callLocaMailApiCriarAnexoRespostaEmail(
-                                            anexoRespostaEmail,
+                                        callLocaMailApiExcluirAnexoPorIdRespostaEmail(
+                                            anexoRespostaEmail.id_resposta_email,
                                             onSuccess = {
 
                                             },
@@ -391,15 +366,37 @@ fun EditaRespostaEmailScreen(navController: NavController, idRespostaEmail: Long
                                                 isLoading.value = false
                                             }
                                         )
-                                    }
-                                }
 
-                                Toast.makeText(
-                                    context,
-                                    toastMessageDraftMailRespSaved,
-                                    Toast.LENGTH_LONG
-                                ).show()
-                                navController.popBackStack()
+                                        if (bitmapList.isNotEmpty()) {
+                                            for (bitmap in bitmapList) {
+                                                val byteArray = bitmapToByteArray(bitmap = bitmap)
+                                                anexoRespostaEmail.anexo = byteArray
+
+                                                callLocaMailApiCriarAnexoRespostaEmail(
+                                                    anexoRespostaEmail,
+                                                    onSuccess = {
+
+                                                    },
+                                                    onError = {
+                                                        isError.value = true
+                                                        isLoading.value = false
+                                                    }
+                                                )
+                                            }
+                                        }
+
+                                        Toast.makeText(
+                                            context,
+                                            toastMessageDraftMailRespSaved,
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                        navController.popBackStack()
+                                    },
+                                    onError = {
+                                        isError.value = true
+                                        isLoading.value = false
+                                    }
+                                )
                             } else {
                                 navController.popBackStack()
                             }
@@ -430,6 +427,127 @@ fun EditaRespostaEmailScreen(navController: NavController, idRespostaEmail: Long
                                     respostaEmail.value!!,
                                     onSuccess = {
                                         isLoading.value = false
+                                        callLocaMailApiExcluirAnexoPorIdRespostaEmail(
+                                            anexoRespostaEmail.id_resposta_email,
+                                            onSuccess = {
+
+                                            },
+                                            onError = {
+                                                isError.value = true
+                                                isLoading.value = false
+                                            }
+                                        )
+
+                                        if (bitmapList.isNotEmpty()) {
+                                            for (bitmap in bitmapList) {
+                                                val byteArray = bitmapToByteArray(bitmap = bitmap)
+                                                anexoRespostaEmail.anexo = byteArray
+
+                                                callLocaMailApiCriarAnexoRespostaEmail(
+                                                    anexoRespostaEmail,
+                                                    onSuccess = {
+
+                                                    },
+                                                    onError = {
+                                                        isError.value = true
+                                                        isLoading.value = false
+                                                    }
+                                                )
+                                            }
+                                        }
+
+                                        val todosDestinatarios = arrayListOf<String>()
+                                        todosDestinatarios.addAll(destinatarios)
+                                        todosDestinatarios.addAll(ccos)
+                                        todosDestinatarios.addAll(ccs)
+
+                                        if (!todosDestinatarios.contains(respostaEmail.value!!.remetente)) todosDestinatarios.add(
+                                            respostaEmail.value!!.remetente
+                                        )
+
+                                        for (destinatario in todosDestinatarios) {
+                                            callLocaMailApiVerificarConvidadoExiste(
+                                                destinatario,
+                                                onSuccess = { convidadoExisteRetornado ->
+
+                                                    if (convidadoExisteRetornado != null) {
+                                                        val convidadoExistente = convidadoExisteRetornado
+
+                                                        if (convidadoExistente != destinatario) {
+                                                            convidado.email = destinatario
+                                                            callLocaMailApiCriarConvidado(
+                                                                convidado,
+                                                                onSuccess = {
+
+                                                                },
+                                                                onError = {
+                                                                    isError.value = true
+                                                                    isLoading.value = false
+                                                                }
+                                                            )
+                                                        }
+
+                                                    }
+                                                },
+                                                onError = {
+                                                    isError.value = true
+                                                    isLoading.value = false
+                                                }
+                                            )
+                                        }
+
+                                        callLocaMailApiListarUsuarios(
+                                            onSuccess = { usuariosRetornados ->
+
+                                                if (usuariosRetornados != null) {
+                                                    for (usuario in usuariosRetornados) {
+                                                        if (todosDestinatarios.contains(usuario.email) && !alteracoesEmailAltIdUsuarioList.contains(
+                                                                usuario.id_usuario
+                                                            )
+                                                        ) {
+                                                            callLocaMailApiCriarAlteracao(
+                                                                Alteracao(
+                                                                    alt_id_email = respostaEmail.value!!.id_email,
+                                                                    alt_id_usuario = usuario.id_usuario
+                                                                ),
+                                                                onSuccess = {
+
+                                                                },
+                                                                onError = {
+                                                                    isError.value = true
+                                                                    isLoading.value = false
+                                                                }
+                                                            )
+                                                        }
+
+                                                        if (usuarioSelecionado.value != null) {
+                                                            if (todosDestinatarios.contains(usuario.email) && alteracoesEmailAltIdUsuarioList.contains(
+                                                                    usuario.id_usuario
+                                                                ) && usuario.id_usuario != usuarioSelecionado.value!!.id_usuario
+                                                            ) {
+
+                                                                callLocaMailApiAtualizarLidoPorIdEmailEIdusuario(
+                                                                    false,
+                                                                    id_email = respostaEmail.value!!.id_email,
+                                                                    id_usuario = usuario.id_usuario,
+                                                                    onSuccess = {
+
+                                                                    },
+                                                                    onError = {
+                                                                        isError.value = true
+                                                                        isLoading.value = false
+                                                                    }
+                                                                )
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            onError = {
+                                                isError.value = true
+                                                isLoading.value = false
+                                            }
+                                        )
                                         Toast.makeText(
                                             context,
                                             toastMessageDraftMailRespSent,
@@ -442,128 +560,6 @@ fun EditaRespostaEmailScreen(navController: NavController, idRespostaEmail: Long
                                         isError.value = true
                                         isLoading.value = false
 
-                                    }
-                                )
-
-                                callLocaMailApiExcluirAnexoPorIdRespostaEmail(
-                                    anexoRespostaEmail.id_resposta_email,
-                                    onSuccess = {
-
-                                    },
-                                    onError = {
-                                        isError.value = true
-                                        isLoading.value = false
-                                    }
-                                )
-
-                                if (bitmapList.isNotEmpty()) {
-                                    for (bitmap in bitmapList) {
-                                        val byteArray = bitmapToByteArray(bitmap = bitmap)
-                                        anexoRespostaEmail.anexo = byteArray
-
-                                        callLocaMailApiCriarAnexoRespostaEmail(
-                                            anexoRespostaEmail,
-                                            onSuccess = {
-
-                                            },
-                                            onError = {
-                                                isError.value = true
-                                                isLoading.value = false
-                                            }
-                                        )
-                                    }
-                                }
-
-                                val todosDestinatarios = arrayListOf<String>()
-                                todosDestinatarios.addAll(destinatarios)
-                                todosDestinatarios.addAll(ccos)
-                                todosDestinatarios.addAll(ccs)
-
-                                if (!todosDestinatarios.contains(respostaEmail.value!!.remetente)) todosDestinatarios.add(
-                                    respostaEmail.value!!.remetente
-                                )
-
-                                for (destinatario in todosDestinatarios) {
-                                    callLocaMailApiVerificarConvidadoExiste(
-                                        destinatario,
-                                        onSuccess = { convidadoExisteRetornado ->
-
-                                            if (convidadoExisteRetornado != null) {
-                                                val convidadoExistente = convidadoExisteRetornado
-
-                                                if (convidadoExistente != destinatario) {
-                                                    convidado.email = destinatario
-                                                    callLocaMailApiCriarConvidado(
-                                                        convidado,
-                                                        onSuccess = {
-
-                                                        },
-                                                        onError = {
-                                                            isError.value = true
-                                                            isLoading.value = false
-                                                        }
-                                                    )
-                                                }
-
-                                            }
-                                        },
-                                        onError = {
-                                            isError.value = true
-                                            isLoading.value = false
-                                        }
-                                    )
-                                }
-
-                                callLocaMailApiListarUsuarios(
-                                    onSuccess = { usuariosRetornados ->
-
-                                        if (usuariosRetornados != null) {
-                                            for (usuario in usuariosRetornados) {
-                                                if (todosDestinatarios.contains(usuario.email) && !alteracoesEmailAltIdUsuarioList.contains(
-                                                        usuario.id_usuario
-                                                    )
-                                                ) {
-                                                    callLocaMailApiCriarAlteracao(
-                                                        Alteracao(
-                                                            alt_id_email = respostaEmail.value!!.id_email,
-                                                            alt_id_usuario = usuario.id_usuario
-                                                        ),
-                                                        onSuccess = {
-
-                                                        },
-                                                        onError = {
-                                                            isError.value = true
-                                                            isLoading.value = false
-                                                        }
-                                                    )
-                                                }
-
-                                                if (usuarioSelecionado.value != null) {
-                                                    if (todosDestinatarios.contains(usuario.email) && alteracoesEmailAltIdUsuarioList.contains(
-                                                            usuario.id_usuario
-                                                        ) && usuario.id_usuario != usuarioSelecionado.value!!.id_usuario
-                                                    ) {
-
-                                                        callLocaMailApiAtualizarLidoPorIdEmailEIdusuario(
-                                                            false,
-                                                            id_email = respostaEmail.value!!.id_email,
-                                                            id_usuario = usuario.id_usuario,
-                                                            onSuccess = {
-
-                                                            },
-                                                            onError = {
-                                                                isError.value = true
-                                                                isLoading.value = false
-                                                            }
-                                                        )
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    },
-                                    onError = {
-                                        isError.value = true
-                                        isLoading.value = false
                                     }
                                 )
                             } else {

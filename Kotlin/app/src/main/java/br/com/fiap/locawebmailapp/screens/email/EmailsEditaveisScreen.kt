@@ -95,7 +95,7 @@ fun EmailsEditaveisScreen(navController: NavController) {
         mutableStateOf<Usuario?>(null)
     }
 
-    var editableEmailList = remember {
+    val editableEmailList = remember {
         mutableStateOf(listOf<Email>())
     }
 
@@ -283,7 +283,6 @@ fun EmailsEditaveisScreen(navController: NavController) {
                                 isLoading.value = true
 
                                 if (usuarioSelecionado.value != null) {
-
                                     callLocaMailApiListarEmailsEditaveisPorRemetente(
                                         usuarioSelecionado.value!!.email,
                                         onSuccess = { listEmailsEditaveisRetorno ->
@@ -351,7 +350,7 @@ fun EmailsEditaveisScreen(navController: NavController) {
                                 })
 
                             LazyColumn(reverseLayout = false) {
-                                items(editableEmailStateList.reversed(), key = {
+                                items(editableEmailStateList, key = {
                                     it.id_email
                                 }) {
                                     if (

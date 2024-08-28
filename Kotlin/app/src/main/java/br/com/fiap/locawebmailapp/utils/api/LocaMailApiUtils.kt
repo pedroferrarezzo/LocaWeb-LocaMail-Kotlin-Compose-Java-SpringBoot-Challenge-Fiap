@@ -103,6 +103,42 @@ fun callLocaMailApiListarEmailsPorDestinatario(
 }
 
 
+fun callLocaMailApiListarEmailsLixeiraPorIdUsuario(
+    id_usuario: Long,
+    onSuccess: (List<EmailComAlteracao>?) -> Unit,
+    onError: (Throwable) -> Unit
+) {
+    val call = LocaMailApiFactory().getLocaMailApiFactory()
+        .listarEmailsLixeiraPorIdUsuario(id_usuario)
+
+    call.enqueue(object : Callback<List<EmailComAlteracao>?> {
+        override fun onResponse(
+            call: Call<List<EmailComAlteracao>?>,
+            response: Response<List<EmailComAlteracao>?>
+        ) {
+            if (response.isSuccessful && response.body() != null) {
+                response.body()!!.forEach {
+                    it.cc = getValidatedString(it.cc)
+                    it.cco = getValidatedString(it.cco)
+                    it.corpo = getValidatedString(it.corpo)
+                    it.destinatario = getValidatedString(it.destinatario)
+                    it.assunto = getValidatedString(it.assunto)
+                }
+                onSuccess(response.body()!!)
+            } else if (response.isSuccessful == false) {
+                onError(Throwable())
+            } else {
+                onSuccess(null)
+            }
+        }
+
+        override fun onFailure(call: Call<List<EmailComAlteracao>?>, t: Throwable) {
+            onError(t)
+        }
+    })
+}
+
+
 fun callLocaMailApiListarEmailsEditaveisPorRemetente(
     remetente: String,
     onSuccess: (List<Email>?) -> Unit,

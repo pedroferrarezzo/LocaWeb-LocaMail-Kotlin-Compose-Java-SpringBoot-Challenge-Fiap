@@ -28,19 +28,21 @@ public class ObjectMapperUtils {
             dto.setCco((String) row[5]);
             dto.setAssunto((String) row[6]);
 
-            Clob corpo = (Clob) row[7];
-            try (Reader reader = corpo.getCharacterStream();
-                 StringWriter w = new StringWriter()) {
-                char[] buffer = new char[4096];
-                int charsRead;
-                while ((charsRead = reader.read(buffer)) != -1) {
-                    w.write(buffer, 0, charsRead);
+            if (row[7] != null) {
+                Clob corpo = (Clob) row[7];
+                try (Reader reader = corpo.getCharacterStream();
+                     StringWriter w = new StringWriter()) {
+                    char[] buffer = new char[4096];
+                    int charsRead;
+                    while ((charsRead = reader.read(buffer)) != -1) {
+                        w.write(buffer, 0, charsRead);
+                    }
+                    dto.setCorpo(w.toString());
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
                 }
-                dto.setCorpo(w.toString());
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
             }
 
             dto.setEditavel(((BigDecimal) row[8]).intValue() == 1);

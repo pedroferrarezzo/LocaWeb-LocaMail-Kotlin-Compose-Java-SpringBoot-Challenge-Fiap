@@ -18,15 +18,12 @@ public record RespostaEmailCadastroDto(
         String remetente,
 
         @NotNull(message = "O destinatário é obrigatório!")
-        @Email(message = "O email deve estar no formato correto!")
         String destinatario,
 
         @NotNull(message = "O campo CC é obrigatório!")
-        @Email(message = "O email deve estar no formato correto!")
         String cc,
 
         @NotNull(message = "O campo CCO é obrigatório!")
-        @Email(message = "O email deve estar no formato correto!")
         String cco,
 
         @NotNull(message = "O assunto é obrigatório!")
