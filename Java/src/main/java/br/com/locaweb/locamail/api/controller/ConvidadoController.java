@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/convidado")
 public class ConvidadoController {
@@ -18,6 +20,12 @@ public class ConvidadoController {
     @ResponseStatus(HttpStatus.OK)
     public String verificarConvidadoExiste(@RequestParam("email") String email) {
         return convidadoService.verificarConvidadoExiste(email);
+    }
+
+    @GetMapping("/listarConvidado")
+    @ResponseStatus(HttpStatus.OK)
+    public List<ConvidadoExibicaoDto> listarConvidado() {
+        return convidadoService.listarConvidado();
     }
 
     @PostMapping("/criarConvidado")

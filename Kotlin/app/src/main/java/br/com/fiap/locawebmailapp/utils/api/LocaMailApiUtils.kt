@@ -1,6 +1,7 @@
 package br.com.fiap.locawebmailapp.utils.api
 
 import br.com.fiap.locawebmailapp.model.Agenda
+import br.com.fiap.locawebmailapp.model.AgendaConvidado
 import br.com.fiap.locawebmailapp.model.Alteracao
 import br.com.fiap.locawebmailapp.model.Anexo
 import br.com.fiap.locawebmailapp.model.AnexoRespostaEmail
@@ -133,6 +134,32 @@ fun callLocaMailApiListarEmailsEnviadosPorRemetente(
         }
 
         override fun onFailure(call: Call<List<EmailComAlteracao>?>, t: Throwable) {
+            onError(t)
+        }
+    })
+}
+
+fun callLocaMailApiListarGrupoRepeticao(
+    onSuccess: (List<Int>?) -> Unit,
+    onError: (Throwable) -> Unit
+) {
+    val call = LocaMailApiFactory().getLocaMailApiFactory()
+        .listarGrupoRepeticao()
+
+    call.enqueue(object : Callback<List<Int>?> {
+        override fun onResponse(
+            call: Call<List<Int>?>,
+            response: Response<List<Int>?>
+        ) {
+            if (response.isSuccessful && response.body() != null) {
+                onSuccess(response.body()!!)
+            } else if (response.isSuccessful == false) {
+                onError(Throwable())
+            } else {
+                onSuccess(null)
+            }
+        }
+        override fun onFailure(call: Call<List<Int>?>, t: Throwable) {
             onError(t)
         }
     })
@@ -864,6 +891,78 @@ fun callLocaMailApiCriarPasta(
     })
 }
 
+
+fun callLocaMailApiCriarAgenda(
+    agenda: Agenda,
+    onSuccess: (Agenda?) -> Unit,
+    onError: (Throwable) -> Unit
+) {
+    val callLocaMailApiService = LocaMailApiFactory().getLocaMailApiFactory().criarAgenda(agenda)
+
+    callLocaMailApiService.enqueue(object : Callback<Agenda?> {
+        override fun onResponse(call: Call<Agenda?>, response: Response<Agenda?>) {
+            if (response.isSuccessful && response.body() != null) {
+                onSuccess(response.body()!!)
+            } else if (response.isSuccessful == false) {
+                onError(Throwable())
+            } else {
+                onSuccess(null)
+            }
+        }
+
+        override fun onFailure(call: Call<Agenda?>, t: Throwable) {
+            onError(t)
+        }
+    })
+}
+
+fun callLocaMailApiCriarAgendaConvidado(
+    agendaConvidado: AgendaConvidado,
+    onSuccess: (AgendaConvidado?) -> Unit,
+    onError: (Throwable) -> Unit
+) {
+    val callLocaMailApiService = LocaMailApiFactory().getLocaMailApiFactory().criarAgendaConvidado(agendaConvidado)
+
+    callLocaMailApiService.enqueue(object : Callback<AgendaConvidado?> {
+        override fun onResponse(call: Call<AgendaConvidado?>, response: Response<AgendaConvidado?>) {
+            if (response.isSuccessful && response.body() != null) {
+                onSuccess(response.body()!!)
+            } else if (response.isSuccessful == false) {
+                onError(Throwable())
+            } else {
+                onSuccess(null)
+            }
+        }
+
+        override fun onFailure(call: Call<AgendaConvidado?>, t: Throwable) {
+            onError(t)
+        }
+    })
+}
+
+fun callLocaMailApiRetornaValorAtualSeqPrimayKey(
+    onSuccess: (Long?) -> Unit,
+    onError: (Throwable) -> Unit
+) {
+    val callLocaMailApiService = LocaMailApiFactory().getLocaMailApiFactory().retornaValorAtualSeqPrimayKey()
+
+    callLocaMailApiService.enqueue(object : Callback<Long?> {
+        override fun onResponse(call: Call<Long?>, response: Response<Long?>) {
+            if (response.isSuccessful && response.body() != null) {
+                onSuccess(response.body()!!)
+            } else if (response.isSuccessful == false) {
+                onError(Throwable())
+            } else {
+                onSuccess(null)
+            }
+        }
+
+        override fun onFailure(call: Call<Long?>, t: Throwable) {
+            onError(t)
+        }
+    })
+}
+
 fun callLocaMailApiExcluirPasta(
     pasta: Long,
     onSuccess: (Unit?) -> Unit,
@@ -1248,7 +1347,7 @@ fun callLocaMailApiVerificarImportantePorIdEmailEIdUsuario(
 }
 
 
-fun callLocaMailApicriarUsuario(
+fun callLocaMailApiCriarUsuario(
     usuario: Usuario,
     onSuccess: (UsuarioSemSenha?) -> Unit,
     onError: (Throwable) -> Unit
@@ -1345,6 +1444,30 @@ fun callLocaMailApiVerificarConvidadoExiste(
         }
 
         override fun onFailure(call: Call<String?>, t: Throwable) {
+            onError(t)
+        }
+    })
+}
+
+fun callLocaMailApiListarConvidado(
+    onSuccess: (List<Convidado>?) -> Unit,
+    onError: (Throwable) -> Unit
+) {
+    val callLocaMailApiService =
+        LocaMailApiFactory().getLocaMailApiFactory().listarConvidado()
+
+    callLocaMailApiService.enqueue(object : Callback<List<Convidado>?> {
+        override fun onResponse(call: Call<List<Convidado>?>, response: Response<List<Convidado>?>) {
+            if (response.isSuccessful && response.body() != null) {
+                onSuccess(response.body()!!)
+            } else if (response.isSuccessful == false) {
+                onError(Throwable())
+            } else {
+                onSuccess(null)
+            }
+        }
+
+        override fun onFailure(call: Call<List<Convidado>?>, t: Throwable) {
             onError(t)
         }
     })

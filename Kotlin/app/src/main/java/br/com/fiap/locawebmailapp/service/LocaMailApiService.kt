@@ -1,6 +1,7 @@
 package br.com.fiap.locawebmailapp.service
 
 import br.com.fiap.locawebmailapp.model.Agenda
+import br.com.fiap.locawebmailapp.model.AgendaConvidado
 import br.com.fiap.locawebmailapp.model.Alteracao
 import br.com.fiap.locawebmailapp.model.Anexo
 import br.com.fiap.locawebmailapp.model.AnexoRespostaEmail
@@ -88,6 +89,9 @@ interface LocaMailApiService {
 
     @GET("/email/listarTodosEmails")
     fun listarTodosEmails(): Call<List<EmailComAlteracao>?>
+
+    @GET("/convidado/listarConvidado")
+    fun listarConvidado(): Call<List<Convidado>?>
 
     @GET("/email/listarEmailsArquivadosPorIdUsuario")
     fun listarEmailsArquivadosPorIdUsuario(@Query("idUsuario") id_usuario: Long): Call<List<EmailComAlteracao>?>
@@ -224,6 +228,19 @@ interface LocaMailApiService {
 
     @PATCH("/alteracao/atualizarImportantePorIdEmail")
     fun atualizarImportantePorIdEmail(@Query("importante") pasta: Boolean, @Query("idEmail") id_email: Long, @Query("idUsuario") id_usuario: Long): Call<Unit>
+
+    @GET("/agenda/listarGrupoRepeticao")
+    fun listarGrupoRepeticao(): Call<List<Int>?>
+
+    @GET("/agenda/retornaValorAtualSeqPrimayKey")
+    fun retornaValorAtualSeqPrimayKey(): Call<Long?>
+
+    @POST("/agenda/criarAgenda")
+    fun criarAgenda(@Body agenda: Agenda): Call<Agenda?>
+
+
+    @POST("/agendaConvidado/criaAgendaConvidado")
+    fun criarAgendaConvidado(@Body agendaConvidado: AgendaConvidado): Call<AgendaConvidado?>
 
 
 

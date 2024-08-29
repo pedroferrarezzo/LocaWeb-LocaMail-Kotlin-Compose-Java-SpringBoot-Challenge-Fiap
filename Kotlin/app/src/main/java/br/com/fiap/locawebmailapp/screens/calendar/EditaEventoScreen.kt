@@ -61,7 +61,6 @@ import br.com.fiap.locawebmailapp.database.repository.UsuarioRepository
 import br.com.fiap.locawebmailapp.model.AgendaConvidado
 import br.com.fiap.locawebmailapp.model.Convidado
 import br.com.fiap.locawebmailapp.model.IdConvidado
-import br.com.fiap.locawebmailapp.utils.convertMillisToLocalDate
 import br.com.fiap.locawebmailapp.utils.convertTo12Hours
 import br.com.fiap.locawebmailapp.utils.localDateToMillis
 import br.com.fiap.locawebmailapp.utils.returnColor

@@ -8,7 +8,6 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -64,7 +63,7 @@ import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiCriarConvidado
 import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiCriarEmail
 import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiRetornaUsarioPorEmail
 import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiVerificarConvidadoExiste
-import br.com.fiap.locawebmailapp.utils.api.callLocaMailApicriarUsuario
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiCriarUsuario
 import br.com.fiap.locawebmailapp.utils.bitmapToByteArray
 import br.com.fiap.locawebmailapp.utils.checkInternetConnectivity
 import br.com.fiap.locawebmailapp.utils.generateSha256
@@ -483,7 +482,7 @@ fun SignupScreen(navController: NavController) {
                                                             autenticado = false
                                                         )
 
-                                                        callLocaMailApicriarUsuario(
+                                                        callLocaMailApiCriarUsuario(
                                                             usuario = usuarioPersistir,
                                                             onSuccess = { usuarioPersistido ->
                                                                 usuarioCriado.value =

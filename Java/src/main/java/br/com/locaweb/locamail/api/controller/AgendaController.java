@@ -1,7 +1,9 @@
 package br.com.locaweb.locamail.api.controller;
 
+import br.com.locaweb.locamail.api.dto.agenda.AgendaCadastroDto;
 import br.com.locaweb.locamail.api.dto.agenda.AgendaExibicaoDto;
 import br.com.locaweb.locamail.api.service.AgendaService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +21,24 @@ public class AgendaController {
     @ResponseStatus(HttpStatus.OK)
     public List<AgendaExibicaoDto> listarAgendaPorIdEmailEIdUsuario(@RequestParam("idEmail") Long id_email, @RequestParam("idUsuario") Long id_usuario) {
         return agendaService.listarAgendaPorIdEmailEIdUsuario(id_email, id_usuario);
+    }
+
+    @GetMapping("/criarAgenda")
+    @ResponseStatus(HttpStatus.OK)
+    public AgendaExibicaoDto criarAgenda(@RequestBody @Valid  AgendaCadastroDto agendaCadastroDto) {
+        return agendaService.criarAgenda(agendaCadastroDto);
+    }
+
+    @GetMapping("/retornaValorAtualSeqPrimayKey")
+    @ResponseStatus(HttpStatus.OK)
+    public Long retornaValorAtualSeqPrimayKey() {
+        return agendaService.retornaValorAtualSeqPrimayKey();
+    }
+
+    @GetMapping("/listarGrupoRepeticao")
+    @ResponseStatus(HttpStatus.OK)
+    public List<Integer> listarGrupoRepeticao() {
+        return agendaService.listarGrupoRepeticao();
     }
 
     @DeleteMapping("/excluiAgenda")
