@@ -185,6 +185,7 @@ fun EmailTodasContasScreen(navController: NavController) {
     }
 
     val todosDestinatarios = arrayListOf<String>()
+
     val toastMessageFolderDeleted = stringResource(id = R.string.toast_folder_deleted)
 
     if (isLoading.value) {
@@ -344,9 +345,28 @@ fun EmailTodasContasScreen(navController: NavController) {
                                             onClickButton = {
                                                 if (!isRead.value) {
                                                     isRead.value = true
-                                                    for (destinatario in (stringParaLista(it.destinatario) + stringParaLista(
-                                                        it.cc
-                                                    ) + stringParaLista(it.cco))) {
+                                                    val emailComAlteracao = EmailComAlteracao(
+                                                        it.id_email,
+                                                        it.id_usuario,
+                                                        it.remetente,
+                                                        it.destinatario,
+                                                        it.cc,
+                                                        it.cco,
+                                                        it.assunto,
+                                                        it.corpo,
+                                                        it.editavel,
+                                                        it.enviado,
+                                                        it.horario,
+                                                        it.data,
+                                                        it.agenda_atrelada,
+                                                    )
+
+                                                    atualizarTodosDestinatariosList(
+                                                        todosDestinatarios,
+                                                        emailComAlteracao,
+                                                        respostasEmail.value
+                                                    )
+                                                    for (destinatario in todosDestinatarios) {
                                                         if (destinatario.isNotBlank()) {
                                                             callLocaMailApiRetornaUsarioPorEmail(
                                                                 destinatario,
@@ -393,9 +413,28 @@ fun EmailTodasContasScreen(navController: NavController) {
                                             respostasEmail = respostasEmail.value,
                                             onClickImportantButton = {
                                                 isImportant.value = !isImportant.value
-                                                for (destinatario in (stringParaLista(it.destinatario) + stringParaLista(
-                                                    it.cc
-                                                ) + stringParaLista(it.cco))) {
+                                                val emailComAlteracao = EmailComAlteracao(
+                                                    it.id_email,
+                                                    it.id_usuario,
+                                                    it.remetente,
+                                                    it.destinatario,
+                                                    it.cc,
+                                                    it.cco,
+                                                    it.assunto,
+                                                    it.corpo,
+                                                    it.editavel,
+                                                    it.enviado,
+                                                    it.horario,
+                                                    it.data,
+                                                    it.agenda_atrelada,
+                                                )
+
+                                                atualizarTodosDestinatariosList(
+                                                    todosDestinatarios,
+                                                    emailComAlteracao,
+                                                    respostasEmail.value
+                                                )
+                                                for (destinatario in todosDestinatarios) {
                                                     if (destinatario.isNotBlank()) {
                                                         callLocaMailApiRetornaUsarioPorEmail(
                                                             destinatario,

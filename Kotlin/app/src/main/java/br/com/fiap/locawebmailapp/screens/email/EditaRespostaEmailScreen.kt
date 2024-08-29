@@ -99,7 +99,7 @@ fun EditaRespostaEmailScreen(navController: NavController, idRespostaEmail: Long
 
     var anexoRespostaEmailArrayByteList: List<ByteArray> = listOf()
 
-    var bitmapList = remember {
+    val bitmapList = remember {
         mutableStateListOf<Bitmap>()
     }
 
@@ -461,10 +461,6 @@ fun EditaRespostaEmailScreen(navController: NavController, idRespostaEmail: Long
                                         todosDestinatarios.addAll(ccos)
                                         todosDestinatarios.addAll(ccs)
 
-                                        if (!todosDestinatarios.contains(respostaEmail.value!!.remetente)) todosDestinatarios.add(
-                                            respostaEmail.value!!.remetente
-                                        )
-
                                         for (destinatario in todosDestinatarios) {
                                             callLocaMailApiVerificarConvidadoExiste(
                                                 destinatario,
@@ -498,7 +494,6 @@ fun EditaRespostaEmailScreen(navController: NavController, idRespostaEmail: Long
 
                                         callLocaMailApiListarUsuarios(
                                             onSuccess = { usuariosRetornados ->
-
                                                 if (usuariosRetornados != null) {
                                                     for (usuario in usuariosRetornados) {
                                                         if (todosDestinatarios.contains(usuario.email) && !alteracoesEmailAltIdUsuarioList.contains(
@@ -554,7 +549,6 @@ fun EditaRespostaEmailScreen(navController: NavController, idRespostaEmail: Long
                                             Toast.LENGTH_LONG
                                         ).show()
                                         navController.popBackStack()
-
                                     },
                                     onError = {
                                         isError.value = true
