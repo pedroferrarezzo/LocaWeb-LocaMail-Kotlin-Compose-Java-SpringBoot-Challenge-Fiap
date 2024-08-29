@@ -9,12 +9,13 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface AlteracaoRepository extends JpaRepository<Alteracao, Long> {
 
     @Query(value = "SELECT * FROM T_LCW_ALTERACAO WHERE alt_id_email = :id_email AND alt_id_usuario = :id_usuario", nativeQuery = true)
-    Alteracao listarAlteracaoPorIdEmailEIdUsuario(@Param("id_email") Long id_email, @Param("id_usuario") Long id_usuario);
+    Optional<Alteracao> listarAlteracaoPorIdEmailEIdUsuario(@Param("id_email") Long id_email, @Param("id_usuario") Long id_usuario);
 
     @Query(value = "SELECT * FROM T_LCW_ALTERACAO WHERE alt_id_usuario = :id_usuario AND id_pasta = :id_pasta", nativeQuery = true)
     List<Alteracao> listarAlteracaoPorIdUsuarioEIdPasta(@Param("id_usuario") Long id_usuario, @Param("id_pasta") Long id_pasta);

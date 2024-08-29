@@ -182,9 +182,6 @@ fun EmailTodasContasScreen(navController: NavController) {
                 isLoading.value = false
             }
         )
-
-
-
     }
 
     val todosDestinatarios = arrayListOf<String>()
