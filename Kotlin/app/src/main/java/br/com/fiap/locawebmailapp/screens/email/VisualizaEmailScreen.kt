@@ -122,7 +122,9 @@ fun VisualizaEmailScreen(
         mutableStateListOf<RespostaEmail?>()
     }
 
-    var respostasEmailList: List<RespostaEmail>? = null
+    val respostasEmailList = remember {
+        mutableStateOf(listOf<RespostaEmail>())
+    }
 
     val isAgendaAtrelada = remember {
         mutableStateOf<Boolean>(false)
@@ -229,14 +231,12 @@ fun VisualizaEmailScreen(
                             email.value!!.agenda_atrelada,
                         )
 
-                        if (respostasEmailList != null) {
+                        atualizarTodosDestinatariosList(
+                            todosDestinatarios,
+                            emailComAlteracao,
+                            respostasEmailList.value
+                        )
 
-                            atualizarTodosDestinatariosList(
-                                todosDestinatarios,
-                                emailComAlteracao,
-                                respostasEmailList!!
-                            )
-                        }
 
                         atualizarIsImportantParaUsuariosRelacionados(
                             todosDestinatarios,
@@ -271,7 +271,6 @@ fun VisualizaEmailScreen(
                             isError = isError
                         )
                     }
-
                 }
             },
             onError = { error ->
@@ -285,7 +284,6 @@ fun VisualizaEmailScreen(
             idEmail,
             onSuccess = { byteArrayListRetornado ->
                 val anexoArrayByteList = byteArrayListRetornado;
-
                 if (anexoArrayByteList != null) {
                     anexoBitMapList.addAll(anexoArrayByteList.map {
                         byteArrayToBitmap(it)
@@ -303,8 +301,8 @@ fun VisualizaEmailScreen(
             onSuccess = { repostaEmailRetornada ->
 
                 if (repostaEmailRetornada != null) {
-                    respostasEmailList = repostaEmailRetornada
-                    respostasEmailList!!.forEach { resposta ->
+                    respostasEmailList.value = repostaEmailRetornada
+                    respostasEmailList.value.forEach { resposta ->
                         if (!respostasEmailStateList.contains(resposta)) {
                             respostasEmailStateList.add(resposta)
                         }
@@ -378,7 +376,6 @@ fun VisualizaEmailScreen(
                 )
             }
         } else {
-
             if (email.value != null) {
                 Column(
                     modifier = Modifier.fillMaxSize()
@@ -529,6 +526,28 @@ fun VisualizaEmailScreen(
 
                             } else {
                                 if (isTodasContasScreen) {
+                                    val emailComAlteracao = EmailComAlteracao(
+                                        email.value!!.id_email,
+                                        email.value!!.id_usuario,
+                                        email.value!!.remetente,
+                                        email.value!!.destinatario,
+                                        email.value!!.cc,
+                                        email.value!!.cco,
+                                        email.value!!.assunto,
+                                        email.value!!.corpo,
+                                        email.value!!.editavel,
+                                        email.value!!.enviado,
+                                        email.value!!.horario,
+                                        email.value!!.data,
+                                        email.value!!.agenda_atrelada,
+                                    )
+
+                                    atualizarTodosDestinatariosList(
+                                        todosDestinatarios,
+                                        emailComAlteracao,
+                                        respostasEmailList.value
+                                    )
+
                                     for (destinatario in todosDestinatarios) {
                                         if (destinatario.isNotBlank()) {
                                             callLocaMailApiRetornaUsarioPorEmail(
@@ -568,7 +587,6 @@ fun VisualizaEmailScreen(
                                         }
                                     }
                                 } else {
-
                                     if (usuarioSelecionado.value != null) {
                                         callLocaMailApiAtualizarExcluidoPorIdEmailEIdusuario(
                                             true,
@@ -598,6 +616,28 @@ fun VisualizaEmailScreen(
                         onClickSpam = {
                             if (isTodasContasScreen) {
                                 isSpam.value = !isSpam.value
+
+                                val emailComAlteracao = EmailComAlteracao(
+                                    email.value!!.id_email,
+                                    email.value!!.id_usuario,
+                                    email.value!!.remetente,
+                                    email.value!!.destinatario,
+                                    email.value!!.cc,
+                                    email.value!!.cco,
+                                    email.value!!.assunto,
+                                    email.value!!.corpo,
+                                    email.value!!.editavel,
+                                    email.value!!.enviado,
+                                    email.value!!.horario,
+                                    email.value!!.data,
+                                    email.value!!.agenda_atrelada,
+                                )
+
+                                atualizarTodosDestinatariosList(
+                                    todosDestinatarios,
+                                    emailComAlteracao,
+                                    respostasEmailList.value
+                                )
                                 for (destinatario in todosDestinatarios) {
                                     if (destinatario.isNotBlank()) {
 
@@ -659,9 +699,30 @@ fun VisualizaEmailScreen(
                         onClickFavorite = {
                             if (isTodasContasScreen) {
                                 isImportant.value = !isImportant.value
+                                val emailComAlteracao = EmailComAlteracao(
+                                    email.value!!.id_email,
+                                    email.value!!.id_usuario,
+                                    email.value!!.remetente,
+                                    email.value!!.destinatario,
+                                    email.value!!.cc,
+                                    email.value!!.cco,
+                                    email.value!!.assunto,
+                                    email.value!!.corpo,
+                                    email.value!!.editavel,
+                                    email.value!!.enviado,
+                                    email.value!!.horario,
+                                    email.value!!.data,
+                                    email.value!!.agenda_atrelada,
+                                )
+
+                                atualizarTodosDestinatariosList(
+                                    todosDestinatarios,
+                                    emailComAlteracao,
+                                    respostasEmailList.value
+                                )
+
                                 for (destinatario in todosDestinatarios) {
                                     if (destinatario.isNotBlank()) {
-
                                         callLocaMailApiRetornaUsarioPorEmail(
                                             destinatario,
                                             onSuccess = { usuarioRetornado ->
@@ -719,6 +780,28 @@ fun VisualizaEmailScreen(
                         onClickArchive = {
                             if (isTodasContasScreen) {
                                 isArchive.value = !isArchive.value
+
+                                val emailComAlteracao = EmailComAlteracao(
+                                    email.value!!.id_email,
+                                    email.value!!.id_usuario,
+                                    email.value!!.remetente,
+                                    email.value!!.destinatario,
+                                    email.value!!.cc,
+                                    email.value!!.cco,
+                                    email.value!!.assunto,
+                                    email.value!!.corpo,
+                                    email.value!!.editavel,
+                                    email.value!!.enviado,
+                                    email.value!!.horario,
+                                    email.value!!.data,
+                                    email.value!!.agenda_atrelada,
+                                )
+
+                                atualizarTodosDestinatariosList(
+                                    todosDestinatarios,
+                                    emailComAlteracao,
+                                    respostasEmailList.value
+                                )
                                 for (destinatario in todosDestinatarios) {
                                     if (destinatario.isNotBlank()) {
 
@@ -782,7 +865,6 @@ fun VisualizaEmailScreen(
                         isArchive = isArchive,
                         isAgendaAtrelada = isAgendaAtrelada
                     )
-
 
                     ColumnEmailDetails(
                         onClickDraftRespostaEmailDelete = { respostaEmail ->

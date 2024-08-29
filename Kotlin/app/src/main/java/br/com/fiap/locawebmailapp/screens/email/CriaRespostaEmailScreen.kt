@@ -97,7 +97,7 @@ fun CriaRespostaEmailScreen(navController: NavController, idEmail: Long, idRespo
         mutableStateOf<Usuario?>(null)
     }
 
-    var alteracoesEmailAltIdUsuarioList: List<Long>? = null
+    var alteracoesEmailAltIdUsuarioList: List<Long> = listOf()
 
     LaunchedEffect(key1 = Unit) {
         callLocaMailApiListarEmailPorId(
@@ -146,7 +146,9 @@ fun CriaRespostaEmailScreen(navController: NavController, idEmail: Long, idRespo
             idEmail,
             onSuccess = { listAltIdUsuarioRetornado ->
 
-                alteracoesEmailAltIdUsuarioList = listAltIdUsuarioRetornado
+                if (listAltIdUsuarioRetornado != null) {
+                    alteracoesEmailAltIdUsuarioList = listAltIdUsuarioRetornado
+                }
 
             },
             onError = {
@@ -411,13 +413,6 @@ fun CriaRespostaEmailScreen(navController: NavController, idEmail: Long, idRespo
 
                                             if (respostaEmailRetornado != null) {
                                                 isLoading.value = false
-                                                Toast.makeText(
-                                                    context,
-                                                    toastMessageDraftMailRespSent,
-                                                    Toast.LENGTH_LONG
-                                                ).show()
-                                                navController.popBackStack()
-
                                                 val rowId = respostaEmailRetornado.id_resposta_email
 
                                                 anexoRespostaEmail.id_resposta_email = rowId
@@ -446,75 +441,7 @@ fun CriaRespostaEmailScreen(navController: NavController, idEmail: Long, idRespo
                                                 todosDestinatarios.addAll(ccos)
                                                 todosDestinatarios.addAll(ccs)
 
-                                                if (!todosDestinatarios.contains(respostaEmail.remetente)) todosDestinatarios.add(
-                                                    respostaEmail.remetente
-                                                )
-
-                                                callLocaMailApiListarUsuarios(
-                                                    onSuccess = {
-
-                                                            listUsuarioRetornado ->
-
-                                                        if (listUsuarioRetornado != null) {
-                                                            for (usuario in listUsuarioRetornado) {
-
-                                                                if (alteracoesEmailAltIdUsuarioList != null) {
-                                                                    if (todosDestinatarios.contains(
-                                                                            usuario.email
-                                                                        ) && !alteracoesEmailAltIdUsuarioList!!.contains(
-                                                                            usuario.id_usuario
-                                                                        )
-                                                                    ) {
-                                                                        callLocaMailApiCriarAlteracao(
-                                                                            Alteracao(
-                                                                                alt_id_email = idEmail,
-                                                                                alt_id_usuario = usuario.id_usuario
-                                                                            ),
-                                                                            onSuccess = {
-                                                                            },
-                                                                            onError = {
-                                                                                isError.value = true
-                                                                                isLoading.value =
-                                                                                    false
-
-                                                                            }
-                                                                        )
-                                                                    }
-
-                                                                    if (todosDestinatarios.contains(
-                                                                            usuario.email
-                                                                        ) && alteracoesEmailAltIdUsuarioList!!.contains(
-                                                                            usuario.id_usuario
-                                                                        ) && usuario.id_usuario != usuarioSelecionado.value!!.id_usuario
-                                                                    ) {
-
-                                                                        callLocaMailApiAtualizarLidoPorIdEmailEIdusuario(
-                                                                            false,
-                                                                            id_email = idEmail,
-                                                                            id_usuario = usuario.id_usuario,
-                                                                            onSuccess = {
-
-                                                                            },
-                                                                            onError = {
-                                                                                isError.value = true
-                                                                                isLoading.value =
-                                                                                    false
-                                                                            }
-                                                                        )
-                                                                    }
-                                                                }
-                                                            }
-                                                        }
-                                                    },
-                                                    onError = {
-                                                        isLoading.value = false
-                                                        isError.value = true
-                                                    }
-                                                )
-
                                                 for (destinatario in todosDestinatarios) {
-
-
                                                     callLocaMailApiVerificarConvidadoExiste(
                                                         destinatario,
                                                         onSuccess = { convidadoExisteRetornado ->
@@ -546,7 +473,63 @@ fun CriaRespostaEmailScreen(navController: NavController, idEmail: Long, idRespo
                                                     )
                                                 }
 
+                                                callLocaMailApiListarUsuarios(
+                                                    onSuccess = { usuariosRetornados ->
+                                                        if (usuariosRetornados != null) {
+                                                            for (usuario in usuariosRetornados) {
+                                                                if (todosDestinatarios.contains(usuario.email) && !alteracoesEmailAltIdUsuarioList.contains(
+                                                                        usuario.id_usuario
+                                                                    )
+                                                                ) {
+                                                                    callLocaMailApiCriarAlteracao(
+                                                                        Alteracao(
+                                                                            alt_id_email = idEmail,
+                                                                            alt_id_usuario = usuario.id_usuario
+                                                                        ),
+                                                                        onSuccess = {
 
+                                                                        },
+                                                                        onError = {
+                                                                            isError.value = true
+                                                                            isLoading.value = false
+                                                                        }
+                                                                    )
+                                                                }
+
+                                                                if (usuarioSelecionado.value != null) {
+                                                                    if (todosDestinatarios.contains(usuario.email) && alteracoesEmailAltIdUsuarioList.contains(
+                                                                            usuario.id_usuario
+                                                                        ) && usuario.id_usuario != usuarioSelecionado.value!!.id_usuario
+                                                                    ) {
+
+                                                                        callLocaMailApiAtualizarLidoPorIdEmailEIdusuario(
+                                                                            false,
+                                                                            id_email = idEmail,
+                                                                            id_usuario = usuario.id_usuario,
+                                                                            onSuccess = {
+
+                                                                            },
+                                                                            onError = {
+                                                                                isError.value = true
+                                                                                isLoading.value = false
+                                                                            }
+                                                                        )
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    onError = {
+                                                        isError.value = true
+                                                        isLoading.value = false
+                                                    }
+                                                )
+                                                Toast.makeText(
+                                                    context,
+                                                    toastMessageDraftMailRespSent,
+                                                    Toast.LENGTH_LONG
+                                                ).show()
+                                                navController.popBackStack()
                                             }
                                         },
                                         onError = {

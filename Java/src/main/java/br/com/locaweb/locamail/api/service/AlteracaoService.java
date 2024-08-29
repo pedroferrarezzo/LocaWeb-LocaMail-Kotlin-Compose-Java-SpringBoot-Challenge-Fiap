@@ -31,7 +31,15 @@ public class AlteracaoService {
     }
 
     public AlteracaoExibicaoDto listarAlteracaoPorIdEmailEIdUsuario(Long idEmail, Long idUsuario) {
-        return new AlteracaoExibicaoDto(alteracaoRepository.listarAlteracaoPorIdEmailEIdUsuario(idEmail, idUsuario));
+
+        Optional<Alteracao> alteracaoRetornada = alteracaoRepository.listarAlteracaoPorIdEmailEIdUsuario(idEmail, idUsuario);
+
+        if (alteracaoRetornada.isPresent()) {
+            return new AlteracaoExibicaoDto(alteracaoRetornada.get());
+        }
+        else {
+            return null;
+        }
     }
 
     public Boolean verificarLidoPorIdEmailEIdUsuario(Long idEmail, Long idUsuario) {
