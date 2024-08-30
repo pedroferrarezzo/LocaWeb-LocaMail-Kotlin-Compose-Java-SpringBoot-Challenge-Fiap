@@ -77,6 +77,11 @@ interface LocaMailApiService {
     @GET("/email/listarEmailsEnviadosPorRemetente")
     fun listarEmailsEnviadosPorRemetente(@Query("remetente") remetente: String, @Query("idUsuario") id_usuario: Long): Call<List<EmailComAlteracao>?>
 
+    @GET("/agenda/listarAgendaPorDia")
+    fun listarAgendaPorDia(@Query("data") data: String, @Query("idUsuario") id_usuario: Long): Call<List<Agenda>?>
+
+    @GET("/agenda/listarCorAgendaPorDia")
+    fun listarCorAgendaPorDia(@Query("data") data: String, @Query("idUsuario") id_usuario: Long): Call<List<Int>?>
 
     @GET("/email/listarEmailsImportantesPorIdUsuario")
     fun listarEmailsImportantesPorIdUsuario(@Query("idUsuario") id_usuario: Long): Call<List<EmailComAlteracao>?>

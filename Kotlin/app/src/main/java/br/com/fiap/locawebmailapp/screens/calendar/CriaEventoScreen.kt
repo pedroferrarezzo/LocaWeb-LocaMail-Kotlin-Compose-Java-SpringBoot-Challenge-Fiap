@@ -68,9 +68,12 @@ import br.com.fiap.locawebmailapp.model.Email
 import br.com.fiap.locawebmailapp.model.Usuario
 import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiCriarAgenda
 import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiCriarAgendaConvidado
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiCriarAlteracao
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiCriarEmail
 import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiListarConvidado
 import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiListarGrupoRepeticao
 import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiListarUsuarioSelecionado
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiRetornaUsarioPorEmail
 import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiRetornaValorAtualSeqPrimayKey
 import br.com.fiap.locawebmailapp.utils.checkInternetConnectivity
 import br.com.fiap.locawebmailapp.utils.completeStringDateToDate
@@ -160,8 +163,7 @@ fun CriaEventoScreen(navController: NavController) {
 
     LaunchedEffect(key1 = Unit) {
         callLocaMailApiListarUsuarioSelecionado(
-            onSuccess = {
-                usuarioSelecionadoRetornado ->
+            onSuccess = { usuarioSelecionadoRetornado ->
 
                 if (usuarioSelecionadoRetornado != null) {
                     usuarioSelecionado.value = usuarioSelecionadoRetornado
@@ -176,8 +178,7 @@ fun CriaEventoScreen(navController: NavController) {
         )
 
         callLocaMailApiListarConvidado(
-            onSuccess = {
-                listConvidadoRetornado ->
+            onSuccess = { listConvidadoRetornado ->
 
                 if (listConvidadoRetornado != null) {
                     listConvidado.value = listConvidadoRetornado
@@ -336,8 +337,7 @@ fun CriaEventoScreen(navController: NavController) {
                             if (agenda.repeticao == 2) {
 
                                 callLocaMailApiListarGrupoRepeticao(
-                                    onSuccess = {
-                                        listGrupoRepeticaoRetornado ->
+                                    onSuccess = { listGrupoRepeticaoRetornado ->
                                         if (listGrupoRepeticaoRetornado != null) {
                                             if (listGrupoRepeticaoRetornado.isNotEmpty()) {
                                                 agenda.grupo_repeticao =
@@ -350,8 +350,7 @@ fun CriaEventoScreen(navController: NavController) {
 
                                                 callLocaMailApiCriarAgenda(
                                                     agenda,
-                                                    onSuccess = {
-                                                        agendaCriadaRetornada ->
+                                                    onSuccess = { agendaCriadaRetornada ->
                                                     },
                                                     onError = {
                                                         isError.value = true
@@ -360,10 +359,10 @@ fun CriaEventoScreen(navController: NavController) {
                                                 )
 
                                                 callLocaMailApiRetornaValorAtualSeqPrimayKey(
-                                                    onSuccess = {
-                                                        valorSeqPkRetornado ->
+                                                    onSuccess = { valorSeqPkRetornado ->
                                                         if (valorSeqPkRetornado != null) {
-                                                            agendaConvidado.id_agenda = valorSeqPkRetornado
+                                                            agendaConvidado.id_agenda =
+                                                                valorSeqPkRetornado
                                                         }
                                                     },
                                                     onError = {
@@ -372,10 +371,12 @@ fun CriaEventoScreen(navController: NavController) {
                                                     }
                                                 )
 
-                                                agendaConvidado.grupo_repeticao = agenda.grupo_repeticao
+                                                agendaConvidado.grupo_repeticao =
+                                                    agenda.grupo_repeticao
 
                                                 for (convidado in listConvidadoSelected) {
-                                                    agendaConvidado.id_convidado = convidado.id_convidado
+                                                    agendaConvidado.id_convidado =
+                                                        convidado.id_convidado
 
                                                     callLocaMailApiCriarAgendaConvidado(
                                                         agendaConvidado,
@@ -410,8 +411,7 @@ fun CriaEventoScreen(navController: NavController) {
                                 )
 
                                 callLocaMailApiRetornaValorAtualSeqPrimayKey(
-                                    onSuccess = {
-                                            valorSeqPkRetornado ->
+                                    onSuccess = { valorSeqPkRetornado ->
                                         if (valorSeqPkRetornado != null) {
                                             agendaConvidado.id_agenda = valorSeqPkRetornado
                                         }
@@ -455,7 +455,6 @@ fun CriaEventoScreen(navController: NavController) {
                                         email.id_usuario = usuarioSelecionado.value!!.id_usuario
                                     }
 
-
                                     email.destinatario =
                                         listaParaString(listConvidadoSelected.map { it.email })
                                     email.cc = ""
@@ -491,95 +490,228 @@ fun CriaEventoScreen(navController: NavController) {
                                     email.enviado = true
                                     email.editavel = false
 
-                                    val rowId = emailRepository.criarEmail(email = email)
-                                    alteracaoRepository.criarAlteracao(
-                                        Alteracao(
-                                            alt_id_email = rowId,
-                                            alt_id_usuario = usuarioSelecionado.value.id_usuario
-                                        )
-                                    )
 
-                                    for (convidadoSelected in listConvidadoSelected) {
-                                        val usuarioExistente =
-                                            usuarioRepository.retornaUsarioPorEmail(
-                                                convidadoSelected.email
-                                            )
+                                    callLocaMailApiCriarEmail(
+                                        email,
+                                        onSuccess = { emailRetornado ->
 
+                                            if (emailRetornado != null && usuarioSelecionado.value != null) {
+                                                val rowId = emailRetornado.id_email
+                                                callLocaMailApiCriarAlteracao(
+                                                    Alteracao(
+                                                        alt_id_email = rowId,
+                                                        alt_id_usuario = usuarioSelecionado.value!!.id_usuario
+                                                    ),
+                                                    onSuccess = {
 
-                                        if (usuarioExistente != null) {
-                                            alteracaoRepository.criarAlteracao(
-                                                Alteracao(
-                                                    alt_id_email = rowId,
-                                                    alt_id_usuario = usuarioExistente.id_usuario
-                                                )
-                                            )
-
-                                            agenda.id_email = rowId
-                                            agenda.nome = taskTitle.value
-                                            agenda.descritivo = taskDescription.value
-                                            agenda.proprietario = usuarioSelecionado.value.nome
-                                            agenda.data = if (millisToLocalDate.toString()
-                                                    .equals("null")
-                                            ) LocalDate.now()
-                                                .toString() else millisToLocalDate!!.toString()
-                                            agenda.horario = time.value
-                                            agenda.cor = selectedColor.value
-                                            agenda.repeticao = selectedRepeat.value
-                                            agenda.tarefa = false
-                                            agenda.id_usuario = usuarioExistente.id_usuario
-                                            agenda.visivel = false
-
-                                            if (agenda.repeticao == 2) {
-                                                if (agendaRepository.listarGrupoRepeticao()
-                                                        .isNotEmpty()
-                                                ) {
-                                                    agenda.grupo_repeticao =
-                                                        agendaRepository.listarGrupoRepeticao()
-                                                            .last().grupo_repeticao + 1
-                                                }
-
-                                                for (day in returnOneMonthFromDate(agenda.data)) {
-                                                    agenda.data = day
-                                                    agendaRepository.criarAgenda(agenda)
-                                                    agendaConvidado.id_agenda =
-                                                        agendaRepository.retornaValorAtualSeqPrimayKey()
-                                                    agendaConvidado.grupo_repeticao =
-                                                        agenda.grupo_repeticao
-
-                                                    for (convidado in listConvidadoSelected) {
-                                                        agendaConvidado.id_convidado =
-                                                            convidado.id_convidado
-                                                        agendaConvidadoRepository.criaAgendaConvidado(
-                                                            agendaConvidado
-                                                        )
+                                                    },
+                                                    onError = {
+                                                        isError.value = true
+                                                        isLoading.value = false
                                                     }
-                                                }
+                                                )
 
-                                            } else {
-                                                agendaRepository.criarAgenda(agenda)
-                                                agendaConvidado.id_agenda =
-                                                    agendaRepository.retornaValorAtualSeqPrimayKey()
-                                                for (convidado in listConvidadoSelected) {
-                                                    agendaConvidado.id_convidado =
-                                                        convidado.id_convidado
-                                                    agendaConvidadoRepository.criaAgendaConvidado(
-                                                        agendaConvidado
+                                                for (convidadoSelected in listConvidadoSelected) {
+                                                    callLocaMailApiRetornaUsarioPorEmail(
+                                                        convidadoSelected.email,
+                                                        onSuccess = { usuarioExistenteRetornado ->
+
+                                                            if (usuarioExistenteRetornado != null) {
+                                                                callLocaMailApiCriarAlteracao(
+                                                                    Alteracao(
+                                                                        alt_id_email = rowId,
+                                                                        alt_id_usuario = usuarioExistenteRetornado.id_usuario
+                                                                    ),
+                                                                    onSuccess = {
+
+                                                                    },
+                                                                    onError = {
+                                                                        isError.value = true
+                                                                        isLoading.value = false
+                                                                    }
+                                                                )
+
+                                                                agenda.id_email = rowId
+                                                                agenda.nome = taskTitle.value
+                                                                agenda.descritivo =
+                                                                    taskDescription.value
+                                                                agenda.proprietario =
+                                                                    usuarioSelecionado.value!!.nome
+                                                                agenda.data =
+                                                                    if (millisToLocalDate.toString()
+                                                                            .equals("null")
+                                                                    ) LocalDate.now()
+                                                                        .toString() else millisToLocalDate!!.toString()
+                                                                agenda.horario = time.value
+                                                                agenda.cor = selectedColor.value
+                                                                agenda.repeticao =
+                                                                    selectedRepeat.value
+                                                                agenda.tarefa = false
+                                                                agenda.id_usuario =
+                                                                    usuarioExistenteRetornado.id_usuario
+                                                                agenda.visivel = false
+
+                                                                if (agenda.repeticao == 2) {
+
+
+                                                                    callLocaMailApiListarGrupoRepeticao(
+                                                                        onSuccess = { listGrupoRepeticaoRetornado ->
+
+                                                                            if (listGrupoRepeticaoRetornado != null) {
+                                                                                if (listGrupoRepeticaoRetornado.isNotEmpty()
+                                                                                ) {
+                                                                                    agenda.grupo_repeticao =
+                                                                                        listGrupoRepeticaoRetornado
+                                                                                            .last() + 1
+                                                                                }
+                                                                            }
+                                                                        },
+                                                                        onError = {
+                                                                            isError.value = true
+                                                                            isLoading.value = false
+                                                                        }
+                                                                    )
+
+
+                                                                    for (day in returnOneMonthFromDate(
+                                                                        agenda.data
+                                                                    )) {
+                                                                        agenda.data = day
+
+
+                                                                        callLocaMailApiCriarAgenda(
+                                                                            agenda,
+                                                                            onSuccess = { agendaRetornado ->
+
+                                                                                if (agendaRetornado != null) {
+                                                                                    callLocaMailApiRetornaValorAtualSeqPrimayKey(
+                                                                                        onSuccess = { valorAtualSeqPrimaryKey ->
+
+                                                                                            if (valorAtualSeqPrimaryKey != null) {
+                                                                                                agendaConvidado.id_agenda =
+                                                                                                    valorAtualSeqPrimaryKey
+                                                                                            }
+
+                                                                                        },
+                                                                                        onError = {
+                                                                                            isError.value =
+                                                                                                true
+                                                                                            isLoading.value =
+                                                                                                false
+                                                                                        }
+                                                                                    )
+
+                                                                                    agendaConvidado.grupo_repeticao =
+                                                                                        agenda.grupo_repeticao
+
+                                                                                    for (convidado in listConvidadoSelected) {
+                                                                                        agendaConvidado.id_convidado =
+                                                                                            convidado.id_convidado
+                                                                                        callLocaMailApiCriarAgendaConvidado(
+                                                                                            agendaConvidado,
+                                                                                            onSuccess = {
+
+                                                                                            },
+                                                                                            onError = {
+                                                                                                isError.value =
+                                                                                                    true
+                                                                                                isLoading.value =
+                                                                                                    false
+                                                                                            }
+                                                                                        )
+                                                                                    }
+                                                                                }
+                                                                            },
+                                                                            onError = {
+                                                                                isError.value = true
+                                                                                isLoading.value =
+                                                                                    false
+                                                                            }
+                                                                        )
+                                                                    }
+
+                                                                } else {
+
+                                                                    callLocaMailApiCriarAgenda(
+                                                                        agenda,
+                                                                        onSuccess = { agendaRetornado ->
+
+                                                                            if (agendaRetornado != null) {
+
+                                                                                callLocaMailApiRetornaValorAtualSeqPrimayKey(
+                                                                                    onSuccess = { valorAtualSeqPk ->
+
+                                                                                        if (valorAtualSeqPk != null) {
+                                                                                            agendaConvidado.id_agenda =
+                                                                                                valorAtualSeqPk
+                                                                                        }
+
+                                                                                    },
+                                                                                    onError = {
+                                                                                        isError.value =
+                                                                                            true
+                                                                                        isLoading.value =
+                                                                                            false
+                                                                                    }
+                                                                                )
+
+                                                                                for (convidado in listConvidadoSelected) {
+                                                                                    agendaConvidado.id_convidado =
+                                                                                        convidado.id_convidado
+
+                                                                                    callLocaMailApiCriarAgendaConvidado(
+                                                                                        agendaConvidado,
+                                                                                        onSuccess = {
+
+                                                                                        },
+                                                                                        onError = {
+                                                                                            isError.value =
+                                                                                                true
+                                                                                            isLoading.value =
+                                                                                                false
+                                                                                        }
+                                                                                    )
+                                                                                }
+                                                                            }
+                                                                        },
+                                                                        onError = {
+                                                                            isError.value = true
+                                                                            isLoading.value = false
+                                                                        }
+                                                                    )
+                                                                }
+                                                            }
+                                                        },
+                                                        onError = {
+                                                            isError.value = true
+                                                            isLoading.value = false
+                                                        }
                                                     )
+                                                    Toast.makeText(
+                                                        context,
+                                                        toastMessageEventInviteSent,
+                                                        Toast.LENGTH_LONG
+                                                    )
+                                                        .show()
                                                 }
                                             }
+                                        },
+                                        onError = {
+                                            isError.value = true
+                                            isLoading.value = false
                                         }
-
-                                        Toast.makeText(
-                                            context,
-                                            toastMessageEventInviteSent,
-                                            Toast.LENGTH_LONG
-                                        )
-                                            .show()
-                                    }
+                                    )
 
                                 } else if (selectedMailOption.value == 3) {
+
+                                    if (usuarioSelecionado.value != null) {
+                                        email.remetente = usuarioSelecionado.value!!.email
+                                        email.id_usuario = usuarioSelecionado.value!!.id_usuario
+                                    }
+
+
                                     email.agenda_atrelada = true
-                                    email.remetente = usuarioSelecionado.value.email
+
                                     email.destinatario =
                                         listaParaString(listConvidadoSelected.map { it.email })
                                     email.cc = ""
@@ -614,17 +746,22 @@ fun CriaEventoScreen(navController: NavController) {
                                                 }"
                                     email.enviado = false
                                     email.editavel = true
-                                    email.id_usuario = usuarioSelecionado.value.id_usuario
 
-                                    emailRepository.criarEmail(email = email)
-
-                                    Toast.makeText(
-                                        context,
-                                        toastMessageMailDraftSaved,
-                                        Toast.LENGTH_LONG
+                                    callLocaMailApiCriarEmail(
+                                        email,
+                                        onSuccess = {
+                                            Toast.makeText(
+                                                context,
+                                                toastMessageMailDraftSaved,
+                                                Toast.LENGTH_LONG
+                                            )
+                                                .show()
+                                        },
+                                        onError = {
+                                            isError.value = true
+                                            isLoading.value = false
+                                        }
                                     )
-                                        .show()
-
                                 }
                             }
                             navController.popBackStack()
@@ -671,22 +808,26 @@ fun CriaEventoScreen(navController: NavController) {
                         tint = colorResource(id = R.color.lcweb_gray_1)
                     )
 
-                    Text(
-                        text = "${stringResource(id = R.string.calendar_organizer_text)}: ${
-                            if (usuarioSelecionado.value.nome.length > 25) {
-                                "${
-                                    usuarioSelecionado.value.nome.take(
-                                        25
-                                    )
-                                }..."
-                            } else {
-                                usuarioSelecionado.value.nome
-                            }
-                        }",
-                        modifier = Modifier.padding(5.dp),
-                        color = colorResource(id = R.color.lcweb_gray_1),
-                        fontSize = 20.sp
-                    )
+                    if (usuarioSelecionado.value != null) {
+                        Text(
+                            text = "${stringResource(id = R.string.calendar_organizer_text)}: ${
+                                if (usuarioSelecionado.value!!.nome.length > 25) {
+                                    "${
+                                        usuarioSelecionado.value!!.nome.take(
+                                            25
+                                        )
+                                    }..."
+                                } else {
+                                    usuarioSelecionado.value!!.nome
+                                }
+                            }",
+                            modifier = Modifier.padding(5.dp),
+                            color = colorResource(id = R.color.lcweb_gray_1),
+                            fontSize = 20.sp
+                        )
+                    }
+
+
                 }
 
                 Button(

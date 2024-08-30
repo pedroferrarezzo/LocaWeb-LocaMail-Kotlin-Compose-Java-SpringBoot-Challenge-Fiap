@@ -23,7 +23,7 @@ public class AgendaController {
         return agendaService.listarAgendaPorIdEmailEIdUsuario(id_email, id_usuario);
     }
 
-    @GetMapping("/criarAgenda")
+    @PostMapping("/criarAgenda")
     @ResponseStatus(HttpStatus.OK)
     public AgendaExibicaoDto criarAgenda(@RequestBody @Valid  AgendaCadastroDto agendaCadastroDto) {
         return agendaService.criarAgenda(agendaCadastroDto);
@@ -39,6 +39,27 @@ public class AgendaController {
     @ResponseStatus(HttpStatus.OK)
     public List<Integer> listarGrupoRepeticao() {
         return agendaService.listarGrupoRepeticao();
+    }
+
+
+    @GetMapping("/listarAgendaPorDia")
+    @ResponseStatus(HttpStatus.OK)
+    public List<AgendaExibicaoDto> listarAgendaPorDia(
+            @RequestParam("data") String data,
+            @RequestParam("idUsuario") Long id_usuario
+    ) {
+        return agendaService.listarAgendaPorDia(
+                data, id_usuario);
+    }
+
+    @GetMapping("/listarCorAgendaPorDia")
+    @ResponseStatus(HttpStatus.OK)
+    public List<Integer> listarCorAgendaPorDia(
+            @RequestParam("data") String data,
+            @RequestParam("idUsuario") Long id_usuario
+    ) {
+        return agendaService.listarCorAgendaPorDia(
+                data, id_usuario);
     }
 
     @DeleteMapping("/excluiAgenda")

@@ -412,6 +412,63 @@ fun callLocaMailApiListarEmailsEditaveisPorRemetente(
 }
 
 
+fun callLocaMailApiListarAgendaPorDia(
+    data: String,
+    id_usuario: Long,
+    onSuccess: (List<Agenda>?) -> Unit,
+    onError: (Throwable) -> Unit
+) {
+    val call = LocaMailApiFactory().getLocaMailApiFactory()
+        .listarAgendaPorDia(data, id_usuario)
+
+    call.enqueue(object : Callback<List<Agenda>?> {
+        override fun onResponse(
+            call: Call<List<Agenda>?>,
+            response: Response<List<Agenda>?>
+        ) {
+            if (response.isSuccessful && response.body() != null) {
+                onSuccess(response.body()!!)
+            } else if (response.isSuccessful == false) {
+                onError(Throwable())
+            } else {
+                onSuccess(null)
+            }
+        }
+        override fun onFailure(call: Call<List<Agenda>?>, t: Throwable) {
+            onError(t)
+        }
+    })
+}
+
+fun callLocaMailApiListarCorAgendaPorDia(
+    data: String,
+    id_usuario: Long,
+    onSuccess: (List<Int>?) -> Unit,
+    onError: (Throwable) -> Unit
+) {
+    val call = LocaMailApiFactory().getLocaMailApiFactory()
+        .listarCorAgendaPorDia(data, id_usuario)
+
+    call.enqueue(object : Callback<List<Int>?> {
+        override fun onResponse(
+            call: Call<List<Int>?>,
+            response: Response<List<Int>?>
+        ) {
+            if (response.isSuccessful && response.body() != null) {
+                onSuccess(response.body()!!)
+            } else if (response.isSuccessful == false) {
+                onError(Throwable())
+            } else {
+                onSuccess(null)
+            }
+        }
+        override fun onFailure(call: Call<List<Int>?>, t: Throwable) {
+            onError(t)
+        }
+    })
+}
+
+
 fun callLocaMailApiListarPastasPorIdUsuario(
     id_usuario: Long,
     onSuccess: (List<Pasta>?) -> Unit,
