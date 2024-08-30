@@ -68,40 +68,17 @@ import java.time.YearMonth
 @Stable
 @Composable
 fun CalendarMainScreen(navController: NavController, data: LocalDate = LocalDate.now()) {
-    val expanded = remember {
-        mutableStateOf(false)
-    }
-
-    var selectedDate by remember { mutableStateOf<LocalDate?>(data) }
-    val listTask = remember {
-        mutableStateOf(listOf<Agenda>())
-    }
-
-    var listColorTask = remember {
-        mutableStateOf(listOf<Int>())
-    }
-
-    val textSearchBar = remember {
-        mutableStateOf("")
-    }
-
     val context = LocalContext.current
 
-    val onClickDay = remember {
-        { day: CalendarDay ->
-            selectedDate = day.date
-        }
-    }
-
-    val expandedPasta = remember {
-        mutableStateOf(true)
+    val expanded = remember {
+        mutableStateOf(false)
     }
 
     val isConnectedStatus = remember {
         mutableStateOf(checkInternetConnectivity(context))
     }
     val isLoading = remember {
-        mutableStateOf(false)
+        mutableStateOf(true)
     }
 
     val isError = remember {
@@ -109,6 +86,23 @@ fun CalendarMainScreen(navController: NavController, data: LocalDate = LocalDate
     }
 
     val toastMessageWait = stringResource(id = R.string.toast_api_wait)
+
+    var selectedDate by remember { mutableStateOf<LocalDate?>(data) }
+    val listTask = remember {
+        mutableStateOf(listOf<Agenda>())
+    }
+
+    val listColorTask = remember {
+        mutableStateOf(listOf<Int>())
+    }
+
+    val textSearchBar = remember {
+        mutableStateOf("")
+    }
+
+    val expandedPasta = remember {
+        mutableStateOf(true)
+    }
 
     val currentMonth = remember { YearMonth.now() }
     val startMonth = remember { currentMonth.minusMonths(100) }
@@ -152,25 +146,9 @@ fun CalendarMainScreen(navController: NavController, data: LocalDate = LocalDate
                         usuarioSelecionado.value!!.id_usuario,
                         onSuccess = { listPastaRetornado ->
                             listPastaState.addAll(listPastaRetornado!!)
+                            isLoading.value = false
                         },
                         onError = { error ->
-                            isError.value = true
-                            isLoading.value = false
-                        }
-                    )
-
-                    callLocaMailApiListarAgendaPorDia(
-                        selectedDate.toString(),
-                        usuarioSelecionado.value!!.id_usuario,
-                        onSuccess = {
-                            listAgendaPorDiaRetornado ->
-
-                            if (listAgendaPorDiaRetornado != null) {
-                                listTask.value = listAgendaPorDiaRetornado
-                            }
-
-                        },
-                        onError = {
                             isError.value = true
                             isLoading.value = false
                         }
@@ -182,8 +160,32 @@ fun CalendarMainScreen(navController: NavController, data: LocalDate = LocalDate
                 isLoading.value = false
             }
         )
+    }
 
+    val onClickDay = remember {
+        { day: CalendarDay ->
+            selectedDate = day.date
+            if (usuarioSelecionado.value != null) {
+                isLoading.value = true
+                callLocaMailApiListarAgendaPorDia(
+                    selectedDate.toString(),
+                    usuarioSelecionado.value!!.id_usuario,
+                    onSuccess = {
+                            listAgendaPorDiaRetornado ->
 
+                        if (listAgendaPorDiaRetornado != null) {
+                            listTask.value = listAgendaPorDiaRetornado
+                            isLoading.value = false
+                        }
+
+                    },
+                    onError = {
+                        isError.value = true
+                        isLoading.value = false
+                    }
+                )
+            }
+        }
     }
 
     val openDialogPastaCreator = remember {
@@ -304,25 +306,23 @@ fun CalendarMainScreen(navController: NavController, data: LocalDate = LocalDate
                             dayContent = { day ->
 
                                 if (usuarioSelecionado.value != null) {
-                                    callLocaMailApiListarCorAgendaPorDia(
-                                        day.date.toString(),
-                                        usuarioSelecionado.value!!.id_usuario,
-                                        onSuccess = {
-                                                listColorTaskRetornado ->
-
-                                            if (listColorTaskRetornado != null) {
-                                                listColorTask.value = listColorTaskRetornado
-                                            }
-                                        },
-                                        onError = {
-                                            isError.value = true
-                                            isLoading.value = false
-
-                                        }
-                                    )
+//                                    callLocaMailApiListarCorAgendaPorDia(
+//                                        day.date.toString(),
+//                                        usuarioSelecionado.value!!.id_usuario,
+//                                        onSuccess = {
+//                                                listColorTaskRetornado ->
+//
+//                                            if (listColorTaskRetornado != null) {
+//                                                listColorTask.value = listColorTaskRetornado
+//                                            }
+//                                        },
+//                                        onError = {
+//                                            isError.value = true
+//                                            isLoading.value = false
+//
+//                                        }
+//                                    )
                                 }
-
-
                                 Day(
                                     day = day,
                                     selectedDate = selectedDate == day.date,

@@ -28,6 +28,12 @@ public class ConvidadoController {
         return convidadoService.listarConvidado();
     }
 
+    @GetMapping("/listarConvidadoPorId")
+    @ResponseStatus(HttpStatus.OK)
+    public ConvidadoExibicaoDto listarConvidadoPorId(@RequestParam("idConvidado") Long id_convidado) {
+        return convidadoService.listarConvidadoPorId(id_convidado);
+    }
+
     @PostMapping("/criarConvidado")
     @ResponseStatus(HttpStatus.CREATED)
     public ConvidadoExibicaoDto criarConvidado(@RequestBody @Valid ConvidadoCadastroDto convidadoCadastroDto) {

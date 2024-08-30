@@ -3,6 +3,7 @@ package br.com.locaweb.locamail.api.controller;
 import br.com.locaweb.locamail.api.dto.agenda.AgendaCadastroDto;
 import br.com.locaweb.locamail.api.dto.agenda.AgendaExibicaoDto;
 import br.com.locaweb.locamail.api.service.AgendaService;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -29,6 +30,12 @@ public class AgendaController {
         return agendaService.criarAgenda(agendaCadastroDto);
     }
 
+    @PutMapping("/atualizaAgenda")
+    @ResponseStatus(HttpStatus.OK)
+    public void atualizaAgenda(@RequestBody @Valid  AgendaCadastroDto agendaCadastroDto) {
+        agendaService.atualizaAgenda(agendaCadastroDto);
+    }
+
     @GetMapping("/retornaValorAtualSeqPrimayKey")
     @ResponseStatus(HttpStatus.OK)
     public Long retornaValorAtualSeqPrimayKey() {
@@ -52,6 +59,13 @@ public class AgendaController {
                 data, id_usuario);
     }
 
+    @GetMapping("/listarAgendaPorId")
+    @ResponseStatus(HttpStatus.OK)
+    public AgendaExibicaoDto listarAgendaPorId(@RequestParam("idAgenda") Long id_agenda
+    ) {
+        return agendaService.listarAgendaPorId(id_agenda);
+    }
+
     @GetMapping("/listarCorAgendaPorDia")
     @ResponseStatus(HttpStatus.OK)
     public List<Integer> listarCorAgendaPorDia(
@@ -72,6 +86,30 @@ public class AgendaController {
     @ResponseStatus(HttpStatus.OK)
     public void atualizaVisivelPorIdAgenda(@RequestParam("idAgenda") Long id_agenda, @RequestParam("visivel") Boolean visivel) {
         agendaService.atualizaVisivelPorIdAgenda(id_agenda, visivel);
+    }
+
+    @DeleteMapping("/excluirPorGrupoRepeticao")
+    @ResponseStatus(HttpStatus.OK)
+    public void excluirPorGrupoRepeticao(@RequestParam("grupoRepeticao") Integer grupo_repeticao)  {
+        agendaService.excluirPorGrupoRepeticao(grupo_repeticao);
+    }
+
+    @DeleteMapping("/excluirPorGrupoRepeticaoExcetoData")
+    @ResponseStatus(HttpStatus.OK)
+    public void excluirPorGrupoRepeticaoExcetoData(@RequestParam("grupoRepeticao") Integer grupo_repeticao, @RequestParam("data") String data)  {
+        agendaService.excluirPorGrupoRepeticaoExcetoData(grupo_repeticao, data);
+    }
+
+    @PutMapping("/atualizaOpcaoRepeticaoPorGrupoRepeticao")
+    @ResponseStatus(HttpStatus.OK)
+    public void atualizaOpcaoRepeticaoPorGrupoRepeticao(@RequestParam("grupoRepeticao") Integer grupo_repeticao, @RequestParam("repeticao") Integer repeticao)  {
+        agendaService.atualizaOpcaoRepeticaoPorGrupoRepeticao(grupo_repeticao, repeticao);
+    }
+
+    @PutMapping("/atualizaOpcaoRepeticaoPorIdAgenda")
+    @ResponseStatus(HttpStatus.OK)
+    public void atualizaOpcaoRepeticaoPorIdAgenda(@RequestParam("idAgenda") Long id_agenda, @RequestParam("repeticao") Integer repeticao)  {
+        agendaService.atualizaOpcaoRepeticaoPorIdAgenda(id_agenda, repeticao);
     }
 
 }

@@ -1,5 +1,6 @@
 package br.com.fiap.locawebmailapp.utils
 
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import br.com.fiap.locawebmailapp.database.repository.ConvidadoRepository
@@ -7,6 +8,7 @@ import br.com.fiap.locawebmailapp.model.Convidado
 import br.com.fiap.locawebmailapp.model.EmailComAlteracao
 import br.com.fiap.locawebmailapp.model.IdConvidado
 import br.com.fiap.locawebmailapp.model.RespostaEmail
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiListarConvidadoPorId
 
 fun listaParaString(lista: List<String>): String {
     return lista.withIndex().joinToString(", ") { it.value }
@@ -44,15 +46,28 @@ fun atualizarTodosDestinatariosList(todosDestinatarios: ArrayList<String>, email
 }
 
 fun returnListConvidado(
-    listIdConvidado: List<IdConvidado>,
-    convidadoRepository: ConvidadoRepository
+    listIdConvidado: List<Long>,
+    isLoading: MutableState<Boolean>,
+    isError: MutableState<Boolean>
 ): SnapshotStateList<Convidado> {
 
     val list = mutableStateListOf<Convidado>()
 
     for (id in listIdConvidado) {
-        list.add(convidadoRepository.listarConvidadoPorId(id.id_convidado))
-    }
 
+        callLocaMailApiListarConvidadoPorId(
+            id,
+            onSuccess = {
+                convidadoRetornado ->
+                if (convidadoRetornado != null) {
+                    list.add(convidadoRetornado)
+                }
+            },
+            onError = {
+                isError.value = true
+                isLoading.value = false
+            }
+        )
+    }
     return list
 }

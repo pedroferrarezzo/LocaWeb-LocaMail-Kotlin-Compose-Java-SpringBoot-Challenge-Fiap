@@ -1,5 +1,6 @@
 package br.com.fiap.locawebmailapp.service
 
+import androidx.compose.foundation.lazy.layout.IntervalList
 import br.com.fiap.locawebmailapp.model.Agenda
 import br.com.fiap.locawebmailapp.model.AgendaConvidado
 import br.com.fiap.locawebmailapp.model.Alteracao
@@ -237,12 +238,41 @@ interface LocaMailApiService {
     @GET("/agenda/listarGrupoRepeticao")
     fun listarGrupoRepeticao(): Call<List<Int>?>
 
+    @GET("/agenda/listarAgendaPorId")
+    fun listarAgendaPorId(@Query("idAgenda") id_agenda: Long): Call<Agenda?>
+
+    @GET("/convidado/listarConvidadoPorId")
+    fun listarConvidadoPorId(@Query("idConvidado") id_convidado: Long): Call<Convidado?>
+
+    @GET("/agendaConvidado/listarConvidadoPorId")
+    fun listarIdConvidadoPorAgenda(@Query("idAgenda") id_agenda: Long): Call<List<Long>?>
+
+    @DELETE("/agendaConvidado/excluirPorIdAgendaEIdConvidado")
+    fun excluirPorIdAgendaEIdConvidado(@Query("idAgenda") id_agenda: Long, @Query("idConvidado") id_convidado: Long): Call<Unit?>
+
+    @DELETE("/agenda/excluirPorGrupoRepeticao")
+    fun excluirPorGrupoRepeticao(@Query("grupoRepeticao") grupo_repeticao: Int): Call<Unit?>
+
+    @DELETE("/agenda/excluirPorGrupoRepeticaoExcetoData")
+    fun excluirPorGrupoRepeticaoExcetoData(@Query("grupoRepeticao") grupo_repeticao: Int, @Query("data") data: String): Call<Unit?>
+
+    @DELETE("/agendaConvidado/excluirPorGrupoRepeticaoExcetoIdAgenda")
+    fun excluirPorGrupoRepeticaoExcetoIdAgenda(@Query("grupoRepeticao") grupo_repeticao: Int, @Query("idAgenda") id_agenda: Long): Call<Unit?>
+
+    @PUT("/agenda/excluirPorGrupoRepeticaoExcetoIdAgenda")
+    fun atualizaOpcaoRepeticaoPorGrupoRepeticao(@Query("grupoRepeticao") grupo_repeticao: Int, @Query("repeticao") repeticao: Int): Call<Unit?>
+
+    @PUT("/agenda/atualizaOpcaoRepeticaoPorIdAgenda")
+    fun atualizaOpcaoRepeticaoPorIdAgenda(@Query("idAgenda") id_agenda: Long, @Query("repeticao") repeticao: Int): Call<Unit?>
+
+    @PUT("/agenda/atualizaAgenda")
+    fun atualizaAgenda(@Body agenda: Agenda): Call<Unit?>
+
     @GET("/agenda/retornaValorAtualSeqPrimayKey")
     fun retornaValorAtualSeqPrimayKey(): Call<Long?>
 
     @POST("/agenda/criarAgenda")
     fun criarAgenda(@Body agenda: Agenda): Call<Agenda?>
-
 
     @POST("/agendaConvidado/criaAgendaConvidado")
     fun criarAgendaConvidado(@Body agendaConvidado: AgendaConvidado): Call<AgendaConvidado?>

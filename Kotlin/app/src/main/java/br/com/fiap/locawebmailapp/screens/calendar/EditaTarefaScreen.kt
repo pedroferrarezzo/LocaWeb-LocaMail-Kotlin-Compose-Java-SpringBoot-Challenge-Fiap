@@ -1,15 +1,17 @@
 package br.com.fiap.locawebmailapp.screens.calendar
 
-import android.os.Bundle
-import android.util.Log
+import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,6 +24,7 @@ import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DisplayMode
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -31,6 +34,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,7 +50,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.os.bundleOf
 import androidx.navigation.NavController
 import br.com.fiap.locawebmailapp.R
 import br.com.fiap.locawebmailapp.components.calendar.ColorSelectorDalog
@@ -55,8 +58,17 @@ import br.com.fiap.locawebmailapp.components.calendar.RepeatSelectorDialog
 import br.com.fiap.locawebmailapp.components.calendar.RowTwoIconCondition
 import br.com.fiap.locawebmailapp.components.calendar.TextFieldCalendar
 import br.com.fiap.locawebmailapp.components.calendar.TimeSelectorDialog
-import br.com.fiap.locawebmailapp.database.repository.AgendaRepository
-import br.com.fiap.locawebmailapp.utils.convertMillisToLocalDate
+import br.com.fiap.locawebmailapp.components.general.ErrorComponent
+import br.com.fiap.locawebmailapp.model.Agenda
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiAtualizaAgenda
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiAtualizaOpcaoRepeticaoPorGrupoRepeticao
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiAtualizaOpcaoRepeticaoPorIdAgenda
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiCriarAgenda
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiExcluiAgenda
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiExcluirPorGrupoRepeticao
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiExcluirPorGrupoRepeticaoExcetoData
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiListarAgendaPorId
+import br.com.fiap.locawebmailapp.utils.checkInternetConnectivity
 import br.com.fiap.locawebmailapp.utils.convertTo12Hours
 import br.com.fiap.locawebmailapp.utils.localDateToMillis
 import br.com.fiap.locawebmailapp.utils.returnColor
@@ -66,7 +78,6 @@ import br.com.fiap.locawebmailapp.utils.returnStringRepeatOption
 import br.com.fiap.locawebmailapp.utils.stringToDate
 import br.com.fiap.locawebmailapp.utils.stringToLocalDate
 import br.com.fiap.locawebmailapp.utils.validateIfAllDay
-import java.lang.RuntimeException
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -79,45 +90,104 @@ import java.util.TimeZone
 @Composable
 fun EditaTarefaScreen(navController: NavController, id_agenda: Int) {
 
-    val agendaRepository = AgendaRepository(LocalContext.current)
-    val agenda = agendaRepository.listarAgendaPorId(id_agenda)
+    val context = LocalContext.current
+
+    val isConnectedStatus = remember {
+        mutableStateOf(checkInternetConnectivity(context))
+    }
+    val isLoading = remember {
+        mutableStateOf(true)
+    }
+
+    val isError = remember {
+        mutableStateOf(false)
+    }
+
+    val toastMessageWait = stringResource(id = R.string.toast_api_wait)
+
+    val agenda = remember {
+        mutableStateOf<Agenda?>(null)
+    }
+
+    val taskTitle = remember {
+        mutableStateOf("")
+    }
+    val taskDescription = remember {
+        mutableStateOf("")
+    }
+
+    val selectedColor = remember { mutableStateOf(-1) }
+    val selectedRepeat = remember { mutableStateOf(-1) }
+
+    val allDay = remember {
+        mutableStateOf(false)
+    }
+
+    val timePickerState = rememberTimePickerState(
+        initialHour = if (agenda.value != null && agenda.value!!.horario != "1") returnHourAndMinuteSeparate(
+            agenda.value!!.horario
+        ).first() else LocalDateTime.now().hour,
+        initialMinute = if (agenda.value != null && agenda.value!!.horario != "1") returnHourAndMinuteSeparate(
+            agenda.value!!.horario
+        ).last() else LocalDateTime.now().minute
+    )
+
+    val timeShow = remember {
+        mutableStateOf("")
+    }
+
+    val datePickerState = rememberDatePickerState(
+        initialDisplayMode = DisplayMode.Picker,
+        initialSelectedDateMillis = if (agenda.value != null) localDateToMillis(
+            stringToLocalDate(
+                agenda.value!!.data
+            )
+        ) else 0
+    )
+
+    val selectedDate = remember {
+        mutableStateOf("")
+    }
+
+    val initialDate = if (agenda.value != null) agenda.value!!.data else ""
+
+    LaunchedEffect(key1 = Unit) {
+
+        callLocaMailApiListarAgendaPorId(
+            id_agenda = id_agenda.toLong(),
+            onSuccess = { agendaRetornada ->
+
+                if (agendaRetornada != null) {
+                    agenda.value = agendaRetornada
+                    taskTitle.value = agenda.value!!.nome
+                    taskDescription.value = agenda.value!!.descritivo
+                    selectedColor.value = agenda.value!!.cor
+                    selectedRepeat.value = agenda.value!!.repeticao
+                    allDay.value = validateIfAllDay(agenda.value!!.horario)
+                    selectedDate.value = stringToDate(agenda.value!!.data)
+                    timeShow.value = if (timePickerState.is24hour) agenda.value!!.horario else convertTo12Hours(
+                        agenda.value!!.horario
+                    )
+                    isLoading.value = false
+                }
+            },
+            onError = {
+                isError.value = true
+                isLoading.value = false
+            }
+        )
+    }
 
     val isEdit = remember {
         mutableStateOf(false)
     }
 
-    val taskTitle = remember {
-        mutableStateOf(agenda.nome)
-    }
-    val taskDescription = remember {
-        mutableStateOf(agenda.descritivo)
-    }
-    val allDay = remember {
-        mutableStateOf(validateIfAllDay(agenda.horario))
-    }
-
-    val timePickerState = rememberTimePickerState(
-        initialHour = if (agenda != null && agenda.horario != "1") returnHourAndMinuteSeparate(
-            agenda.horario
-        ).first() else LocalDateTime.now().hour,
-        initialMinute = if (agenda != null && agenda.horario != "1") returnHourAndMinuteSeparate(
-            agenda.horario
-        ).last() else LocalDateTime.now().minute
-    )
-
     val showTimePicker = remember { mutableStateOf(false) }
 
-    val timeShow = remember {
-        mutableStateOf(if (timePickerState.is24hour) agenda.horario else convertTo12Hours(agenda.horario))
-    }
     val time = remember {
         mutableStateOf(timeShow.value)
     }
 
-    val datePickerState = rememberDatePickerState(
-        initialDisplayMode = DisplayMode.Picker,
-        initialSelectedDateMillis = if (agenda != null) localDateToMillis(stringToLocalDate(agenda.data)) else 0
-    )
     val openDialogDatePicker = remember { mutableStateOf(false) }
     val timezoneFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.US).apply {
         timeZone = TimeZone.getTimeZone("GMT")
@@ -126,380 +196,550 @@ fun EditaTarefaScreen(navController: NavController, id_agenda: Int) {
     val millisToLocalDate = datePickerState.selectedDateMillis?.let {
         stringToLocalDate(timezoneFormatter.format(it))
     }
-    val selectedDate = remember {
-        mutableStateOf(stringToDate(agenda.data))
-    }
+
 
     val openDialogColorPicker = remember { mutableStateOf(false) }
-    val selectedColor = remember { mutableStateOf(agenda.cor) }
 
     val openDialogRepeatPicker = remember { mutableStateOf(false) }
-    val selectedRepeat = remember { mutableStateOf(agenda.repeticao) }
+
 
     val isErrorTitle = remember { mutableStateOf(false) }
 
-    val initialDate = if (agenda != null) agenda.data else ""
-
-    Box(
-
-    ) {
-
-        Column {
-            RowTwoIconCondition(
-                horizontalArrangement = Arrangement.SpaceBetween,
+    if (isLoading.value) {
+        BackHandler {
+            Toast.makeText(
+                context,
+                toastMessageWait,
+                Toast.LENGTH_LONG
+            ).show()
+        }
+        Box(modifier = Modifier.fillMaxSize()) {
+            CircularProgressIndicator(
                 modifier = Modifier
-                    .padding(8.dp)
-                    .fillMaxWidth(),
-                onClickFirstButton = {
-                    val previousBackStackEntry = navController.previousBackStackEntry
-                    if (previousBackStackEntry != null) {
-                        previousBackStackEntry.savedStateHandle.set("data", agenda.data)
+                    .align(Alignment.Center)
+                    .size(100.dp, 100.dp),
+                color = colorResource(id = R.color.lcweb_red_1)
+            )
+        }
+    } else {
+        if (!isConnectedStatus.value) {
+            Box {
+                ErrorComponent(
+                    title = stringResource(id = R.string.ai_error_oops),
+                    subtitle = stringResource(id = R.string.ai_error_verifynet),
+                    painter = painterResource(id = R.drawable.notfound),
+                    descriptionimage = stringResource(id = R.string.content_desc_nonet),
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .size(400.dp, 400.dp),
+                    modifierButton = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 10.dp)
+                        .height(50.dp)
+                        .align(Alignment.BottomCenter),
+                    textButton = stringResource(id = R.string.ai_button_return),
+                    buttonChange = {
+                        navController.popBackStack()
                     }
+                )
+            }
+        } else if (isError.value) {
+            Box {
+                ErrorComponent(
+                    title = stringResource(id = R.string.ai_error_oops),
+                    subtitle = stringResource(id = R.string.ai_error_apiproblem),
+                    painter = painterResource(id = R.drawable.bugfixing),
+                    descriptionimage = stringResource(id = R.string.content_desc_apiproblem),
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .size(400.dp, 400.dp),
+                    modifierButton = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 10.dp)
+                        .height(50.dp)
+                        .align(Alignment.BottomCenter),
+                    textButton = stringResource(id = R.string.ai_button_return),
+                    buttonChange = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+        } else {
 
-                    navController.popBackStack()
-                },
-                onClickSecondButton = {
-                    isEdit.value = true
-                },
-                iconFirstButton = Icons.Filled.Close,
-                iconSecondButton = Icons.Filled.Edit,
-                descriptionFirstButton = "",
-                descriptionSecondButton = "",
-                textSecondButtonText = stringResource(id = R.string.calendar_update_button),
-                onClickSecondButtonText = {
+            if (agenda.value != null) {
+                Box(
+                ) {
+                    Column {
+                        RowTwoIconCondition(
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier
+                                .padding(8.dp)
+                                .fillMaxWidth(),
+                            onClickFirstButton = {
+                                val previousBackStackEntry = navController.previousBackStackEntry
+                                if (previousBackStackEntry != null) {
+                                    previousBackStackEntry.savedStateHandle.set(
+                                        "data",
+                                        agenda.value!!.data
+                                    )
+                                }
 
-                    if (taskTitle.value.isEmpty()) {
-                        isErrorTitle.value = true
+                                navController.popBackStack()
+                            },
+                            onClickSecondButton = {
+                                isEdit.value = true
+                            },
+                            iconFirstButton = Icons.Filled.Close,
+                            iconSecondButton = Icons.Filled.Edit,
+                            descriptionFirstButton = "",
+                            descriptionSecondButton = "",
+                            textSecondButtonText = stringResource(id = R.string.calendar_update_button),
+                            onClickSecondButtonText = {
 
-                    } else {
-                        agenda.nome = taskTitle.value
-                        agenda.descritivo = taskDescription.value
-                        agenda.horario = time.value
-                        agenda.cor = selectedColor.value
-                        agenda.data =
-                            if (millisToLocalDate.toString().equals("null")) LocalDate.now()
-                                .toString() else millisToLocalDate!!.toString()
+                                if (taskTitle.value.isEmpty()) {
+                                    isErrorTitle.value = true
+
+                                } else {
+                                    isLoading.value = true
+                                    agenda.value!!.nome = taskTitle.value
+                                    agenda.value!!.descritivo = taskDescription.value
+                                    agenda.value!!.horario = time.value
+                                    agenda.value!!.cor = selectedColor.value
+                                    agenda.value!!.data =
+                                        if (millisToLocalDate.toString()
+                                                .equals("null")
+                                        ) LocalDate.now()
+                                            .toString() else millisToLocalDate!!.toString()
+
+                                    if (selectedRepeat.value == agenda.value!!.repeticao) {
+                                        agenda.value!!.repeticao = selectedRepeat.value
+
+                                        callLocaMailApiAtualizaAgenda(
+                                            agenda.value!!,
+                                            onSuccess = {
+                                            },
+                                            onError = {
+                                                isError.value = true
+                                                isLoading.value = false
+                                            }
+                                        )
+                                    } else if (agenda.value!!.repeticao == 2 && selectedDate.value != stringToDate(
+                                            initialDate
+                                        )
+                                    ) {
+
+                                        callLocaMailApiExcluirPorGrupoRepeticao(
+                                            agenda.value!!.grupo_repeticao,
+                                            onSuccess = {
+
+                                            },
+                                            onError = {
+                                                isError.value = true
+                                                isLoading.value = false
+                                            }
+                                        )
+
+                                        for (day in returnOneMonthFromDate(agenda.value!!.data)) {
+                                            agenda.value!!.id_agenda = 0
+                                            agenda.value!!.data = day
+
+                                            callLocaMailApiCriarAgenda(
+                                                agenda.value!!,
+                                                onSuccess = {
 
 
+                                                },
+                                                onError = {
+                                                    isError.value = true
+                                                    isLoading.value = false
+                                                }
+                                            )
+                                        }
+                                    } else if (selectedRepeat.value == 1 && agenda.value!!.repeticao == 2) {
 
-                        if (selectedRepeat.value == agenda.repeticao) {
-                            agenda.repeticao = selectedRepeat.value
 
-                            agendaRepository.atualizaAgenda(agenda)
-                        } else if (agenda.repeticao == 2 && selectedDate.value != stringToDate(
-                                initialDate
-                            )
+                                        callLocaMailApiExcluirPorGrupoRepeticaoExcetoData(
+                                            agenda.value!!.grupo_repeticao,
+                                            agenda.value!!.data,
+                                            onSuccess = {
+
+                                            },
+                                            onError = {
+                                                isError.value = true
+                                                isLoading.value = false
+                                            }
+                                        )
+
+                                        callLocaMailApiAtualizaOpcaoRepeticaoPorGrupoRepeticao(
+                                            agenda.value!!.grupo_repeticao,
+                                            1,
+                                            onSuccess = {
+
+                                            },
+                                            onError = {
+                                                isError.value = true
+                                                isLoading.value = false
+                                            }
+                                        )
+
+                                    } else if (selectedRepeat.value == 2 && agenda.value!!.repeticao == 1 && selectedDate.value != agenda.value!!.data) {
+
+                                        callLocaMailApiExcluiAgenda(
+                                            agenda.value!!.id_agenda,
+                                            onSuccess = {
+
+                                            },
+                                            onError = {
+                                                isError.value = true
+                                                isLoading.value = false
+                                            }
+                                        )
+
+
+                                        for (day in returnOneMonthFromDate(agenda.value!!.data)) {
+                                            agenda.value!!.repeticao = 2
+                                            agenda.value!!.id_agenda = 0
+                                            agenda.value!!.data = day
+
+                                            callLocaMailApiCriarAgenda(
+                                                agenda.value!!,
+                                                onSuccess = {
+
+
+                                                },
+                                                onError = {
+                                                    isError.value = true
+                                                    isLoading.value = false
+                                                }
+                                            )
+                                        }
+                                    } else if (selectedRepeat.value == 2 && agenda.value!!.repeticao == 1) {
+
+
+                                        agenda.value!!.repeticao = 2
+
+                                        callLocaMailApiAtualizaOpcaoRepeticaoPorIdAgenda(
+                                            agenda.value!!.id_agenda,
+                                            2,
+                                            onSuccess = {
+
+                                            },
+                                            onError = {
+                                                isError.value = true
+                                                isLoading.value = false
+                                            }
+                                        )
+
+                                        for (day in returnOneMonthFromDate(agenda.value!!.data)) {
+                                            if (agenda.value!!.data != day) {
+                                                agenda.value!!.id_agenda = 0
+                                                agenda.value!!.data = day
+
+                                                callLocaMailApiCriarAgenda(
+                                                    agenda.value!!,
+                                                    onSuccess = {
+
+                                                    },
+                                                    onError = {
+                                                        isError.value = true
+                                                        isLoading.value = false
+                                                    }
+                                                )
+                                            }
+                                        }
+                                    }
+
+                                    val previousBackStackEntry =
+                                        navController.previousBackStackEntry
+                                    if (previousBackStackEntry != null) {
+                                        previousBackStackEntry.savedStateHandle.set(
+                                            "data",
+                                            if (millisToLocalDate.toString()
+                                                    .equals("null")
+                                            ) LocalDate.now()
+                                                .toString() else millisToLocalDate!!.toString()
+                                        )
+                                    }
+
+                                    isLoading.value = false
+                                    navController.popBackStack()
+                                }
+                            },
+                            colorText = colorResource(id = R.color.white),
+                            colorsSecondButtonText = ButtonDefaults.buttonColors(
+                                containerColor = colorResource(id = R.color.lcweb_red_1)
+                            ),
+                            isEdit = isEdit.value
+                        )
+
+                        TextFieldCalendar(
+                            value = taskTitle.value,
+                            onValueChange = {
+                                isErrorTitle.value = it.isEmpty()
+                                taskTitle.value = it
+                            },
+                            placeholderText = stringResource(id = R.string.calendar_task_placeholder_title),
+                            fontSizePlaceHolder = 25.sp,
+                            fontSizeTextStyle = 25.sp,
+                            paddingTextField = 20.dp,
+                            descriptionTrailingIcon = "",
+                            iconTrailingIcon = Icons.Outlined.CheckCircle,
+                            isReadOnly = !isEdit.value,
+                            maxLines = 2,
+                            isError = isErrorTitle.value
+                        )
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(20.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            agendaRepository.excluirPorGrupoRepeticao(
-                                agenda.grupo_repeticao
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    modifier = Modifier
+                                        .width(30.dp)
+                                        .height(30.dp),
+                                    painter = painterResource(id = R.drawable.clock_solid),
+                                    contentDescription = stringResource(id = R.string.content_desc_clock),
+                                    tint = colorResource(id = R.color.lcweb_gray_1)
+                                )
 
-
-                            for (day in returnOneMonthFromDate(agenda.data)) {
-                                agenda.id_agenda = 0
-                                agenda.data = day
-                                agendaRepository.criarAgenda(agenda)
-
+                                Text(
+                                    text = stringResource(id = R.string.calendar_all_day),
+                                    modifier = Modifier.padding(5.dp),
+                                    color = colorResource(id = R.color.lcweb_gray_1),
+                                    fontSize = 20.sp
+                                )
                             }
-                        } else if (selectedRepeat.value == 1 && agenda.repeticao == 2) {
 
-
-                            agendaRepository.excluirPorGrupoRepeticaoExcetoData(
-                                agenda.grupo_repeticao,
-                                agenda.data
+                            Switch(
+                                checked = allDay.value,
+                                onCheckedChange = {
+                                    time.value = if (!allDay.value) "1" else LocalDateTime.now()
+                                        .format(DateTimeFormatter.ofPattern(if (timePickerState.is24hour) "HH:mm" else "hh:mm a"))
+                                    timeShow.value = time.value
+                                    allDay.value = !allDay.value
+                                },
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = colorResource(id = R.color.white),
+                                    uncheckedThumbColor = colorResource(id = R.color.white),
+                                    uncheckedBorderColor = colorResource(id = R.color.lcweb_gray_1),
+                                    checkedBorderColor = colorResource(id = R.color.lcweb_red_1),
+                                    checkedTrackColor = colorResource(id = R.color.lcweb_red_1),
+                                    uncheckedTrackColor = colorResource(id = R.color.lcweb_gray_1),
+                                    disabledCheckedTrackColor = colorResource(id = R.color.lcweb_red_1),
+                                    disabledUncheckedTrackColor = colorResource(id = R.color.lcweb_gray_1),
+                                    disabledCheckedThumbColor = colorResource(id = R.color.lcweb_gray_3),
+                                    disabledUncheckedThumbColor = colorResource(id = R.color.lcweb_gray_3)
+                                ),
+                                enabled = isEdit.value
                             )
-                            agendaRepository.atualizaOpcaoRepeticaoPorGrupoRepeticao(
-                                agenda.grupo_repeticao,
-                                1
-                            )
-                        } else if (selectedRepeat.value == 2 && agenda.repeticao == 1 && selectedDate.value != agenda.data) {
+                        }
 
-                            agendaRepository.excluiAgenda(agenda)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
 
-                            for (day in returnOneMonthFromDate(agenda.data)) {
-                                agenda.repeticao = 2
-                                agenda.id_agenda = 0
-                                agenda.data = day
-                                agendaRepository.criarAgenda(agenda)
+                            Button(
+                                onClick = {
+                                    openDialogDatePicker.value = true
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color.Transparent,
+                                    disabledContainerColor = Color.Transparent,
+                                    disabledContentColor = colorResource(id = R.color.lcweb_gray_1)
+                                ),
+                                shape = RoundedCornerShape(5.dp),
+                                enabled = isEdit.value
+                            ) {
+                                Text(
+                                    text = selectedDate.value,
+                                    color = colorResource(id = R.color.lcweb_gray_1),
+                                    fontSize = 20.sp
+                                )
+
+                                DateSelectorDialog(
+                                    openDialogDatePicker = openDialogDatePicker,
+                                    selectedDate = selectedDate,
+                                    millisToLocalDate = millisToLocalDate,
+                                    datePickerState = datePickerState
+                                )
                             }
-                        } else if (selectedRepeat.value == 2 && agenda.repeticao == 1) {
 
+                            if (!allDay.value) {
+                                Button(
+                                    onClick = {
+                                        showTimePicker.value = true
+                                    },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color.Transparent,
+                                        disabledContainerColor = Color.Transparent,
+                                        disabledContentColor = colorResource(id = R.color.lcweb_gray_1)
+                                    ),
+                                    shape = RoundedCornerShape(5.dp),
+                                    enabled = isEdit.value,
 
-                            agenda.repeticao = 2
-                            agendaRepository.atualizaOpcaoRepeticaoPorIdAgenda(agenda.id_agenda, 2)
+                                    ) {
+                                    Text(
+                                        text = timeShow.value,
+                                        color = colorResource(id = R.color.lcweb_gray_1),
+                                        fontSize = 20.sp,
+                                        textAlign = TextAlign.Center
+                                    )
 
-                            for (day in returnOneMonthFromDate(agenda.data)) {
-                                if (agenda.data != day) {
-                                    agenda.id_agenda = 0
-                                    agenda.data = day
-                                    agendaRepository.criarAgenda(agenda)
+                                    TimeSelectorDialog(
+                                        showTimePicker = showTimePicker,
+                                        time = time,
+                                        timeShow = timeShow,
+                                        timePickerState = timePickerState
+                                    )
                                 }
                             }
                         }
 
-                        val previousBackStackEntry = navController.previousBackStackEntry
-                        if (previousBackStackEntry != null) {
-                            previousBackStackEntry.savedStateHandle.set("data", if (millisToLocalDate.toString().equals("null")) LocalDate.now()
-                                .toString() else millisToLocalDate!!.toString())
+                        Button(
+                            onClick = { openDialogColorPicker.value = true },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Transparent,
+                                disabledContainerColor = Color.Transparent,
+                                disabledContentColor = colorResource(id = R.color.lcweb_gray_1)
+                            ),
+                            enabled = isEdit.value
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .clip(CircleShape)
+                                        .width(30.dp)
+                                        .height(30.dp)
+                                        .background(returnColor(option = selectedColor.value))
+                                )
+                                Text(
+                                    text = stringResource(id = R.string.calendar_choose_color),
+                                    fontSize = 20.sp,
+                                    color = colorResource(id = R.color.lcweb_gray_1),
+                                    modifier = Modifier.padding(5.dp)
+                                )
+
+                                ColorSelectorDalog(
+                                    openDialogColorPicker = openDialogColorPicker,
+                                    selectedColor = selectedColor
+                                )
+                            }
+
+                            ColorSelectorDalog(
+                                openDialogColorPicker = openDialogColorPicker,
+                                selectedColor = selectedColor
+                            )
                         }
 
-                        navController.popBackStack()
+                        Button(
+                            onClick = { openDialogRepeatPicker.value = true },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Transparent,
+                                disabledContainerColor = Color.Transparent,
+                                disabledContentColor = colorResource(id = R.color.lcweb_gray_1)
+                            ),
+                            enabled = isEdit.value
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(15.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Refresh,
+                                    contentDescription = stringResource(id = R.string.content_desc_calendar_repeat),
+                                    modifier = Modifier
+                                        .width(30.dp)
+                                        .height(30.dp),
+                                    tint = colorResource(id = R.color.lcweb_gray_1)
+                                )
+                                Text(
+                                    text = returnStringRepeatOption(selectedRepeat.value),
+                                    fontSize = 20.sp,
+                                    color = colorResource(id = R.color.lcweb_gray_1),
+                                    modifier = Modifier.padding(5.dp)
+                                )
+                            }
+
+                            RepeatSelectorDialog(
+                                openDialogRepeatPicker = openDialogRepeatPicker,
+                                selectedRepeat = selectedRepeat
+                            )
+                        }
+
+                        TextFieldCalendar(
+                            value = taskDescription.value,
+                            onValueChange = {
+                                taskDescription.value = it
+                            },
+                            placeholderText = stringResource(id = R.string.calendar_task_description_text),
+                            fontSizePlaceHolder = 20.sp,
+                            fontSizeTextStyle = 20.sp,
+                            paddingTextField = 20.dp,
+                            descriptionTrailingIcon = "",
+                            iconTrailingIcon = Icons.Outlined.Info,
+                            isReadOnly = !isEdit.value,
+                            maxLines = 4,
+                            isError = false
+                        )
                     }
-                },
-                colorText = colorResource(id = R.color.white),
-                colorsSecondButtonText = ButtonDefaults.buttonColors(
-                    containerColor = colorResource(id = R.color.lcweb_red_1)
-                ),
-                isEdit = isEdit.value
-            )
 
-            TextFieldCalendar(
-                value = taskTitle.value,
-                onValueChange = {
-                    isErrorTitle.value = it.isEmpty()
-                    taskTitle.value = it
-                },
-                placeholderText = stringResource(id = R.string.calendar_task_placeholder_title),
-                fontSizePlaceHolder = 25.sp,
-                fontSizeTextStyle = 25.sp,
-                paddingTextField = 20.dp,
-                descriptionTrailingIcon = "",
-                iconTrailingIcon = Icons.Outlined.CheckCircle,
-                isReadOnly = !isEdit.value,
-                maxLines = 2,
-                isError = isErrorTitle.value
-            )
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        modifier = Modifier
-                            .width(30.dp)
-                            .height(30.dp),
-                        painter = painterResource(id = R.drawable.clock_solid),
-                        contentDescription = stringResource(id = R.string.content_desc_clock),
-                        tint = colorResource(id = R.color.lcweb_gray_1)
-                    )
-
-                    Text(
-                        text = stringResource(id = R.string.calendar_all_day),
-                        modifier = Modifier.padding(5.dp),
-                        color = colorResource(id = R.color.lcweb_gray_1),
-                        fontSize = 20.sp
-                    )
-                }
-
-                Switch(
-                    checked = allDay.value,
-                    onCheckedChange = {
-                        time.value = if (!allDay.value) "1" else LocalDateTime.now()
-                            .format(DateTimeFormatter.ofPattern(if (timePickerState.is24hour) "HH:mm" else "hh:mm a"))
-                        timeShow.value = time.value
-                        allDay.value = !allDay.value
-                    },
-                    colors = SwitchDefaults.colors(
-                        checkedThumbColor = colorResource(id = R.color.white),
-                        uncheckedThumbColor = colorResource(id = R.color.white),
-                        uncheckedBorderColor = colorResource(id = R.color.lcweb_gray_1),
-                        checkedBorderColor = colorResource(id = R.color.lcweb_red_1),
-                        checkedTrackColor = colorResource(id = R.color.lcweb_red_1),
-                        uncheckedTrackColor = colorResource(id = R.color.lcweb_gray_1),
-                        disabledCheckedTrackColor = colorResource(id = R.color.lcweb_red_1),
-                        disabledUncheckedTrackColor = colorResource(id = R.color.lcweb_gray_1),
-                        disabledCheckedThumbColor = colorResource(id = R.color.lcweb_gray_3),
-                        disabledUncheckedThumbColor = colorResource(id = R.color.lcweb_gray_3)
-                    ),
-                    enabled = isEdit.value
-                )
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-
-                Button(
-                    onClick = {
-                        openDialogDatePicker.value = true
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Transparent,
-                        disabledContainerColor = Color.Transparent,
-                        disabledContentColor = colorResource(id = R.color.lcweb_gray_1)
-                    ),
-                    shape = RoundedCornerShape(5.dp),
-                    enabled = isEdit.value
-                ) {
-                    Text(
-                        text = selectedDate.value,
-                        color = colorResource(id = R.color.lcweb_gray_1),
-                        fontSize = 20.sp
-                    )
-
-                    DateSelectorDialog(
-                        openDialogDatePicker = openDialogDatePicker,
-                        selectedDate = selectedDate,
-                        millisToLocalDate = millisToLocalDate,
-                        datePickerState = datePickerState
-                    )
-                }
-
-                if (!allDay.value) {
                     Button(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp)
+                            .align(Alignment.BottomCenter),
                         onClick = {
-                            showTimePicker.value = true
+
+                            callLocaMailApiExcluiAgenda(
+                                agenda.value!!.id_agenda,
+                                onSuccess = {
+
+                                },
+                                onError = {
+                                    isError.value = true
+                                    isLoading.value = false
+                                })
+
+                            val previousBackStackEntry = navController.previousBackStackEntry
+                            if (previousBackStackEntry != null) {
+                                previousBackStackEntry.savedStateHandle.set(
+                                    "data",
+                                    agenda.value!!.data
+                                )
+                            }
+                            navController.popBackStack()
                         },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.Transparent,
-                            disabledContainerColor = Color.Transparent,
-                            disabledContentColor = colorResource(id = R.color.lcweb_gray_1)
+                            containerColor = colorResource(id = R.color.lcweb_red_1)
                         ),
-                        shape = RoundedCornerShape(5.dp),
-                        enabled = isEdit.value,
-
+                        shape = RectangleShape
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                        Text(
-                            text = timeShow.value,
-                            color = colorResource(id = R.color.lcweb_gray_1),
-                            fontSize = 20.sp,
-                            textAlign = TextAlign.Center
-                        )
+                            Text(text = stringResource(id = R.string.calendar_task_mark))
+                            Icon(
+                                imageVector = Icons.Filled.CheckCircle,
+                                contentDescription = stringResource(id = R.string.content_desc_task)
+                            )
+                        }
 
-                        TimeSelectorDialog(
-                            showTimePicker = showTimePicker,
-                            time = time,
-                            timeShow = timeShow,
-                            timePickerState = timePickerState
-                        )
                     }
                 }
             }
 
-            Button(
-                onClick = { openDialogColorPicker.value = true },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Transparent,
-                    disabledContainerColor = Color.Transparent,
-                    disabledContentColor = colorResource(id = R.color.lcweb_gray_1)
-                ),
-                enabled = isEdit.value
-            ) {
-                Row(
-                    modifier = Modifier.padding(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .clip(CircleShape)
-                            .width(30.dp)
-                            .height(30.dp)
-                            .background(returnColor(option = selectedColor.value))
-                    )
-                    Text(
-                        text = stringResource(id = R.string.calendar_choose_color),
-                        fontSize = 20.sp,
-                        color = colorResource(id = R.color.lcweb_gray_1),
-                        modifier = Modifier.padding(5.dp)
-                    )
-
-                    ColorSelectorDalog(
-                        openDialogColorPicker = openDialogColorPicker,
-                        selectedColor = selectedColor
-                    )
-                }
-
-                ColorSelectorDalog(
-                    openDialogColorPicker = openDialogColorPicker,
-                    selectedColor = selectedColor
-                )
-            }
-
-            Button(
-                onClick = { openDialogRepeatPicker.value = true },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Transparent,
-                    disabledContainerColor = Color.Transparent,
-                    disabledContentColor = colorResource(id = R.color.lcweb_gray_1)
-                ),
-                enabled = isEdit.value
-            ) {
-                Row(
-                    modifier = Modifier.padding(15.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Refresh,
-                        contentDescription = stringResource(id = R.string.content_desc_calendar_repeat),
-                        modifier = Modifier
-                            .width(30.dp)
-                            .height(30.dp),
-                        tint = colorResource(id = R.color.lcweb_gray_1)
-                    )
-                    Text(
-                        text = returnStringRepeatOption(selectedRepeat.value),
-                        fontSize = 20.sp,
-                        color = colorResource(id = R.color.lcweb_gray_1),
-                        modifier = Modifier.padding(5.dp)
-                    )
-                }
-
-                RepeatSelectorDialog(
-                    openDialogRepeatPicker = openDialogRepeatPicker,
-                    selectedRepeat = selectedRepeat
-                )
-            }
-
-            TextFieldCalendar(
-                value = taskDescription.value,
-                onValueChange = {
-                    taskDescription.value = it
-                },
-                placeholderText = stringResource(id = R.string.calendar_task_description_text),
-                fontSizePlaceHolder = 20.sp,
-                fontSizeTextStyle = 20.sp,
-                paddingTextField = 20.dp,
-                descriptionTrailingIcon = "",
-                iconTrailingIcon = Icons.Outlined.Info,
-                isReadOnly = !isEdit.value,
-                maxLines = 4,
-                isError = false
-            )
         }
 
-        Button(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp)
-                .align(Alignment.BottomCenter),
-            onClick = {
-                agendaRepository.excluiAgenda(agenda)
-                val previousBackStackEntry = navController.previousBackStackEntry
-                if (previousBackStackEntry != null) {
-                    previousBackStackEntry.savedStateHandle.set("data", agenda.data)
-                }
-                navController.popBackStack()
-            },
-            colors = ButtonDefaults.buttonColors(
-                containerColor = colorResource(id = R.color.lcweb_red_1)
-            ),
-            shape = RectangleShape
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(text = stringResource(id = R.string.calendar_task_mark))
-                Icon(imageVector = Icons.Filled.CheckCircle, contentDescription = stringResource(id = R.string.content_desc_task))
-            }
-
-        }
     }
 }
