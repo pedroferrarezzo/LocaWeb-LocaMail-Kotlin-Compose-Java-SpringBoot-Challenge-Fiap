@@ -13,6 +13,7 @@ import br.com.fiap.locawebmailapp.model.Pasta
 import br.com.fiap.locawebmailapp.model.RespostaEmail
 import br.com.fiap.locawebmailapp.model.Usuario
 import br.com.fiap.locawebmailapp.model.UsuarioSemSenha
+import br.com.fiap.locawebmailapp.model.ai.AiQuestion
 import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -276,6 +277,12 @@ interface LocaMailApiService {
 
     @POST("/agendaConvidado/criaAgendaConvidado")
     fun criarAgendaConvidado(@Body agendaConvidado: AgendaConvidado): Call<AgendaConvidado?>
+
+    @POST("/aiQuestion/criarPergunta")
+    fun criarPergunta(@Body aiQuestion: AiQuestion): Call<AiQuestion?>
+
+    @GET("/aiQuestion/obterPergunta")
+    fun obterPergunta(@Query("idQuestion") id_question: Long, @Query("idEmail") id_email: Long): Call<AiQuestion?>
 
 
 

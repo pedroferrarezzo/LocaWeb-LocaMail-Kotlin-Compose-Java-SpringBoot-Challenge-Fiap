@@ -12,6 +12,7 @@ import br.com.fiap.locawebmailapp.model.Pasta
 import br.com.fiap.locawebmailapp.model.RespostaEmail
 import br.com.fiap.locawebmailapp.model.Usuario
 import br.com.fiap.locawebmailapp.model.UsuarioSemSenha
+import br.com.fiap.locawebmailapp.model.ai.AiQuestion
 import br.com.fiap.locawebmailapp.service.LocaMailApiFactory
 import br.com.fiap.locawebmailapp.utils.getValidatedString
 import retrofit2.Call
@@ -435,6 +436,61 @@ fun callLocaMailApiListarAgendaPorDia(
             }
         }
         override fun onFailure(call: Call<List<Agenda>?>, t: Throwable) {
+            onError(t)
+        }
+    })
+}
+
+fun callLocaMailApiObterPergunta(
+    id_question: Long,
+    id_email: Long,
+    onSuccess: (AiQuestion?) -> Unit,
+    onError: (Throwable) -> Unit
+) {
+    val call = LocaMailApiFactory().getLocaMailApiFactory()
+        .obterPergunta(id_question, id_email)
+
+    call.enqueue(object : Callback<AiQuestion?> {
+        override fun onResponse(
+            call: Call<AiQuestion?>,
+            response: Response<AiQuestion?>
+        ) {
+            if (response.isSuccessful && response.body() != null) {
+                onSuccess(response.body()!!)
+            } else if (response.isSuccessful == false) {
+                onError(Throwable())
+            } else {
+                onSuccess(null)
+            }
+        }
+        override fun onFailure(call: Call<AiQuestion?>, t: Throwable) {
+            onError(t)
+        }
+    })
+}
+
+fun callLocaMailApiCriarPergunta(
+    aiQuestion: AiQuestion,
+    onSuccess: (AiQuestion?) -> Unit,
+    onError: (Throwable) -> Unit
+) {
+    val call = LocaMailApiFactory().getLocaMailApiFactory()
+        .criarPergunta(aiQuestion)
+
+    call.enqueue(object : Callback<AiQuestion?> {
+        override fun onResponse(
+            call: Call<AiQuestion?>,
+            response: Response<AiQuestion?>
+        ) {
+            if (response.isSuccessful && response.body() != null) {
+                onSuccess(response.body()!!)
+            } else if (response.isSuccessful == false) {
+                onError(Throwable())
+            } else {
+                onSuccess(null)
+            }
+        }
+        override fun onFailure(call: Call<AiQuestion?>, t: Throwable) {
             onError(t)
         }
     })

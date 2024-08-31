@@ -38,18 +38,19 @@ import androidx.navigation.NavController
 import br.com.fiap.locawebmailapp.BuildConfig
 import br.com.fiap.locawebmailapp.R
 import br.com.fiap.locawebmailapp.components.general.ErrorComponent
-import br.com.fiap.locawebmailapp.database.repository.AiQuestionRepository
-import br.com.fiap.locawebmailapp.database.repository.EmailRepository
 import br.com.fiap.locawebmailapp.model.ai.ContentsBody
 import br.com.fiap.locawebmailapp.model.ai.GeminiRequest
 import br.com.fiap.locawebmailapp.model.ai.GeminiResponse
 import br.com.fiap.locawebmailapp.model.ai.TextRequestResponse
 import br.com.fiap.locawebmailapp.utils.api.callGemini
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiListarEmailPorId
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiObterPergunta
 import br.com.fiap.locawebmailapp.utils.checkInternetConnectivity
 import com.halilibo.richtext.commonmark.CommonmarkAstNodeParser
 import com.halilibo.richtext.commonmark.MarkdownParseOptions
 import com.halilibo.richtext.markdown.BasicMarkdown
 import com.halilibo.richtext.ui.RichTextScope
+import kotlinx.coroutines.launch
 
 @Composable
 fun AiResponseScreen(
@@ -59,10 +60,6 @@ fun AiResponseScreen(
     id_question: Long
 ) {
     val context = LocalContext.current
-    val emailRepository = EmailRepository(context)
-    val email = emailRepository.listarEmailPorId(id_email)
-    val aiQuestionRepository = AiQuestionRepository(context)
-    val question = aiQuestionRepository.listarPergunta(id_question, id_email)
 
     val isLoading = remember {
         mutableStateOf(true)
@@ -84,44 +81,70 @@ fun AiResponseScreen(
     val aiLanguage = stringResource(id = R.string.ai_language)
 
     LaunchedEffect(key1 = Unit) {
-        try {
-            isConnectedStatus.value = checkInternetConnectivity(context)
-            if (!isConnectedStatus.value) {
-                isLoading.value = false
-            } else {
-                val geminiRequest = GeminiRequest()
-                val textRequestResponse = TextRequestResponse()
-                val parts = ContentsBody()
-                val apiToken = BuildConfig.API_KEY
 
-                textRequestResponse.text =
-                "Pergunta: ${question.pergunta}\n" +
-                        "Email:\n"+
-                        "De: ${email.remetente}\n" +
-                        "Para: ${email.destinatario}\n" +
-                        "Cc: ${email.cc}\n" +
-                        "Cco: ${email.cco}\n" +
-                        "Assunto: ${email.assunto}\n" +
-                        "Corpo: ${email.corpo}\n" +
-                        "\n" +
-                        "**OBSERVAÇÃO: \n" +
-                        "- Sua resposta deve ser baseada no email acima;\n" +
-                        "- Sua resposta deve ser fornecida no idioma: $aiLanguage;\n" +
-                        "**Qualquer pergunta que fuja do contexto do email (assunto e corpo) deve ser ignorada e respondida com uma resposta padrão**.\n"
-                parts.parts = listOf(textRequestResponse)
-                geminiRequest.contents = listOf(parts)
-                geminiResponse.value =
-                    callGemini(apiToken, geminiRequest)
+        callLocaMailApiListarEmailPorId(
+            id_email = id_email,
+            onSuccess = { emailRetornado ->
 
-                if (geminiResponse.value != null) {
-                    isLoading.value = false
+                if (emailRetornado != null) {
+                    callLocaMailApiObterPergunta(
+                        id_question,
+                        id_email,
+                        onSuccess = { perguntaRetornada ->
+
+                            if (perguntaRetornada != null) {
+
+                                val geminiRequest = GeminiRequest()
+                                val textRequestResponse = TextRequestResponse()
+                                val parts = ContentsBody()
+                                val apiToken = BuildConfig.API_KEY
+
+                                textRequestResponse.text =
+                                    "Pergunta: ${perguntaRetornada.pergunta}\n" +
+                                            "Email:\n" +
+                                            "De: ${emailRetornado.remetente}\n" +
+                                            "Para: ${emailRetornado.destinatario}\n" +
+                                            "Cc: ${emailRetornado.cc}\n" +
+                                            "Cco: ${emailRetornado.cco}\n" +
+                                            "Assunto: ${emailRetornado.assunto}\n" +
+                                            "Corpo: ${emailRetornado.corpo}\n" +
+                                            "\n" +
+                                            "**OBSERVAÇÃO: \n" +
+                                            "- Sua resposta deve ser baseada no email acima;\n" +
+                                            "- Sua resposta deve ser fornecida no idioma: $aiLanguage;\n" +
+                                            "**Qualquer pergunta que fuja do contexto do email (assunto e corpo) deve ser ignorada e respondida com uma resposta padrão**.\n"
+                                parts.parts = listOf(textRequestResponse)
+                                geminiRequest.contents = listOf(parts)
+
+                                callGemini(
+                                    apiToken,
+                                    geminiRequest,
+                                    onSuccess = {
+                                        respostaRetornada ->
+                                        if (respostaRetornada != null) {
+                                            geminiResponse.value = respostaRetornada
+                                            isLoading.value = false
+                                        }
+                                    },
+                                    onError = {
+                                        isError.value = true
+                                        isLoading.value = false
+                                    }
+                                )
+                            }
+                        },
+                        onError = {
+                            isError.value = true
+                            isLoading.value = false
+                        }
+                    )
                 }
-
+            },
+            onError = {
+                isError.value = true
+                isLoading.value = false
             }
-        } catch (t: Throwable) {
-            isError.value = true
-            isLoading.value = false
-        }
+        )
     }
 
     if (isLoading.value) {
@@ -220,7 +243,10 @@ fun AiResponseScreen(
                 ) {
                     Box(
                         modifier
-                            .background(color = colorResource(id = R.color.white), shape = RoundedCornerShape(10.dp))
+                            .background(
+                                color = colorResource(id = R.color.white),
+                                shape = RoundedCornerShape(10.dp)
+                            )
                             .border(
                                 width = 2.dp,
                                 color = colorResource(id = R.color.lcweb_red_1),

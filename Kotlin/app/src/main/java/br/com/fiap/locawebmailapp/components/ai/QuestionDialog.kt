@@ -32,14 +32,16 @@ import androidx.navigation.NavController
 import br.com.fiap.locawebmailapp.R
 import br.com.fiap.locawebmailapp.database.repository.AiQuestionRepository
 import br.com.fiap.locawebmailapp.model.ai.AiQuestion
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiCriarPergunta
 
 @Composable
 fun QuestionDialog(
     openQuestionDialog: MutableState<Boolean>,
     question: MutableState<String>,
-    aiQuestionRepository: AiQuestionRepository,
     idEmail: Long,
-    navController: NavController
+    navController: NavController,
+    isLoading: MutableState<Boolean>,
+    isError: MutableState<Boolean>,
 ) {
     if (openQuestionDialog.value) {
         Dialog(onDismissRequest = { openQuestionDialog.value = false }) {
@@ -121,15 +123,26 @@ fun QuestionDialog(
                         }
 
                         TextButton(onClick = {
-                            val rowId = aiQuestionRepository.criarPergunta(
+                            isLoading.value = true
+                            callLocaMailApiCriarPergunta(
                                 AiQuestion(
                                     id_email = idEmail,
                                     pergunta = question.value
-                                )
+                                ),
+                                onSuccess = {
+                                    perguntaRetornada ->
+                                    if (perguntaRetornada != null) {
+                                        isLoading.value = false
+                                        openQuestionDialog.value = false
+                                        navController.navigate("airesponsescreen/${idEmail}/${perguntaRetornada.id_question}")
+                                        question.value = ""
+                                    }
+                                },
+                                onError = {
+                                    isError.value = true
+                                    isLoading.value = false
+                                }
                             )
-                            openQuestionDialog.value = false
-                            navController.navigate("airesponsescreen/${idEmail}/${rowId}")
-                            question.value = ""
                         }) {
                             Text(text = stringResource(id = R.string.question_dialog_ask), color = colorResource(id = R.color.lcweb_red_1))
                         }
