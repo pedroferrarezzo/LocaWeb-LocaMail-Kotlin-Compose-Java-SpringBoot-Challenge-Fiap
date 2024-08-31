@@ -958,6 +958,8 @@ fun callLocaMailApiListarAgendaPorId(
     callLocaMailApiService.enqueue(object : Callback<Agenda?> {
         override fun onResponse(call: Call<Agenda?>, response: Response<Agenda?>) {
             if (response.isSuccessful && response.body() != null) {
+                response.body()!!.descritivo = getValidatedString(response.body()!!.descritivo)
+                response.body()!!.nome = getValidatedString(response.body()!!.nome)
                 onSuccess(response.body()!!)
             } else if (response.isSuccessful == false) {
                 onError(Throwable())

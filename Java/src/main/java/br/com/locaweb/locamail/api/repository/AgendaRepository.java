@@ -13,7 +13,7 @@ import java.util.List;
 @Repository
 public interface AgendaRepository extends JpaRepository<Agenda, Long> {
 
-    @Query(value = "SELECT * FROM T_LCW_AGENDA WHERE data = :data AND id_usuario = :id_usuario AND visivel = 1", nativeQuery = true)
+    @Query(value = "SELECT * FROM T_LCW_AGENDA WHERE data = :data AND id_usuario = :id_usuario AND visivel = 1 ORDER BY T_LCW_AGENDA.data DESC, T_LCW_AGENDA.horario DESC", nativeQuery = true)
     List<Agenda> listarAgendaPorDia(@Param("data") String data, @Param("id_usuario") Long id_usuario);
 
     @Query(value = "SELECT DISTINCT cor FROM T_LCW_AGENDA WHERE data = :data AND id_usuario = :id_usuario AND visivel = 1", nativeQuery = true)

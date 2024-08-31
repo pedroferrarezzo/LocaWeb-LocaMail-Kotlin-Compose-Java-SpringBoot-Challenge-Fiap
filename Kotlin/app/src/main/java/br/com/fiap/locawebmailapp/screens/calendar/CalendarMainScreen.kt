@@ -153,6 +153,25 @@ fun CalendarMainScreen(navController: NavController, data: LocalDate = LocalDate
                             isLoading.value = false
                         }
                     )
+
+                    callLocaMailApiListarAgendaPorDia(
+                        selectedDate.toString(),
+                        usuarioSelecionado.value!!.id_usuario,
+                        onSuccess = {
+                                listAgendaPorDiaRetornado ->
+                            isLoading.value = false
+
+                            if (listAgendaPorDiaRetornado != null) {
+                                listTask.value = listAgendaPorDiaRetornado
+
+                            }
+
+                        },
+                        onError = {
+                            isError.value = true
+                            isLoading.value = false
+                        }
+                    )
                 }
             },
             onError = {
@@ -160,6 +179,7 @@ fun CalendarMainScreen(navController: NavController, data: LocalDate = LocalDate
                 isLoading.value = false
             }
         )
+
     }
 
     val onClickDay = remember {
@@ -335,7 +355,7 @@ fun CalendarMainScreen(navController: NavController, data: LocalDate = LocalDate
                             reverseLayout = false,
                             content = {
                                 items(
-                                    listTask.value.reversed(),
+                                    listTask.value,
                                     key = {
                                         it.id_agenda
                                     }

@@ -108,9 +108,15 @@ fun VisualizaEmailScreen(
         mutableStateListOf<Bitmap?>()
     }
 
-    var agendaEmailStateList: SnapshotStateList<Agenda>? = null
 
-    var agendaEmailList: List<Agenda>? = null
+
+    val agendaEmailList = remember {
+        mutableStateOf(listOf<Agenda>())
+    }
+
+    val agendaEmailStateList = remember {
+        mutableStateListOf<Agenda>()
+    }
 
     val alteracao = remember {
         mutableStateOf<Alteracao?>(null)
@@ -128,10 +134,6 @@ fun VisualizaEmailScreen(
 
     val isAgendaAtrelada = remember {
         mutableStateOf<Boolean>(false)
-    }
-
-    if (agendaEmailList != null) {
-        isAgendaAtrelada.value = if (agendaEmailList.isNotEmpty()) true else false
     }
 
     val isImportant = remember {
@@ -186,10 +188,16 @@ fun VisualizaEmailScreen(
                         usuarioSelecionado.value!!.id_usuario,
                         onSuccess = { listAgendaRetornado ->
 
-                            agendaEmailList = listAgendaRetornado
+                            if (listAgendaRetornado != null) {
+                                agendaEmailList.value = listAgendaRetornado
+                                agendaEmailStateList.addAll(agendaEmailList.value)
 
-                            if (agendaEmailList != null) {
-                                agendaEmailStateList = agendaEmailList!!.toMutableStateList()
+                                if (agendaEmailList.value.isNotEmpty()) {
+                                    isAgendaAtrelada.value = true
+                                }
+                                else {
+                                    isAgendaAtrelada.value = false
+                                }
                             }
                         },
                         onError = { error ->
@@ -478,48 +486,40 @@ fun VisualizaEmailScreen(
                                     )
                                 }
 
-                                if (agendaEmailStateList != null) {
+                                if (agendaEmailStateList.isNotEmpty()) {
 
-                                    if (agendaEmailStateList!!.isNotEmpty()) {
+                                    for (agenda in agendaEmailList.value) {
 
-                                        if (agendaEmailList != null) {
+                                        callLocaMailApiExcluirPorIdAgenda(
+                                            agenda.id_agenda,
+                                            onSuccess = {
 
-                                            for (agenda in agendaEmailList!!) {
-
-                                                callLocaMailApiExcluirPorIdAgenda(
-                                                    agenda.id_agenda,
-                                                    onSuccess = {
-
-                                                    },
-                                                    onError = { error ->
-                                                        isError.value = true
-                                                        isLoading.value = false
-                                                    }
-                                                )
-
-                                                callLocaMailApiExcluiAgenda(
-                                                    agenda.id_agenda,
-                                                    onSuccess = {
-                                                        agendaEmailStateList!!.remove(agenda)
-
-                                                    },
-                                                    onError = { error ->
-                                                        isError.value = true
-                                                        isLoading.value = false
-                                                    }
-                                                )
+                                            },
+                                            onError = { error ->
+                                                isError.value = true
+                                                isLoading.value = false
                                             }
+                                        )
 
-                                            Toast.makeText(
-                                                context,
-                                                toastMessageInviteDeleted,
-                                                Toast.LENGTH_LONG
-                                            ).show()
+                                        callLocaMailApiExcluiAgenda(
+                                            agenda.id_agenda,
+                                            onSuccess = {
+                                                agendaEmailStateList!!.remove(agenda)
 
-                                        }
-
-
+                                            },
+                                            onError = { error ->
+                                                isError.value = true
+                                                isLoading.value = false
+                                            }
+                                        )
                                     }
+
+                                    Toast.makeText(
+                                        context,
+                                        toastMessageInviteDeleted,
+                                        Toast.LENGTH_LONG
+                                    ).show()
+
 
                                 }
                                 navController.popBackStack()
@@ -912,15 +912,15 @@ fun VisualizaEmailScreen(
                         },
                         isAgendaAtrelada = isAgendaAtrelada,
                         onClickAcceptInviteButton = {
-                            if (agendaEmailList != null) {
-                                for (agenda in agendaEmailList!!) {
-
+                            if (agendaEmailList.value.isNotEmpty()) {
+                                isLoading.value = true
+                                for (agenda in agendaEmailList.value) {
                                     callLocaMailApiAtualizaVisivelPorIdAgenda(
                                         agenda.id_agenda,
                                         true,
                                         onSuccess = {
-                                            if (agendaEmailStateList != null) {
-                                                agendaEmailStateList!!.remove(agenda)
+                                            if (agendaEmailStateList.isNotEmpty()) {
+                                                agendaEmailStateList.remove(agenda)
                                             }
                                         },
                                         onError = {
@@ -929,7 +929,7 @@ fun VisualizaEmailScreen(
                                         }
                                     )
                                 }
-
+                                isLoading.value = false
                                 Toast.makeText(
                                     context,
                                     toastMessageInviteAccepted,
@@ -938,27 +938,24 @@ fun VisualizaEmailScreen(
                             }
                         },
                         onClickRejectInviteButton = {
-
-                            if (agendaEmailList != null) {
-                                for (agenda in agendaEmailList!!) {
-
+                            if (agendaEmailList.value.isNotEmpty()) {
+                                isLoading.value = true
+                                for (agenda in agendaEmailList.value) {
                                     callLocaMailApiExcluirPorIdAgenda(
                                         agenda.id_agenda,
                                         onSuccess = {
-
-                                        },
-                                        onError = {
-                                            isError.value = true
-                                            isLoading.value = false
-                                        }
-                                    )
-
-                                    callLocaMailApiExcluiAgenda(
-                                        agenda.id_agenda,
-                                        onSuccess = {
-                                            if (agendaEmailStateList != null) {
-                                                agendaEmailStateList!!.remove(agenda)
-                                            }
+                                            callLocaMailApiExcluiAgenda(
+                                                agenda.id_agenda,
+                                                onSuccess = {
+                                                    if (agendaEmailStateList.isNotEmpty()) {
+                                                        agendaEmailStateList.remove(agenda)
+                                                    }
+                                                },
+                                                onError = {
+                                                    isError.value = true
+                                                    isLoading.value = false
+                                                }
+                                            )
                                         },
                                         onError = {
                                             isError.value = true
@@ -966,6 +963,7 @@ fun VisualizaEmailScreen(
                                         }
                                     )
                                 }
+                                isLoading.value = false
                                 Toast.makeText(
                                     context,
                                     toastMessageInviteDeleted,

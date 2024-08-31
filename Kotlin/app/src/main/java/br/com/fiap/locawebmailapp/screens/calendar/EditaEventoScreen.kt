@@ -37,9 +37,9 @@ import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -81,7 +81,6 @@ import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiListarAgendaPorId
 import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiListarConvidado
 import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiListarIdConvidadoPorAgenda
 import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiListarUsuarioSelecionado
-import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiRetornaValorAtualSeqPrimayKey
 import br.com.fiap.locawebmailapp.utils.checkInternetConnectivity
 import br.com.fiap.locawebmailapp.utils.convertTo12Hours
 import br.com.fiap.locawebmailapp.utils.localDateToMillis
@@ -141,8 +140,7 @@ fun EditaEventoScreen(navController: NavController, id_agenda: Int) {
     }
 
     val listConvidadoSelected = remember {
-        mutableStateOf(listOf<Convidado>())
-
+        mutableStateListOf<Convidado>()
     }
 
     val taskTitle = remember {
@@ -154,30 +152,6 @@ fun EditaEventoScreen(navController: NavController, id_agenda: Int) {
     val allDay = remember {
         mutableStateOf(false)
     }
-
-    val timePickerState = rememberTimePickerState(
-        initialHour = if (agenda.value != null && agenda.value!!.horario != "1") returnHourAndMinuteSeparate(
-            agenda.value!!.horario
-        ).first() else LocalDateTime.now().hour,
-        initialMinute = if (agenda.value != null && agenda.value!!.horario != "1") returnHourAndMinuteSeparate(
-            agenda.value!!.horario
-        ).last() else LocalDateTime.now().minute
-    )
-
-    val timeShow = remember {
-        mutableStateOf("")
-    }
-
-    val datePickerState = rememberDatePickerState(
-        initialDisplayMode = DisplayMode.Picker,
-        initialSelectedDateMillis = if (agenda.value != null) localDateToMillis(
-            stringToLocalDate(
-                agenda.value!!.data
-            )
-        ) else 0
-    )
-
-    val initialDate = if (agenda.value != null) agenda.value!!.data else ""
 
     val selectedDate = remember {
         mutableStateOf("")
@@ -211,15 +185,9 @@ fun EditaEventoScreen(navController: NavController, id_agenda: Int) {
                     taskTitle.value = agenda.value!!.nome
                     taskDescription.value = agenda.value!!.descritivo
                     allDay.value = validateIfAllDay(agenda.value!!.horario)
-                    timeShow.value =
-                        if (timePickerState.is24hour) agenda.value!!.horario else convertTo12Hours(
-                            agenda.value!!.horario
-                        )
                     selectedDate.value = stringToDate(agenda.value!!.data)
                     selectedRepeat.value = agenda.value!!.repeticao
                     selectedColor.value = agenda.value!!.cor
-
-
 
                     callLocaMailApiListarIdConvidadoPorAgenda(
                         agenda.value!!.id_agenda,
@@ -227,6 +195,14 @@ fun EditaEventoScreen(navController: NavController, id_agenda: Int) {
 
                             if (listIdConvidadoRetornado != null) {
                                 listIdConvidado.value = listIdConvidadoRetornado
+
+                                returnListConvidado(
+                                    listIdConvidado = listIdConvidado.value,
+                                    isLoading = isLoading,
+                                    isError = isError,
+                                    listConvidadoSelected
+                                )
+
 
                             }
 
@@ -242,12 +218,6 @@ fun EditaEventoScreen(navController: NavController, id_agenda: Int) {
                 isLoading.value = false
                 isError.value = true
             }
-        )
-
-        returnListConvidado(
-            listIdConvidado = listIdConvidado.value,
-            isLoading = isLoading,
-            isError = isError
         )
 
         callLocaMailApiListarConvidado(
@@ -274,17 +244,10 @@ fun EditaEventoScreen(navController: NavController, id_agenda: Int) {
 
     val showTimePicker = remember { mutableStateOf(false) }
 
-    val time = remember {
-        mutableStateOf(timeShow.value)
-    }
 
     val openDialogDatePicker = remember { mutableStateOf(false) }
     val timezoneFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.US).apply {
         timeZone = TimeZone.getTimeZone("GMT")
-    }
-
-    val millisToLocalDate = datePickerState.selectedDateMillis?.let {
-        stringToLocalDate(timezoneFormatter.format(it))
     }
 
     val openDialogColorPicker = remember { mutableStateOf(false) }
@@ -360,6 +323,41 @@ fun EditaEventoScreen(navController: NavController, id_agenda: Int) {
         } else {
 
             if (agenda.value != null) {
+                val timePickerState = rememberTimePickerState(
+                    initialHour = if (agenda.value != null && agenda.value!!.horario != "1") returnHourAndMinuteSeparate(
+                        agenda.value!!.horario
+                    ).first() else LocalDateTime.now().hour,
+                    initialMinute = if (agenda.value != null && agenda.value!!.horario != "1") returnHourAndMinuteSeparate(
+                        agenda.value!!.horario
+                    ).last() else LocalDateTime.now().minute
+                )
+                val timeShow = remember {
+                    mutableStateOf(
+                        if (timePickerState.is24hour) agenda.value!!.horario else convertTo12Hours(
+                            agenda.value!!.horario
+                        )
+                    )
+                }
+
+                val time = remember {
+                    mutableStateOf(timeShow.value)
+                }
+
+                val initialDate = if (agenda.value != null) agenda.value!!.data else ""
+
+                val datePickerState = rememberDatePickerState(
+                    initialDisplayMode = DisplayMode.Picker,
+                    initialSelectedDateMillis = if (agenda.value != null) localDateToMillis(
+                        stringToLocalDate(
+                            agenda.value!!.data
+                        )
+                    ) else 0
+                )
+
+                val millisToLocalDate = datePickerState.selectedDateMillis?.let {
+                    stringToLocalDate(timezoneFormatter.format(it))
+                }
+
                 Box() {
                     Column {
                         RowTwoIconCondition(
@@ -394,6 +392,9 @@ fun EditaEventoScreen(navController: NavController, id_agenda: Int) {
                                     agenda.value!!.nome = taskTitle.value
                                     agenda.value!!.descritivo = taskDescription.value
                                     agenda.value!!.horario = time.value
+                                    if (time.value == "Todo dia") {
+                                        agenda.value!!.horario = "1"
+                                    }
                                     agenda.value!!.cor = selectedColor.value
                                     agenda.value!!.data =
                                         if (millisToLocalDate.toString()
@@ -410,7 +411,7 @@ fun EditaEventoScreen(navController: NavController, id_agenda: Int) {
                                             agenda.value!!,
                                             onSuccess = {
 
-                                                for (convidado in listConvidadoSelected.value) {
+                                                for (convidado in listConvidadoSelected) {
                                                     if (!(listIdConvidado.value.contains(convidado.id_convidado))) {
                                                         agendaConvidado.id_convidado =
                                                             convidado.id_convidado
@@ -429,7 +430,7 @@ fun EditaEventoScreen(navController: NavController, id_agenda: Int) {
                                                 }
 
                                                 for (id in listIdConvidado.value) {
-                                                    if (!(listConvidadoSelected.value.any {
+                                                    if (!(listConvidadoSelected.any {
                                                             it.id_convidado == id
                                                         })) {
 
@@ -477,47 +478,33 @@ fun EditaEventoScreen(navController: NavController, id_agenda: Int) {
 
                                             callLocaMailApiCriarAgenda(
                                                 agenda.value!!,
-                                                onSuccess = {
-
-                                                },
-                                                onError = {
-                                                    isLoading.value = false
-                                                    isError.value = true
-                                                }
-                                            )
-
-
-                                            callLocaMailApiRetornaValorAtualSeqPrimayKey(
-                                                onSuccess = { valorAtualSeqPkRetornado ->
-
-                                                    if (valorAtualSeqPkRetornado != null) {
+                                                onSuccess = { agendaRetornada ->
+                                                    if (agendaRetornada != null) {
                                                         agendaConvidado.id_agenda =
-                                                            valorAtualSeqPkRetornado
-                                                    }
+                                                            agendaRetornada.id_agenda
 
+                                                        for (convidado in listConvidadoSelected) {
+                                                            agendaConvidado.id_convidado =
+                                                                convidado.id_convidado
+
+                                                            callLocaMailApiCriarAgendaConvidado(
+                                                                agendaConvidado,
+                                                                onSuccess = {
+
+                                                                },
+                                                                onError = {
+                                                                    isLoading.value = false
+                                                                    isError.value = true
+                                                                }
+                                                            )
+                                                        }
+                                                    }
                                                 },
                                                 onError = {
                                                     isLoading.value = false
                                                     isError.value = true
                                                 }
                                             )
-
-
-                                            for (convidado in listConvidadoSelected.value) {
-                                                agendaConvidado.id_convidado =
-                                                    convidado.id_convidado
-
-                                                callLocaMailApiCriarAgendaConvidado(
-                                                    agendaConvidado,
-                                                    onSuccess = {
-
-                                                    },
-                                                    onError = {
-                                                        isLoading.value = false
-                                                        isError.value = true
-                                                    }
-                                                )
-                                            }
                                         }
                                     } else if (selectedRepeat.value == 1 && agenda.value!!.repeticao == 2) {
 
@@ -562,16 +549,28 @@ fun EditaEventoScreen(navController: NavController, id_agenda: Int) {
                                     } else if (selectedRepeat.value == 2 && agenda.value!!.repeticao == 1 && selectedDate.value != agenda.value!!.data) {
 
 
-                                        callLocaMailApiExcluiAgenda(
-                                            agenda.value!!.id_agenda,
+                                        callLocaMailApiExcluirPorIdAgenda(
+                                            id_agenda.toLong(),
                                             onSuccess = {
+                                                callLocaMailApiExcluiAgenda(
+                                                    id_agenda.toLong(),
+                                                    onSuccess = {
 
+                                                    },
+                                                    onError = {
+                                                        isLoading.value = false
+                                                        isError.value = true
+
+                                                    }
+                                                )
                                             },
                                             onError = {
                                                 isLoading.value = false
                                                 isError.value = true
+
                                             }
                                         )
+
                                         for (day in returnOneMonthFromDate(agenda.value!!.data)) {
                                             agenda.value!!.repeticao = 2
                                             agenda.value!!.id_agenda = 0
@@ -580,21 +579,28 @@ fun EditaEventoScreen(navController: NavController, id_agenda: Int) {
 
                                             callLocaMailApiCriarAgenda(
                                                 agenda.value!!,
-                                                onSuccess = {
+                                                onSuccess = { agendaRetornada ->
 
-                                                },
-                                                onError = {
-                                                    isLoading.value = false
-                                                    isError.value = true
-                                                }
-                                            )
-
-                                            callLocaMailApiRetornaValorAtualSeqPrimayKey(
-                                                onSuccess = { valorAtualSeqPkRetornado ->
-
-                                                    if (valorAtualSeqPkRetornado != null) {
+                                                    if (agendaRetornada != null) {
                                                         agendaConvidado.id_agenda =
-                                                            valorAtualSeqPkRetornado
+                                                            agendaRetornada.id_agenda
+                                                        for (convidado in listConvidadoSelected) {
+                                                            agendaConvidado.id_convidado =
+                                                                convidado.id_convidado
+
+
+                                                            callLocaMailApiCriarAgendaConvidado(
+                                                                agendaConvidado,
+                                                                onSuccess = {
+
+                                                                },
+                                                                onError = {
+                                                                    isLoading.value =
+                                                                        false
+                                                                    isError.value = true
+                                                                }
+                                                            )
+                                                        }
                                                     }
 
                                                 },
@@ -603,27 +609,9 @@ fun EditaEventoScreen(navController: NavController, id_agenda: Int) {
                                                     isError.value = true
                                                 }
                                             )
-
 
                                             agendaConvidado.grupo_repeticao =
                                                 agenda.value!!.grupo_repeticao
-
-                                            for (convidado in listConvidadoSelected.value) {
-                                                agendaConvidado.id_convidado =
-                                                    convidado.id_convidado
-
-
-                                                callLocaMailApiCriarAgendaConvidado(
-                                                    agendaConvidado,
-                                                    onSuccess = {
-
-                                                    },
-                                                    onError = {
-                                                        isLoading.value = false
-                                                        isError.value = true
-                                                    }
-                                                )
-                                            }
                                         }
                                     } else if (selectedRepeat.value == 2 && agenda.value!!.repeticao == 1) {
                                         agenda.value!!.repeticao = 2
@@ -646,48 +634,40 @@ fun EditaEventoScreen(navController: NavController, id_agenda: Int) {
 
                                                 callLocaMailApiCriarAgenda(
                                                     agenda.value!!,
-                                                    onSuccess = {
+                                                    onSuccess = { agendaRetornada ->
 
-                                                    },
-                                                    onError = {
-                                                        isLoading.value = false
-                                                        isError.value = true
-                                                    }
-                                                )
-
-                                                callLocaMailApiRetornaValorAtualSeqPrimayKey(
-                                                    onSuccess = { valorAtualSeqPkRetornado ->
-
-                                                        if (valorAtualSeqPkRetornado != null) {
+                                                        if (agendaRetornada != null) {
                                                             agendaConvidado.id_agenda =
-                                                                valorAtualSeqPkRetornado
-                                                        }
+                                                                agendaRetornada.id_agenda
+                                                            for (convidado in listConvidadoSelected) {
+                                                                agendaConvidado.id_convidado =
+                                                                    convidado.id_convidado
+                                                                callLocaMailApiCriarAgendaConvidado(
+                                                                    agendaConvidado,
+                                                                    onSuccess = {
 
+                                                                    },
+                                                                    onError = {
+                                                                        isLoading.value =
+                                                                            false
+                                                                        isError.value =
+                                                                            true
+                                                                    }
+
+                                                                )
+                                                            }
+                                                        }
                                                     },
                                                     onError = {
                                                         isLoading.value = false
                                                         isError.value = true
                                                     }
                                                 )
+
+
 
                                                 agendaConvidado.grupo_repeticao =
                                                     agenda.value!!.grupo_repeticao
-
-                                                for (convidado in listConvidadoSelected.value) {
-                                                    agendaConvidado.id_convidado =
-                                                        convidado.id_convidado
-                                                    callLocaMailApiCriarAgendaConvidado(
-                                                        agendaConvidado,
-                                                        onSuccess = {
-
-                                                        },
-                                                        onError = {
-                                                            isLoading.value = false
-                                                            isError.value = true
-                                                        }
-
-                                                    )
-                                                }
                                             }
                                         }
                                     }
@@ -798,7 +778,7 @@ fun EditaEventoScreen(navController: NavController, id_agenda: Int) {
                                 openDialogPeoplePicker = openDialogPeoplePicker,
                                 listConvidado = listTodoConvidado,
                                 listConvidadoText = listConvidadoText,
-                                listConvidadoSelected = listConvidadoSelected.value.toMutableStateList(),
+                                listConvidadoSelected = listConvidadoSelected,
                                 usuarioSelecionado = usuarioSelecionado
                             )
                         }
@@ -1019,26 +999,23 @@ fun EditaEventoScreen(navController: NavController, id_agenda: Int) {
                             callLocaMailApiExcluirPorIdAgenda(
                                 agenda.value!!.id_agenda,
                                 onSuccess = {
+                                    callLocaMailApiExcluiAgenda(
+                                        agenda.value!!.id_agenda,
+                                        onSuccess = {
 
+                                        },
+                                        onError = {
+                                            isLoading.value = false
+                                            isError.value = true
+
+                                        }
+                                    )
                                 },
                                 onError = {
                                     isLoading.value = false
                                     isError.value = true
 
                                 }
-                            )
-
-                            callLocaMailApiExcluiAgenda(
-                                agenda.value!!.id_agenda,
-                                onSuccess = {
-
-                                },
-                                onError = {
-                                    isLoading.value = false
-                                    isError.value = true
-
-                                }
-
                             )
 
                             val previousBackStackEntry = navController.previousBackStackEntry

@@ -20,7 +20,6 @@ public record AgendaCadastroDto(
         @NotNull(message = "A cor da agenda é obrigatória!")
         Integer cor,
 
-        @NotNull(message = "A localização da agenda é obrigatória!")
         String localizacao,
 
         @NotNull(message = "O status de notificação é obrigatório!")

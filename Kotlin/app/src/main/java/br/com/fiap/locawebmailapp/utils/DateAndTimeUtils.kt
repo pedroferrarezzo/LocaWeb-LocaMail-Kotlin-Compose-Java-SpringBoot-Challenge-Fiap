@@ -67,10 +67,7 @@ fun convertTo12Hours(time24: String): String {
 fun returnHourAndMinuteSeparate(time: String): List<Int> {
     val initialHour = time.substring(startIndex = 0, endIndex = 2).toInt()
     val initialMinute = time.substring(startIndex = 3, endIndex = 5).toInt()
-
     return listOf(initialHour, initialMinute)
-
-
 }
 
 fun returnOneMonthFromDate(data: String): List<String> {

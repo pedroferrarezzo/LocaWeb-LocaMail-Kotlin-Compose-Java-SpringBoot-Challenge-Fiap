@@ -48,10 +48,9 @@ fun atualizarTodosDestinatariosList(todosDestinatarios: ArrayList<String>, email
 fun returnListConvidado(
     listIdConvidado: List<Long>,
     isLoading: MutableState<Boolean>,
-    isError: MutableState<Boolean>
-): SnapshotStateList<Convidado> {
-
-    val list = mutableStateListOf<Convidado>()
+    isError: MutableState<Boolean>,
+    listConvidado: SnapshotStateList<Convidado>
+) {
 
     for (id in listIdConvidado) {
 
@@ -60,7 +59,7 @@ fun returnListConvidado(
             onSuccess = {
                 convidadoRetornado ->
                 if (convidadoRetornado != null) {
-                    list.add(convidadoRetornado)
+                    listConvidado.add(convidadoRetornado)
                 }
             },
             onError = {
@@ -69,5 +68,4 @@ fun returnListConvidado(
             }
         )
     }
-    return list
 }

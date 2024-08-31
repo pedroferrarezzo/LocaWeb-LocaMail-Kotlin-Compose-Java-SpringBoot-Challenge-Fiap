@@ -74,7 +74,6 @@ import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiListarConvidado
 import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiListarGrupoRepeticao
 import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiListarUsuarioSelecionado
 import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiRetornaUsarioPorEmail
-import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiRetornaValorAtualSeqPrimayKey
 import br.com.fiap.locawebmailapp.utils.checkInternetConnectivity
 import br.com.fiap.locawebmailapp.utils.completeStringDateToDate
 import br.com.fiap.locawebmailapp.utils.convertTo12Hours
@@ -351,18 +350,24 @@ fun CriaEventoScreen(navController: NavController) {
                                                 callLocaMailApiCriarAgenda(
                                                     agenda,
                                                     onSuccess = { agendaCriadaRetornada ->
-                                                    },
-                                                    onError = {
-                                                        isError.value = true
-                                                        isLoading.value = false
-                                                    }
-                                                )
-
-                                                callLocaMailApiRetornaValorAtualSeqPrimayKey(
-                                                    onSuccess = { valorSeqPkRetornado ->
-                                                        if (valorSeqPkRetornado != null) {
+                                                        if (agendaCriadaRetornada != null) {
                                                             agendaConvidado.id_agenda =
-                                                                valorSeqPkRetornado
+                                                                agendaCriadaRetornada.id_agenda
+                                                            for (convidado in listConvidadoSelected) {
+                                                                agendaConvidado.id_convidado =
+                                                                    convidado.id_convidado
+
+                                                                callLocaMailApiCriarAgendaConvidado(
+                                                                    agendaConvidado,
+                                                                    onSuccess = {
+
+                                                                    },
+                                                                    onError = {
+                                                                        isError.value = true
+                                                                        isLoading.value = false
+                                                                    }
+                                                                )
+                                                            }
                                                         }
                                                     },
                                                     onError = {
@@ -370,25 +375,12 @@ fun CriaEventoScreen(navController: NavController) {
                                                         isLoading.value = false
                                                     }
                                                 )
+
+
 
                                                 agendaConvidado.grupo_repeticao =
                                                     agenda.grupo_repeticao
 
-                                                for (convidado in listConvidadoSelected) {
-                                                    agendaConvidado.id_convidado =
-                                                        convidado.id_convidado
-
-                                                    callLocaMailApiCriarAgendaConvidado(
-                                                        agendaConvidado,
-                                                        onSuccess = {
-
-                                                        },
-                                                        onError = {
-                                                            isError.value = true
-                                                            isLoading.value = false
-                                                        }
-                                                    )
-                                                }
                                             }
                                         }
                                     },
@@ -401,7 +393,26 @@ fun CriaEventoScreen(navController: NavController) {
 
                                 callLocaMailApiCriarAgenda(
                                     agenda,
-                                    onSuccess = {
+                                    onSuccess = { agendaRetornada ->
+
+                                        if (agendaRetornada != null) {
+                                            agendaConvidado.id_agenda =
+                                                agendaRetornada.id_agenda
+                                            for (convidado in listConvidadoSelected) {
+                                                agendaConvidado.id_convidado =
+                                                    convidado.id_convidado
+                                                callLocaMailApiCriarAgendaConvidado(
+                                                    agendaConvidado,
+                                                    onSuccess = {
+
+                                                    },
+                                                    onError = {
+                                                        isError.value = true
+                                                        isLoading.value = false
+                                                    }
+                                                )
+                                            }
+                                        }
 
                                     },
                                     onError = {
@@ -409,32 +420,6 @@ fun CriaEventoScreen(navController: NavController) {
                                         isLoading.value = false
                                     }
                                 )
-
-                                callLocaMailApiRetornaValorAtualSeqPrimayKey(
-                                    onSuccess = { valorSeqPkRetornado ->
-                                        if (valorSeqPkRetornado != null) {
-                                            agendaConvidado.id_agenda = valorSeqPkRetornado
-                                        }
-                                    },
-                                    onError = {
-                                        isError.value = true
-                                        isLoading.value = false
-                                    }
-                                )
-
-                                for (convidado in listConvidadoSelected) {
-                                    agendaConvidado.id_convidado = convidado.id_convidado
-                                    callLocaMailApiCriarAgendaConvidado(
-                                        agendaConvidado,
-                                        onSuccess = {
-
-                                        },
-                                        onError = {
-                                            isError.value = true
-                                            isLoading.value = false
-                                        }
-                                    )
-                                }
                             }
 
                             val previousBackStackEntry = navController.previousBackStackEntry
@@ -584,26 +569,8 @@ fun CriaEventoScreen(navController: NavController) {
                                                                             onSuccess = { agendaRetornado ->
 
                                                                                 if (agendaRetornado != null) {
-                                                                                    callLocaMailApiRetornaValorAtualSeqPrimayKey(
-                                                                                        onSuccess = { valorAtualSeqPrimaryKey ->
-
-                                                                                            if (valorAtualSeqPrimaryKey != null) {
-                                                                                                agendaConvidado.id_agenda =
-                                                                                                    valorAtualSeqPrimaryKey
-                                                                                            }
-
-                                                                                        },
-                                                                                        onError = {
-                                                                                            isError.value =
-                                                                                                true
-                                                                                            isLoading.value =
-                                                                                                false
-                                                                                        }
-                                                                                    )
-
-                                                                                    agendaConvidado.grupo_repeticao =
-                                                                                        agenda.grupo_repeticao
-
+                                                                                    agendaConvidado.id_agenda =
+                                                                                        agendaRetornado.id_agenda
                                                                                     for (convidado in listConvidadoSelected) {
                                                                                         agendaConvidado.id_convidado =
                                                                                             convidado.id_convidado
@@ -620,6 +587,8 @@ fun CriaEventoScreen(navController: NavController) {
                                                                                             }
                                                                                         )
                                                                                     }
+                                                                                    agendaConvidado.grupo_repeticao =
+                                                                                        agenda.grupo_repeticao
                                                                                 }
                                                                             },
                                                                             onError = {
@@ -637,24 +606,8 @@ fun CriaEventoScreen(navController: NavController) {
                                                                         onSuccess = { agendaRetornado ->
 
                                                                             if (agendaRetornado != null) {
-
-                                                                                callLocaMailApiRetornaValorAtualSeqPrimayKey(
-                                                                                    onSuccess = { valorAtualSeqPk ->
-
-                                                                                        if (valorAtualSeqPk != null) {
-                                                                                            agendaConvidado.id_agenda =
-                                                                                                valorAtualSeqPk
-                                                                                        }
-
-                                                                                    },
-                                                                                    onError = {
-                                                                                        isError.value =
-                                                                                            true
-                                                                                        isLoading.value =
-                                                                                            false
-                                                                                    }
-                                                                                )
-
+                                                                                agendaConvidado.id_agenda =
+                                                                                    agendaRetornado.id_agenda
                                                                                 for (convidado in listConvidadoSelected) {
                                                                                     agendaConvidado.id_convidado =
                                                                                         convidado.id_convidado
@@ -672,6 +625,8 @@ fun CriaEventoScreen(navController: NavController) {
                                                                                         }
                                                                                     )
                                                                                 }
+
+
                                                                             }
                                                                         },
                                                                         onError = {

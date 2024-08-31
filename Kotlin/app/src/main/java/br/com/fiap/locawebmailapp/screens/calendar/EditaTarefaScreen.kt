@@ -123,33 +123,9 @@ fun EditaTarefaScreen(navController: NavController, id_agenda: Int) {
         mutableStateOf(false)
     }
 
-    val timePickerState = rememberTimePickerState(
-        initialHour = if (agenda.value != null && agenda.value!!.horario != "1") returnHourAndMinuteSeparate(
-            agenda.value!!.horario
-        ).first() else LocalDateTime.now().hour,
-        initialMinute = if (agenda.value != null && agenda.value!!.horario != "1") returnHourAndMinuteSeparate(
-            agenda.value!!.horario
-        ).last() else LocalDateTime.now().minute
-    )
-
-    val timeShow = remember {
-        mutableStateOf("")
-    }
-
-    val datePickerState = rememberDatePickerState(
-        initialDisplayMode = DisplayMode.Picker,
-        initialSelectedDateMillis = if (agenda.value != null) localDateToMillis(
-            stringToLocalDate(
-                agenda.value!!.data
-            )
-        ) else 0
-    )
-
     val selectedDate = remember {
         mutableStateOf("")
     }
-
-    val initialDate = if (agenda.value != null) agenda.value!!.data else ""
 
     LaunchedEffect(key1 = Unit) {
 
@@ -165,9 +141,6 @@ fun EditaTarefaScreen(navController: NavController, id_agenda: Int) {
                     selectedRepeat.value = agenda.value!!.repeticao
                     allDay.value = validateIfAllDay(agenda.value!!.horario)
                     selectedDate.value = stringToDate(agenda.value!!.data)
-                    timeShow.value = if (timePickerState.is24hour) agenda.value!!.horario else convertTo12Hours(
-                        agenda.value!!.horario
-                    )
                     isLoading.value = false
                 }
             },
@@ -184,19 +157,10 @@ fun EditaTarefaScreen(navController: NavController, id_agenda: Int) {
 
     val showTimePicker = remember { mutableStateOf(false) }
 
-    val time = remember {
-        mutableStateOf(timeShow.value)
-    }
-
     val openDialogDatePicker = remember { mutableStateOf(false) }
     val timezoneFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.US).apply {
         timeZone = TimeZone.getTimeZone("GMT")
     }
-
-    val millisToLocalDate = datePickerState.selectedDateMillis?.let {
-        stringToLocalDate(timezoneFormatter.format(it))
-    }
-
 
     val openDialogColorPicker = remember { mutableStateOf(false) }
 
@@ -267,6 +231,37 @@ fun EditaTarefaScreen(navController: NavController, id_agenda: Int) {
         } else {
 
             if (agenda.value != null) {
+                val timePickerState = rememberTimePickerState(
+                    initialHour = if (agenda.value != null && agenda.value!!.horario != "1") returnHourAndMinuteSeparate(
+                        agenda.value!!.horario
+                    ).first() else LocalDateTime.now().hour,
+                    initialMinute = if (agenda.value != null && agenda.value!!.horario != "1") returnHourAndMinuteSeparate(
+                        agenda.value!!.horario
+                    ).last() else LocalDateTime.now().minute
+                )
+
+                val timeShow = remember {
+                    mutableStateOf(if (timePickerState.is24hour) agenda.value!!.horario else convertTo12Hours(agenda.value!!.horario))
+                }
+
+                val time = remember {
+                    mutableStateOf(timeShow.value)
+                }
+
+                val initialDate = if (agenda.value != null) agenda.value!!.data else ""
+
+                val datePickerState = rememberDatePickerState(
+                    initialDisplayMode = DisplayMode.Picker,
+                    initialSelectedDateMillis = if (agenda.value != null) localDateToMillis(
+                        stringToLocalDate(
+                            agenda.value!!.data
+                        )
+                    ) else 0
+                )
+                val millisToLocalDate = datePickerState.selectedDateMillis?.let {
+                    stringToLocalDate(timezoneFormatter.format(it))
+                }
+
                 Box(
                 ) {
                     Column {
@@ -304,12 +299,16 @@ fun EditaTarefaScreen(navController: NavController, id_agenda: Int) {
                                     agenda.value!!.nome = taskTitle.value
                                     agenda.value!!.descritivo = taskDescription.value
                                     agenda.value!!.horario = time.value
+                                    if (time.value == "Todo dia") {
+                                        agenda.value!!.horario = "1"
+                                    }
                                     agenda.value!!.cor = selectedColor.value
                                     agenda.value!!.data =
                                         if (millisToLocalDate.toString()
                                                 .equals("null")
                                         ) LocalDate.now()
                                             .toString() else millisToLocalDate!!.toString()
+
 
                                     if (selectedRepeat.value == agenda.value!!.repeticao) {
                                         agenda.value!!.repeticao = selectedRepeat.value

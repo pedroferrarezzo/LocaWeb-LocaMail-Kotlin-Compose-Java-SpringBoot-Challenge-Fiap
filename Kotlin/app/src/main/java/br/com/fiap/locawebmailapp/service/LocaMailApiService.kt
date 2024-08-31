@@ -244,7 +244,7 @@ interface LocaMailApiService {
     @GET("/convidado/listarConvidadoPorId")
     fun listarConvidadoPorId(@Query("idConvidado") id_convidado: Long): Call<Convidado?>
 
-    @GET("/agendaConvidado/listarConvidadoPorId")
+    @GET("/agendaConvidado/listarIdConvidadoPorAgenda")
     fun listarIdConvidadoPorAgenda(@Query("idAgenda") id_agenda: Long): Call<List<Long>?>
 
     @DELETE("/agendaConvidado/excluirPorIdAgendaEIdConvidado")
@@ -259,7 +259,7 @@ interface LocaMailApiService {
     @DELETE("/agendaConvidado/excluirPorGrupoRepeticaoExcetoIdAgenda")
     fun excluirPorGrupoRepeticaoExcetoIdAgenda(@Query("grupoRepeticao") grupo_repeticao: Int, @Query("idAgenda") id_agenda: Long): Call<Unit?>
 
-    @PUT("/agenda/excluirPorGrupoRepeticaoExcetoIdAgenda")
+    @PUT("/agenda/atualizaOpcaoRepeticaoPorGrupoRepeticao")
     fun atualizaOpcaoRepeticaoPorGrupoRepeticao(@Query("grupoRepeticao") grupo_repeticao: Int, @Query("repeticao") repeticao: Int): Call<Unit?>
 
     @PUT("/agenda/atualizaOpcaoRepeticaoPorIdAgenda")
