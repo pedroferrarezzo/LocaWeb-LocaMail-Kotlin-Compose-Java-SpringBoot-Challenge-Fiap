@@ -1,12 +1,10 @@
 package br.com.locaweb.locamail.api.controller;
 
-import br.com.locaweb.locamail.api.dto.alteracao.AlteracaoCadastroDto;
-import br.com.locaweb.locamail.api.dto.alteracao.AlteracaoExibicaoDto;
 import br.com.locaweb.locamail.api.dto.respostaEmail.RespostaEmailCadastroDto;
 import br.com.locaweb.locamail.api.dto.respostaEmail.RespostaEmailExibicaoDto;
-import br.com.locaweb.locamail.api.model.RespostaEmail;
 import br.com.locaweb.locamail.api.service.RespostaEmailService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,6 +15,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/respostaEmail")
 @CircuitBreaker(name = "appLocaMailCircuitBreaker")
+@RateLimiter(name = "appLocaMailApplication")
 public class RespostaEmailController {
 
     @Autowired

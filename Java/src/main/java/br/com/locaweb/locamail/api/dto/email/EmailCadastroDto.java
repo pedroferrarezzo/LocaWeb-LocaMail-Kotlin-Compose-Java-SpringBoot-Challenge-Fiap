@@ -42,7 +42,9 @@ public record EmailCadastroDto (
         String data,
 
         @NotNull(message = "O status de agenda atrelada é obrigatório!")
-        Boolean agenda_atrelada
+        Boolean agenda_atrelada,
+
+        Boolean is_spam
 
 ) {
 

@@ -17,7 +17,8 @@ public record EmailExibicaoDto(
         Boolean enviado,
         String horario,
         String data,
-        Boolean agenda_atrelada
+        Boolean agenda_atrelada,
+        Boolean is_spam
 
 ) {
         public EmailExibicaoDto(Email email) {
@@ -34,7 +35,8 @@ public record EmailExibicaoDto(
                         email.getEnviado(),
                         email.getHorario(),
                         email.getData(),
-                        email.getAgenda_atrelada()
+                        email.getAgenda_atrelada(),
+                        email.getIs_spam()
                 );
         }
 }

@@ -1,5 +1,6 @@
 package br.com.locaweb.locamail.api.service;
 
+import br.com.locaweb.locamail.api.client.BlackListCheckerClient;
 import br.com.locaweb.locamail.api.dto.email.EmailCadastroDto;
 import br.com.locaweb.locamail.api.dto.email.EmailExibicaoDto;
 import br.com.locaweb.locamail.api.model.Email;
@@ -12,13 +13,6 @@ import br.com.locaweb.locamail.api.repository.UsuarioRepository;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.io.IOException;
-import java.io.Reader;
-import java.io.StringWriter;
-import java.math.BigDecimal;
-import java.sql.Clob;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -39,10 +33,22 @@ public class EmailService {
     @Autowired
     private RespostaEmailRepository respostaEmailRepository;
 
+    @Autowired
+    private BlackListCheckerClient blackListCheckerClient;
+
     public EmailExibicaoDto criarEmail(EmailCadastroDto emailCadastroDto) {
-        Email email = new Email();
+        var email = new Email();
         BeanUtils.copyProperties(emailCadastroDto, email);
+
+        email.setIs_spam(Boolean.FALSE);
+        var domain = getDomainFromEmail(emailCadastroDto.remetente());
+        var blackListVerify = blackListCheckerClient.blackListVerify(domain);
+
+        if(blackListVerify.getDetections() > 0)
+            email.setIs_spam(Boolean.TRUE);
+
         Email emailPersistido = emailRepository.save(email);
+
         return new EmailExibicaoDto(emailPersistido);
     }
 
@@ -62,8 +68,6 @@ public class EmailService {
     public EmailExibicaoDto atualizarEmail(EmailCadastroDto emailCadastroDto) {
         Email email = new Email();
         BeanUtils.copyProperties(emailCadastroDto, email);
-
-
 
         return new EmailExibicaoDto(emailRepository.save(email));
     }
@@ -168,4 +172,10 @@ public class EmailService {
     public List<EmailComAlteracaoDto> listarEmailsSociaisPorIdUsuario(Long id_usuario) {
         return emailComAlteracaoObjectMapper(emailRepository.listarEmailsSociaisPorIdUsuario(id_usuario));
     }
+
+    private String getDomainFromEmail(String email) {
+        String[] parts = email.split("@");
+        return parts[1];
+    }
+
 }

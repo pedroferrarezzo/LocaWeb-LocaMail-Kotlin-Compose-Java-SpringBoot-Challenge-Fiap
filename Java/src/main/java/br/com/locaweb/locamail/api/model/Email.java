@@ -52,4 +52,8 @@ public class Email {
 
     @Column(name = "agenda_atrelada", nullable = false)
     private Boolean agenda_atrelada;
+
+    @Column(name = "is_spam", nullable = false)
+    private Boolean is_spam;
+
 }
