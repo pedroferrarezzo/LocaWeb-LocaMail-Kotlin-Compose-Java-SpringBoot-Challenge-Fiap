@@ -4,16 +4,20 @@ import br.com.locaweb.locamail.api.dto.email.EmailCadastroDto;
 import br.com.locaweb.locamail.api.dto.email.EmailComAlteracaoDto;
 import br.com.locaweb.locamail.api.dto.email.EmailExibicaoDto;
 import br.com.locaweb.locamail.api.service.EmailService;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/email")
+@CircuitBreaker(name = "appLocaMailCircuitBreaker")
 public class EmailController {
+
     @Autowired
     private EmailService emailService;
 
