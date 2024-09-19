@@ -487,6 +487,7 @@ fun CriaEventoScreen(navController: NavController) {
                                                         alt_id_email = rowId,
                                                         alt_id_usuario = usuarioSelecionado.value!!.id_usuario
                                                     ),
+                                                    isSpamEmail = emailRetornado.is_spam,
                                                     onSuccess = {
 
                                                     },
@@ -507,6 +508,7 @@ fun CriaEventoScreen(navController: NavController) {
                                                                         alt_id_email = rowId,
                                                                         alt_id_usuario = usuarioExistenteRetornado.id_usuario
                                                                     ),
+                                                                    isSpamEmail = emailRetornado.is_spam,
                                                                     onSuccess = {
 
                                                                     },

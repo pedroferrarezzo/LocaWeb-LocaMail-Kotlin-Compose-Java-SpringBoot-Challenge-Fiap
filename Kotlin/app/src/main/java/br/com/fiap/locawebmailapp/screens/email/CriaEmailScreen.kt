@@ -2,7 +2,6 @@ package br.com.fiap.locawebmailapp.screens.email
 
 import android.graphics.Bitmap
 import android.net.Uri
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -367,12 +366,12 @@ fun CriaEmailScreen(navController: NavController) {
                                                                     alt_id_email = rowId,
                                                                     alt_id_usuario = usuario.id_usuario
                                                                 ),
+                                                                isSpamEmail = emailRetornado.is_spam,
                                                                 onSuccess = {
                                                                 },
                                                                 onError = {
                                                                     isError.value = true
                                                                     isLoading.value = false
-
                                                                 }
                                                             )
                                                         }

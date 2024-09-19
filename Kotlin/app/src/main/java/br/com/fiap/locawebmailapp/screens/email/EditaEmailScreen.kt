@@ -447,6 +447,7 @@ fun EditaEmailScreen(navController: NavController, idEmail: Long) {
                                                             alt_id_email = email.value!!.id_email,
                                                             alt_id_usuario = usuario.id_usuario
                                                         ),
+                                                        isSpamEmail = email.value!!.is_spam,
                                                         onSuccess = {
 
                                                         },

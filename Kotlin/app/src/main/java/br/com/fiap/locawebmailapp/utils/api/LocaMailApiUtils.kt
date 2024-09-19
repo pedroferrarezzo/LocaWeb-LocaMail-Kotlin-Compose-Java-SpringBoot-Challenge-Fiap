@@ -1736,9 +1736,15 @@ fun callLocaMailApiCriarUsuario(
 
 fun callLocaMailApiCriarAlteracao(
     alteracao: Alteracao,
+    isSpamEmail: Boolean = false,
     onSuccess: (Alteracao?) -> Unit,
     onError: (Throwable) -> Unit
 ) {
+
+    if (isSpamEmail) {
+        alteracao.spam = true
+    }
+
     val callLocaMailApiService =
         LocaMailApiFactory().getLocaMailApiFactory().criarAlteracao(alteracao)
 

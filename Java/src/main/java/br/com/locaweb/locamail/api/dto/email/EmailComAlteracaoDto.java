@@ -50,8 +50,6 @@ public class EmailComAlteracaoDto{
 
     private Boolean agenda_atrelada;
 
-
-
     private Long id_alteracao;
 
 

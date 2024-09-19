@@ -40,12 +40,11 @@ public class EmailService {
         var email = new Email();
         BeanUtils.copyProperties(emailCadastroDto, email);
 
-        email.setIs_spam(Boolean.FALSE);
         var domain = getDomainFromEmail(emailCadastroDto.remetente());
         var blackListVerify = blackListCheckerClient.blackListVerify(domain);
 
         if(blackListVerify.getDetections() > 0)
-            email.setIs_spam(Boolean.TRUE);
+            email.setIs_spam(true);
 
         Email emailPersistido = emailRepository.save(email);
 
@@ -68,6 +67,12 @@ public class EmailService {
     public EmailExibicaoDto atualizarEmail(EmailCadastroDto emailCadastroDto) {
         Email email = new Email();
         BeanUtils.copyProperties(emailCadastroDto, email);
+
+        var domain = getDomainFromEmail(emailCadastroDto.remetente());
+        var blackListVerify = blackListCheckerClient.blackListVerify(domain);
+
+        if(blackListVerify.getDetections() > 0)
+            email.setIs_spam(true);
 
         return new EmailExibicaoDto(emailRepository.save(email));
     }

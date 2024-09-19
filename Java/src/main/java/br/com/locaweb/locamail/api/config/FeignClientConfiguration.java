@@ -8,6 +8,6 @@ import org.springframework.context.annotation.Configuration;
 public class FeignClientConfiguration {
     @Bean
     public BasicAuthRequestInterceptor basicAuthRequestInterceptor() {
-        return new BasicAuthRequestInterceptor("key_iAfKuYZEojBRauTZUfFsJsXA1", "");
+        return new BasicAuthRequestInterceptor("key_4JcalIT4TjPGyami4mmYcRRBn", "");
     }
 }

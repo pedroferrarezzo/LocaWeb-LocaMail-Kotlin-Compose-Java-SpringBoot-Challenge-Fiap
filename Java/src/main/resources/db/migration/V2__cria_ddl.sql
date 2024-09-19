@@ -24,7 +24,6 @@ CREATE TABLE T_LCW_EMAIL (
     horario VARCHAR2(10) NOT NULL,
     data VARCHAR2(10) NOT NULL,
     agenda_atrelada NUMBER NOT NULL,
-    is_spam NUMBER,
     CONSTRAINT fk_T_LCW_EMAIL_T_LCW_USUARIO FOREIGN KEY (id_usuario) REFERENCES T_LCW_USUARIO (id_usuario)
 );
 
