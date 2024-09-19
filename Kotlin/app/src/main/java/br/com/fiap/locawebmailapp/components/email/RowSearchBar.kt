@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -36,24 +37,25 @@ import br.com.fiap.locawebmailapp.components.user.UserSelectorDalog
 import br.com.fiap.locawebmailapp.database.repository.UsuarioRepository
 import br.com.fiap.locawebmailapp.model.EmailComAlteracao
 import br.com.fiap.locawebmailapp.model.Usuario
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiListarUsuariosNaoSelecionados
 import br.com.fiap.locawebmailapp.utils.byteArrayToBitmap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 @Composable
 fun <T> RowSearchBar(
-    modifier: Modifier = Modifier,
     drawerState: DrawerState,
     scope: CoroutineScope,
     openDialogUserPicker: MutableState<Boolean>,
     textSearchBar: MutableState<String>,
     applyStateListUserSelectorDialog: () -> Unit = {},
-    usuarioSelecionado: MutableState<Usuario>,
+    usuarioSelecionado: MutableState<Usuario?>,
     stateEmailList: SnapshotStateList<T> = mutableStateListOf(),
-    usuarioRepository: UsuarioRepository,
     placeholderTextFieldSearch: String,
-    selectedDrawerPasta: MutableState<String>,
-    navController: NavController
+    navController: NavController,
+    isLoading: MutableState<Boolean>,
+    isError: MutableState<Boolean>,
+    listUsuariosNaoAutenticados: SnapshotStateList<Usuario>
 
     ) {
     Row(
@@ -91,15 +93,37 @@ fun <T> RowSearchBar(
                 IconButton(
                     onClick = {
                         openDialogUserPicker.value = !openDialogUserPicker.value
+                        if (openDialogUserPicker.value) {
+                            callLocaMailApiListarUsuariosNaoSelecionados(
+                                onSuccess = { listUsuarioRetornado ->
+                                    if (listUsuarioRetornado != null) {
+                                        listUsuarioRetornado.forEach { usuario ->
+                                            if (!listUsuariosNaoAutenticados.contains(usuario)) {
+                                                listUsuariosNaoAutenticados.add(usuario)
+                                            }
+                                        }
+                                    }
+                                },
+                                onError = { error ->
+                                    isError.value = true
+                                    isLoading.value = false
+
+                                }
+                            )
+
+                        }
                     }
                 ) {
-                    Image(
-                        bitmap = byteArrayToBitmap(usuarioSelecionado.value.profile_image).asImageBitmap(),
-                        contentDescription = stringResource(id = R.string.content_desc_iconregister),
-                        modifier = Modifier
-                            .size(30.dp)
-                            .clip(shape = CircleShape)
-                    )
+                    if (usuarioSelecionado.value != null) {
+                        Image(
+                            bitmap = byteArrayToBitmap(usuarioSelecionado.value!!.profile_image).asImageBitmap(),
+                            contentDescription = stringResource(id = R.string.content_desc_iconregister),
+                            modifier = Modifier
+                                .size(30.dp)
+                                .clip(shape = CircleShape)
+                        )
+
+                    }
                 }
             },
             colors = TextFieldDefaults.colors(
@@ -132,8 +156,10 @@ fun <T> RowSearchBar(
         usuarioSelecionado = usuarioSelecionado,
         stateList = stateEmailList,
         applyStateList = applyStateListUserSelectorDialog,
-        usuarioRepository = usuarioRepository,
-        selectedDrawerPasta = selectedDrawerPasta,
-        navController = navController
+        navController = navController,
+        isLoading = isLoading,
+        isError = isError,
+        listUsuariosNaoAutenticados = listUsuariosNaoAutenticados
+
     )
 }

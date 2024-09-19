@@ -1,6 +1,8 @@
 package br.com.fiap.locawebmailapp.screens.ai
 
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
+import androidx.collection.longListOf
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,6 +17,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -22,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,16 +43,20 @@ import br.com.fiap.locawebmailapp.R
 import br.com.fiap.locawebmailapp.components.ai.QuestionDialog
 import br.com.fiap.locawebmailapp.components.email.EmailViewButton
 import br.com.fiap.locawebmailapp.components.email.RowSearchBar
+import br.com.fiap.locawebmailapp.components.general.ErrorComponent
 import br.com.fiap.locawebmailapp.components.general.ModalNavDrawer
-import br.com.fiap.locawebmailapp.database.repository.AiQuestionRepository
-import br.com.fiap.locawebmailapp.database.repository.AlteracaoRepository
-import br.com.fiap.locawebmailapp.database.repository.AnexoRepository
-import br.com.fiap.locawebmailapp.database.repository.EmailRepository
-import br.com.fiap.locawebmailapp.database.repository.PastaRepository
-import br.com.fiap.locawebmailapp.database.repository.RespostaEmailRepository
-import br.com.fiap.locawebmailapp.database.repository.UsuarioRepository
 import br.com.fiap.locawebmailapp.model.EmailComAlteracao
 import br.com.fiap.locawebmailapp.model.Pasta
+import br.com.fiap.locawebmailapp.model.RespostaEmail
+import br.com.fiap.locawebmailapp.model.Usuario
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiAtualizarImportantePorIdEmail
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiAtualizarLidoPorIdEmailEIdusuario
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiListarAnexosIdEmail
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiListarEmailsPorDestinatario
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiListarPastasPorIdUsuario
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiListarRespostasEmailPorIdEmail
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiListarUsuarioSelecionado
+import br.com.fiap.locawebmailapp.utils.checkInternetConnectivity
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -76,13 +84,18 @@ fun AiScreen(navController: NavController) {
 
     val context = LocalContext.current
 
-    val emailRepository = EmailRepository(context)
-    val anexoRepository = AnexoRepository(context)
-    val usuarioRepository = UsuarioRepository(context)
-    val alteracaoRepository = AlteracaoRepository(context)
-    val pastaRepository = PastaRepository(context)
-    val respostaEmailRepository = RespostaEmailRepository(context)
-    val aiQuestionRepository = AiQuestionRepository(context)
+    val isConnectedStatus = remember {
+        mutableStateOf(checkInternetConnectivity(context))
+    }
+    val isLoading = remember {
+        mutableStateOf(true)
+    }
+
+    val isError = remember {
+        mutableStateOf(false)
+    }
+
+    val toastMessageWait = stringResource(id = R.string.toast_api_wait)
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
@@ -101,7 +114,7 @@ fun AiScreen(navController: NavController) {
     val openDialogPastaPicker = remember {
         mutableStateOf(false)
     }
-    
+
     val expandedPasta = remember {
         mutableStateOf(true)
     }
@@ -112,167 +125,317 @@ fun AiScreen(navController: NavController) {
 
 
     val usuarioSelecionado = remember {
-        mutableStateOf(usuarioRepository.listarUsuarioSelecionado())
+        mutableStateOf<Usuario?>(null)
     }
 
     val question = remember {
         mutableStateOf("")
     }
 
-    val receivedEmailList =
-        emailRepository.listarEmailsAi(
-            usuarioSelecionado.value.id_usuario
-        )
+    val receivedEmailList = remember {
+        mutableStateOf(listOf<EmailComAlteracao>())
+    }
 
     val listPastaState = remember {
-        mutableStateListOf<Pasta>().apply {
-            addAll(pastaRepository.listarPastasPorIdUsuario(usuarioSelecionado.value.id_usuario))
-        }
+        mutableStateListOf<Pasta>()
     }
 
 
-    val attachEmailList = anexoRepository.listarAnexosIdEmail()
+    val attachEmailList = remember {
+        mutableStateListOf<Long?>()
+    }
+
+    val listUsuariosNaoAutenticados = remember {
+        mutableStateListOf<Usuario>()
+    }
+
+    LaunchedEffect(key1 = Unit) {
+        callLocaMailApiListarUsuarioSelecionado(
+            onSuccess = { usuarioRetornado ->
+                usuarioSelecionado.value = usuarioRetornado
+                if (usuarioSelecionado.value != null) {
+                    callLocaMailApiListarEmailsPorDestinatario(
+                        usuarioSelecionado.value!!.email,
+                        usuarioSelecionado.value!!.id_usuario,
+                        onSuccess = { listMailRetornado ->
+                            isLoading.value = false
+                            if (listMailRetornado != null) {
+                                receivedEmailList.value = listMailRetornado
+                                callLocaMailApiListarPastasPorIdUsuario(
+                                    usuarioSelecionado.value!!.id_usuario,
+                                    onSuccess = { listPastaRetornado ->
+
+                                        listPastaState.addAll(listPastaRetornado!!)
+
+                                        callLocaMailApiListarAnexosIdEmail(
+                                            onSuccess = { listLongRetornado ->
+
+                                                if (listLongRetornado != null) {
+                                                    attachEmailList.addAll(listLongRetornado)
+                                                }
+
+                                            },
+                                            onError = { error ->
+                                                isError.value = true
+                                                isLoading.value = false
+                                            }
+                                        )
+                                    },
+                                    onError = { error ->
+                                        isError.value = true
+                                        isLoading.value = false
+                                    }
+                                )
+                            }
+                        },
+                        onError = { error ->
+                            isError.value = true
+                            isLoading.value = false
+                        }
+                    )
+                }
+            },
+            onError = { error ->
+                isError.value = true
+                isLoading.value = false
+            }
+        )
+
+
+    }
 
     val redLcWeb = colorResource(id = R.color.lcweb_red_1)
     val toastMessageFolderDeleted = stringResource(id = R.string.toast_folder_deleted)
 
-    ModalNavDrawer(
-        selectedDrawer = selectedDrawer,
-        navController = navController,
-        drawerState = drawerState,
-        usuarioRepository = usuarioRepository,
-        pastaRepository = pastaRepository,
-        scrollState = rememberScrollState(),
-        expandedPasta = expandedPasta,
-        openDialogPastaCreator = openDialogPastaCreator,
-        textPastaCreator = textPastaCreator,
-        selectedDrawerPasta = selectedDrawerPasta,
-        alteracaoRepository = alteracaoRepository,
-        context = context,
-        listPastaState = listPastaState,
-        scope = scope,
-        toastMessageFolderDeleted = toastMessageFolderDeleted
-    ) {
-
-        Box(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            Column {
-                RowSearchBar<EmailComAlteracao>(
-                    drawerState = drawerState,
-                    scope = scope,
-                    openDialogUserPicker = openDialogUserPicker,
-                    textSearchBar = textSearchBar,
-                    usuarioSelecionado = usuarioSelecionado,
-                    usuarioRepository = usuarioRepository,
-                    placeholderTextFieldSearch = stringResource(id = R.string.mail_main_searchbar),
-                    selectedDrawerPasta = selectedDrawerPasta,
-                    navController = navController
+    if (isLoading.value) {
+        BackHandler {
+            Toast.makeText(
+                context,
+                toastMessageWait,
+                Toast.LENGTH_LONG
+            ).show()
+        }
+        Box(modifier = Modifier.fillMaxSize()) {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .size(100.dp, 100.dp),
+                color = colorResource(id = R.color.lcweb_red_1)
+            )
+        }
+    } else {
+        if (!isConnectedStatus.value) {
+            Box {
+                ErrorComponent(
+                    title = stringResource(id = R.string.ai_error_oops),
+                    subtitle = stringResource(id = R.string.ai_error_verifynet),
+                    painter = painterResource(id = R.drawable.notfound),
+                    descriptionimage = stringResource(id = R.string.content_desc_nonet),
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .size(400.dp, 400.dp),
+                    modifierButton = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 10.dp)
+                        .height(50.dp)
+                        .align(Alignment.BottomCenter),
+                    textButton = stringResource(id = R.string.ai_button_return),
+                    buttonChange = {
+                        navController.popBackStack()
+                    }
                 )
+            }
+        } else if (isError.value) {
+            Box {
+                ErrorComponent(
+                    title = stringResource(id = R.string.ai_error_oops),
+                    subtitle = stringResource(id = R.string.ai_error_apiproblem),
+                    painter = painterResource(id = R.drawable.bugfixing),
+                    descriptionimage = stringResource(id = R.string.content_desc_apiproblem),
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .size(400.dp, 400.dp),
+                    modifierButton = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 10.dp)
+                        .height(50.dp)
+                        .align(Alignment.BottomCenter),
+                    textButton = stringResource(id = R.string.ai_button_return),
+                    buttonChange = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+        } else {
+            ModalNavDrawer(
+                selectedDrawer = selectedDrawer,
+                navController = navController,
+                drawerState = drawerState,
+                expandedPasta = expandedPasta,
+                openDialogPastaCreator = openDialogPastaCreator,
+                textPastaCreator = textPastaCreator,
+                selectedDrawerPasta = selectedDrawerPasta,
+                context = context,
+                listPastaState = listPastaState,
+                scope = scope,
+                toastMessageFolderDeleted = toastMessageFolderDeleted,
+                isLoading = isLoading,
+                isError = isError
+            ) {
 
-                if (receivedEmailList.isNotEmpty()) {
-                    LazyColumn() {
-                        item {
-                            Row(modifier = Modifier
-                                .align(Alignment.CenterHorizontally)
-                                .fillMaxWidth()
-                                .padding(bottom = 10.dp),
-                                horizontalArrangement = Arrangement.Center) {
-                                Image(
-                                    painter = painterResource(id = R.drawable.aianalyse),
-                                    contentDescription = stringResource(id = R.string.content_desc_aianalyse),
-                                    modifier = Modifier
-                                        .width(80.dp)
-                                        .height(80.dp)
-                                        .align(Alignment.CenterVertically))
-                                Column(modifier = Modifier.align(Alignment.CenterVertically)) {
-                                    Text(
-                                        text = stringResource(id = R.string.ai_summary),
-                                        color = colorResource(id = R.color.lcweb_gray_1),
-                                        modifier = Modifier.align(Alignment.CenterHorizontally),
-                                        fontWeight = FontWeight.SemiBold)
-                                    Text(
-                                        text = stringResource(id = R.string.ai_main_topics),
-                                        color = colorResource(id = R.color.lcweb_gray_1),
-                                        modifier = Modifier.align(Alignment.CenterHorizontally),
-                                        fontWeight = FontWeight.SemiBold)
+                Box(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    Column {
+                        RowSearchBar<EmailComAlteracao>(
+                            drawerState = drawerState,
+                            scope = scope,
+                            openDialogUserPicker = openDialogUserPicker,
+                            textSearchBar = textSearchBar,
+                            usuarioSelecionado = usuarioSelecionado,
+                            placeholderTextFieldSearch = stringResource(id = R.string.mail_main_searchbar),
+                            navController = navController,
+                            isError = isError,
+                            isLoading = isLoading,
+                            listUsuariosNaoAutenticados = listUsuariosNaoAutenticados
+                        )
+
+                        if (receivedEmailList.value.isNotEmpty()) {
+                            LazyColumn() {
+                                item {
+                                    Row(modifier = Modifier
+                                        .align(Alignment.CenterHorizontally)
+                                        .fillMaxWidth()
+                                        .padding(bottom = 10.dp),
+                                        horizontalArrangement = Arrangement.Center) {
+                                        Image(
+                                            painter = painterResource(id = R.drawable.aianalyse),
+                                            contentDescription = stringResource(id = R.string.content_desc_aianalyse),
+                                            modifier = Modifier
+                                                .width(80.dp)
+                                                .height(80.dp)
+                                                .align(Alignment.CenterVertically))
+                                        Column(modifier = Modifier.align(Alignment.CenterVertically)) {
+                                            Text(
+                                                text = stringResource(id = R.string.ai_summary),
+                                                color = colorResource(id = R.color.lcweb_gray_1),
+                                                modifier = Modifier.align(Alignment.CenterHorizontally),
+                                                fontWeight = FontWeight.SemiBold)
+                                            Text(
+                                                text = stringResource(id = R.string.ai_main_topics),
+                                                color = colorResource(id = R.color.lcweb_gray_1),
+                                                modifier = Modifier.align(Alignment.CenterHorizontally),
+                                                fontWeight = FontWeight.SemiBold)
+                                        }
+                                    }
                                 }
-                            }
-                        }
 
-                        items(receivedEmailList.reversed(), key = {
-                            it.alteracao.id_alteracao
-                        }) {
+                                items(receivedEmailList.value, key = {
+                                    it.id_alteracao
+                                }) {
 
-                            if (
-                                it.email.assunto.contains(textSearchBar.value, ignoreCase = true) ||
-                                it.email.corpo.contains(textSearchBar.value, ignoreCase = true)
-                            ) {
-                                val isImportant = remember {
-                                    mutableStateOf(it.alteracao.importante)
-                                }
-
-                                val isRead = remember {
-                                    mutableStateOf(it.alteracao.lido)
-                                }
-
-                                val respostasEmail =
-                                    respostaEmailRepository.listarRespostasEmailPorIdEmail(id_email = it.email.id_email)
-
-                                EmailViewButton(
-                                    onClickButton = {
-                                        if (!isRead.value) {
-                                            isRead.value = true
-                                            alteracaoRepository.atualizarLidoPorIdEmailEIdusuario(
-                                                isRead.value,
-                                                it.email.id_email,
-                                                it.alteracao.alt_id_usuario
-                                            )
+                                    if (
+                                        it.assunto.contains(textSearchBar.value, ignoreCase = true) ||
+                                        it.corpo.contains(textSearchBar.value, ignoreCase = true)
+                                    ) {
+                                        val isImportant = remember {
+                                            mutableStateOf(it.importante)
                                         }
 
-                                        openQuestionDialog.value = true
-                                        idEmail.value = it.email.id_email
-                                    },
-                                    isRead = isRead,
-                                    redLcWeb = redLcWeb,
-                                    respostasEmail = respostasEmail,
-                                    onClickImportantButton = {
-                                        isImportant.value = !isImportant.value
-                                        alteracaoRepository.atualizarImportantePorIdEmail(
-                                            isImportant.value,
-                                            it.email.id_email,
-                                            it.alteracao.alt_id_usuario
+                                        val isRead = remember {
+                                            mutableStateOf(it.lido)
+                                        }
+
+                                        val respostasEmail = remember {
+                                            mutableStateOf(listOf<RespostaEmail>())
+                                        }
+
+                                        callLocaMailApiListarRespostasEmailPorIdEmail(
+                                            it.id_email,
+                                            onSuccess = { listRespostaRetornado ->
+                                                if (listRespostaRetornado != null) {
+                                                    respostasEmail.value = listRespostaRetornado
+                                                }
+                                            },
+                                            onError = { error ->
+                                                isError.value = true
+                                                isLoading.value = false
+                                            }
                                         )
-                                    },
-                                    isImportant = isImportant,
-                                    attachEmailList = attachEmailList,
-                                    timeState = timeState,
-                                    email = it,
-                                    usuarioSelecionado = usuarioSelecionado,
-                                )
+
+                                        EmailViewButton(
+                                            onClickButton = {
+                                                if (!isRead.value) {
+                                                    isRead.value = true
+
+                                                    callLocaMailApiAtualizarLidoPorIdEmailEIdusuario(
+                                                        isRead.value,
+                                                        it.id_email,
+                                                        it.alt_id_usuario,
+                                                        onSuccess = {
+
+                                                        },
+                                                        onError = { error ->
+                                                            isError.value = true
+                                                            isLoading.value = false
+                                                        }
+                                                    )
+                                                }
+
+                                                openQuestionDialog.value = true
+                                                idEmail.value = it.id_email
+                                            },
+                                            isRead = isRead,
+                                            redLcWeb = redLcWeb,
+                                            respostasEmail = respostasEmail.value,
+                                            onClickImportantButton = {
+                                                isImportant.value = !isImportant.value
+                                                callLocaMailApiAtualizarImportantePorIdEmail(
+                                                    isImportant.value,
+                                                    it.id_email,
+                                                    it.alt_id_usuario,
+                                                    onSuccess = {
+                                                    },
+                                                    onError = { error ->
+                                                        isError.value = true
+                                                        isLoading.value = false
+                                                    }
+                                                )
+                                            },
+                                            isImportant = isImportant,
+                                            attachEmailList = attachEmailList,
+                                            timeState = timeState,
+                                            email = it,
+                                            usuarioSelecionado = usuarioSelecionado,
+                                        )
+                                    }
+                                }
                             }
+
+                            QuestionDialog(
+                                openQuestionDialog = openQuestionDialog ,
+                                question = question,
+                                idEmail = idEmail.value,
+                                navController = navController,
+                                isError = isError,
+                                isLoading = isLoading
+                            )
                         }
                     }
 
-                    QuestionDialog(
-                        openQuestionDialog = openQuestionDialog ,
-                        question = question,
-                        aiQuestionRepository = aiQuestionRepository,
-                        idEmail = idEmail.value,
-                        navController = navController
-                    )
+                    if (receivedEmailList.value.isEmpty()) {
+                        Image(
+                            painter = painterResource(id = R.drawable.messagereceived),
+                            contentDescription = stringResource(id = R.string.content_desc_nomailimage),
+                            modifier = Modifier
+                                .size(250.dp)
+                                .align(Alignment.Center)
+                        )
+                    }
                 }
+
             }
 
-            if (receivedEmailList.isEmpty()) {
-                Image(
-                    painter = painterResource(id = R.drawable.messagereceived),
-                    contentDescription = stringResource(id = R.string.content_desc_nomailimage),
-                    modifier = Modifier
-                        .size(250.dp)
-                        .align(Alignment.Center)
-                )
-            }
         }
 
     }

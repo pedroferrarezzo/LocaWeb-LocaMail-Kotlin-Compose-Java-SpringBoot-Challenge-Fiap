@@ -20,7 +20,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.dp
 import br.com.fiap.locawebmailapp.R
-import br.com.fiap.locawebmailapp.model.AgendaCor
 import br.com.fiap.locawebmailapp.utils.returnColor
 import com.kizitonwose.calendar.core.CalendarDay
 import com.kizitonwose.calendar.core.DayPosition
@@ -31,7 +30,7 @@ import java.time.LocalDate
 fun Day(
     day: CalendarDay,
     selectedDate: Boolean,
-    listColorTask: List<AgendaCor>,
+    listColorTask: List<Int>,
     onClick: (CalendarDay) -> Unit) {
 
     Box(
@@ -71,7 +70,7 @@ fun Day(
                     items(
                         listColorTask,
                         key = {
-                            it.cor
+                            it
                         }
                     ) {
                         Box(
@@ -80,7 +79,7 @@ fun Day(
                                 .width(7.dp)
                                 .height(7.dp)
                                 .padding(2.dp)
-                                .background(returnColor(option = it.cor))
+                                .background(returnColor(option = it))
 
                         )
                     }

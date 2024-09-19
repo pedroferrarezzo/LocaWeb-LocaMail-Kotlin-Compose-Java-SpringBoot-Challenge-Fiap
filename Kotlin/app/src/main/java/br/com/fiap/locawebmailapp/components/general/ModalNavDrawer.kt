@@ -3,7 +3,6 @@ package br.com.fiap.locawebmailapp.components.general
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -44,10 +43,10 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import br.com.fiap.locawebmailapp.R
 import br.com.fiap.locawebmailapp.components.email.PastaCreatorDalog
-import br.com.fiap.locawebmailapp.database.repository.AlteracaoRepository
-import br.com.fiap.locawebmailapp.database.repository.PastaRepository
-import br.com.fiap.locawebmailapp.database.repository.UsuarioRepository
 import br.com.fiap.locawebmailapp.model.Pasta
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiAtualizarPastaPorIdAlteracao
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiExcluirPasta
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiListarAlteracaoPorIdUsuarioEIdPasta
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -57,10 +56,6 @@ fun ModalNavDrawer(
     selectedDrawerPasta: MutableState<String>,
     navController: NavController,
     drawerState: DrawerState,
-    scrollState: ScrollState,
-    usuarioRepository: UsuarioRepository,
-    pastaRepository: PastaRepository,
-    alteracaoRepository: AlteracaoRepository,
     expandedPasta: MutableState<Boolean>,
     openDialogPastaCreator: MutableState<Boolean>,
     textPastaCreator: MutableState<String>,
@@ -69,8 +64,9 @@ fun ModalNavDrawer(
     context: Context,
     toastMessageFolderDeleted: String,
     scope: CoroutineScope,
+    isLoading: MutableState<Boolean>,
+    isError: MutableState<Boolean>,
     content: @Composable () -> Unit
-
 ) {
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -640,10 +636,10 @@ fun ModalNavDrawer(
 
                         PastaCreatorDalog(
                             openDialogPastaCreator = openDialogPastaCreator,
-                            usuarioRepository = usuarioRepository,
-                            pastaRepository = pastaRepository,
                             textPastaCreator = textPastaCreator,
-                            listPastaState = listPastaState
+                            listPastaState = listPastaState,
+                            isLoading = isLoading,
+                            isError = isError
                         )
                     }
 
@@ -681,32 +677,65 @@ fun ModalNavDrawer(
                                             }
 
                                             IconButton(onClick = {
-                                                Toast.makeText(
-                                                    context,
-                                                    toastMessageFolderDeleted,
-                                                    Toast.LENGTH_LONG
-                                                )
-                                                    .show()
-
-                                                for (alteracao in alteracaoRepository.listarAlteracaoPorIdUsuarioEIdPasta(
+                                                isLoading.value = true
+                                                callLocaMailApiListarAlteracaoPorIdUsuarioEIdPasta(
                                                     id_usuario = it.id_usuario,
-                                                    id_pasta = it.id_pasta
-                                                )) {
-                                                    alteracaoRepository.atualizarPastaPorIdAlteracao(
-                                                        pasta = null,
-                                                        id_alteracao = alteracao.id_alteracao
-                                                    )
-                                                }
+                                                    pasta = it.id_pasta,
+                                                    onSuccess = {
+                                                        listAlteracaoRetornado ->
+
+                                                        val pasta = it
 
 
-                                                if (selectedDrawerPasta.value != "") {
-                                                    selectedDrawerPasta.value = ""
-                                                    navController.popBackStack()
-                                                }
+                                                        for (alteracao in listAlteracaoRetornado!!) {
 
-                                                receivedEmailStateListRecompose()
-                                                pastaRepository.excluirPasta(it)
-                                                listPastaState.remove(it)
+                                                            callLocaMailApiAtualizarPastaPorIdAlteracao(
+                                                                id_alteracao = alteracao.id_alteracao,
+                                                                pasta = null,
+                                                                onSuccess = {
+
+
+                                                                },
+                                                                onError = {
+                                                                        error ->
+                                                                    isError.value = true
+                                                                    isLoading.value = false
+                                                                }
+                                                            )
+                                                        }
+
+
+                                                        if (selectedDrawerPasta.value != "") {
+                                                            selectedDrawerPasta.value = ""
+                                                            navController.popBackStack()
+                                                        }
+
+                                                        callLocaMailApiExcluirPasta(
+                                                            pasta = it.id_pasta,
+                                                            onSuccess = {
+                                                                listPastaState.remove(pasta)
+                                                                isLoading.value = false
+                                                                Toast.makeText(
+                                                                    context,
+                                                                    toastMessageFolderDeleted,
+                                                                    Toast.LENGTH_LONG
+                                                                )
+                                                                    .show()
+                                                                receivedEmailStateListRecompose()
+                                                            },
+                                                            onError = {error ->
+                                                                isError.value = true
+                                                                isLoading.value = false
+
+                                                            }
+                                                        )
+
+                                                    },
+                                                    onError = {error ->
+                                                        isError.value = true
+                                                        isLoading.value = false
+                                                    }
+                                                )
                                             }) {
                                                 Icon(
                                                     imageVector = Icons.Filled.Clear,

@@ -12,7 +12,6 @@ interface PastaDao {
     @Insert
     fun criarPasta(pasta: Pasta): Long
 
-
     @Delete
     fun excluirPasta(pasta: Pasta)
 

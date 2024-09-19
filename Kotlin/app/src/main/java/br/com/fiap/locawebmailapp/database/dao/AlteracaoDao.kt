@@ -41,10 +41,6 @@ interface AlteracaoDao {
     @Query("SELECT id_pasta FROM T_LCW_ALTERACAO where alt_id_email = :id_email AND alt_id_usuario = :id_usuario")
     fun verificarPastaPorIdEmailEIdUsuario(id_email: Long, id_usuario: Long): Long
 
-
-
-
-
     @Query("UPDATE T_LCW_ALTERACAO SET importante = :importante where alt_id_email = :id_email AND alt_id_usuario = :id_usuario")
     fun atualizarImportantePorIdEmailEIdUsuario(importante: Boolean, id_email: Long, id_usuario: Long)
 

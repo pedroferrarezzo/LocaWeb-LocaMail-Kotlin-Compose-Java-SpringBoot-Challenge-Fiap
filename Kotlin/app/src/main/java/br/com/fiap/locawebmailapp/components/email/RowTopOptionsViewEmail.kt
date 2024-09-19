@@ -82,16 +82,18 @@ fun RowTopOptionsViewEmail(
 
             if (!isExcluido.value) {
 
-                if (!isTodasContasScreen && !isAgendaAtrelada.value) {
-                    IconButton(onClick = onClickReply) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.reply_solid),
-                            contentDescription = stringResource(id = R.string.content_desc_lcweb_reply),
-                            modifier = Modifier
-                                .width(25.dp)
-                                .height(25.dp),
-                            tint = colorResource(id = R.color.lcweb_gray_1)
-                        )
+                if (isAgendaAtrelada.value != null) {
+                    if (!isTodasContasScreen && !isAgendaAtrelada.value!!) {
+                        IconButton(onClick = onClickReply) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.reply_solid),
+                                contentDescription = stringResource(id = R.string.content_desc_lcweb_reply),
+                                modifier = Modifier
+                                    .width(25.dp)
+                                    .height(25.dp),
+                                tint = colorResource(id = R.color.lcweb_gray_1)
+                            )
+                        }
                     }
                 }
 

@@ -1,12 +1,14 @@
 package br.com.fiap.locawebmailapp.utils
 
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import br.com.fiap.locawebmailapp.database.repository.ConvidadoRepository
 import br.com.fiap.locawebmailapp.model.Convidado
-import br.com.fiap.locawebmailapp.model.Email
+import br.com.fiap.locawebmailapp.model.EmailComAlteracao
 import br.com.fiap.locawebmailapp.model.IdConvidado
 import br.com.fiap.locawebmailapp.model.RespostaEmail
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiListarConvidadoPorId
 
 fun listaParaString(lista: List<String>): String {
     return lista.withIndex().joinToString(", ") { it.value }
@@ -16,7 +18,7 @@ fun stringParaLista(str: String): List<String> {
     return str.split(", ")
 }
 
-fun atualizarTodosDestinatariosList(todosDestinatarios: ArrayList<String>, email: Email, respostaEmailList: List<RespostaEmail>){
+fun atualizarTodosDestinatariosList(todosDestinatarios: ArrayList<String>, email: EmailComAlteracao, respostaEmailList: List<RespostaEmail>){
 
     todosDestinatarios.addAll(stringParaLista(email.destinatario))
     todosDestinatarios.addAll(stringParaLista(email.cc))
@@ -44,15 +46,26 @@ fun atualizarTodosDestinatariosList(todosDestinatarios: ArrayList<String>, email
 }
 
 fun returnListConvidado(
-    listIdConvidado: List<IdConvidado>,
-    convidadoRepository: ConvidadoRepository
-): SnapshotStateList<Convidado> {
-
-    val list = mutableStateListOf<Convidado>()
+    listIdConvidado: List<Long>,
+    isLoading: MutableState<Boolean>,
+    isError: MutableState<Boolean>,
+    listConvidado: SnapshotStateList<Convidado>
+) {
 
     for (id in listIdConvidado) {
-        list.add(convidadoRepository.listarConvidadoPorId(id.id_convidado))
-    }
 
-    return list
+        callLocaMailApiListarConvidadoPorId(
+            id,
+            onSuccess = {
+                convidadoRetornado ->
+                if (convidadoRetornado != null) {
+                    listConvidado.add(convidadoRetornado)
+                }
+            },
+            onError = {
+                isError.value = true
+                isLoading.value = false
+            }
+        )
+    }
 }

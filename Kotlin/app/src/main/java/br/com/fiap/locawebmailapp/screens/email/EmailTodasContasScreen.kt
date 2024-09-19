@@ -1,17 +1,23 @@
 package br.com.fiap.locawebmailapp.screens.email
 
+import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -20,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -27,18 +34,24 @@ import br.com.fiap.locawebmailapp.R
 import br.com.fiap.locawebmailapp.components.email.EmailCreateButton
 import br.com.fiap.locawebmailapp.components.email.EmailViewButton
 import br.com.fiap.locawebmailapp.components.email.RowSearchBar
+import br.com.fiap.locawebmailapp.components.general.ErrorComponent
 import br.com.fiap.locawebmailapp.components.general.ModalNavDrawer
-import br.com.fiap.locawebmailapp.database.repository.AlteracaoRepository
-import br.com.fiap.locawebmailapp.database.repository.AnexoRepository
-import br.com.fiap.locawebmailapp.database.repository.EmailRepository
-import br.com.fiap.locawebmailapp.database.repository.PastaRepository
-import br.com.fiap.locawebmailapp.database.repository.RespostaEmailRepository
-import br.com.fiap.locawebmailapp.database.repository.UsuarioRepository
 import br.com.fiap.locawebmailapp.model.EmailComAlteracao
 import br.com.fiap.locawebmailapp.model.Pasta
+import br.com.fiap.locawebmailapp.model.RespostaEmail
+import br.com.fiap.locawebmailapp.model.Usuario
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiAtualizarImportantePorIdEmail
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiAtualizarLidoPorIdEmailEIdusuario
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiListarAnexosIdEmail
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiListarPastasPorIdUsuario
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiListarRespostasEmailPorIdEmail
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiListarTodosEmails
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiListarUsuarioSelecionado
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiRetornaUsarioPorEmail
 import br.com.fiap.locawebmailapp.utils.atualizarIsImportantParaUsuariosRelacionados
 import br.com.fiap.locawebmailapp.utils.atualizarTodosDestinatariosList
 import br.com.fiap.locawebmailapp.utils.atualizarisReadParaUsuariosRelacionados
+import br.com.fiap.locawebmailapp.utils.checkInternetConnectivity
 import br.com.fiap.locawebmailapp.utils.stringParaLista
 
 
@@ -59,12 +72,22 @@ fun EmailTodasContasScreen(navController: NavController) {
 
     val context = LocalContext.current
 
-    val emailRepository = EmailRepository(context)
-    val anexoRepository = AnexoRepository(context)
-    val usuarioRepository = UsuarioRepository(context)
-    val alteracaoRepository = AlteracaoRepository(context)
-    val pastaRepository = PastaRepository(context)
-    val respostaEmailRepository = RespostaEmailRepository(context)
+    val isConnectedStatus = remember {
+        mutableStateOf(checkInternetConnectivity(context))
+    }
+    val isLoading = remember {
+        mutableStateOf(true)
+    }
+
+    val isError = remember {
+        mutableStateOf(false)
+    }
+
+    val toastMessageWait = stringResource(id = R.string.toast_api_wait)
+
+    val listUsuariosNaoAutenticados = remember {
+        mutableStateListOf<Usuario>()
+    }
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
@@ -76,9 +99,8 @@ fun EmailTodasContasScreen(navController: NavController) {
         mutableStateOf(false)
     }
 
-    val usuariosExistentes = usuarioRepository.listarUsuariosNaoSelecionados()
     val usuarioSelecionado = remember {
-        mutableStateOf(usuarioRepository.listarUsuarioSelecionado())
+        mutableStateOf<Usuario?>(null)
     }
 
     val openDialogPastaCreator = remember {
@@ -89,188 +111,388 @@ fun EmailTodasContasScreen(navController: NavController) {
         mutableStateOf("")
     }
 
-    val receivedEmailList =
-        emailRepository.listarTodosEmails(usuarioRepository)
-    val attachEmailList = anexoRepository.listarAnexosIdEmail()
+    val receivedEmailList = remember {
+        mutableStateOf(listOf<EmailComAlteracao>())
+    }
+
+
+    val attachEmailList = remember {
+        mutableStateListOf<Long?>(null)
+    }
+
+    val listPastaState = remember {
+        mutableStateListOf<Pasta>()
+    }
 
     val selectedDrawerPasta = remember {
         mutableStateOf("")
     }
 
+    LaunchedEffect(key1 = Unit) {
+        callLocaMailApiListarUsuarioSelecionado(
+            onSuccess = {
+                usuarioSelecionadoRetornado ->
+                if (usuarioSelecionadoRetornado != null) {
+                    usuarioSelecionado.value = usuarioSelecionadoRetornado
 
-    val listPasta =
-        pastaRepository.listarPastasPorIdUsuario(usuarioRepository.listarUsuarioSelecionado().id_usuario)
+                    callLocaMailApiListarTodosEmails(
+                        onSuccess = {
+                            listMailRetornado ->
+                            isLoading.value = false
+                            if (listMailRetornado != null) {
+                                receivedEmailList.value = listMailRetornado
+                            }
 
-    val listPastaState = remember {
-        mutableStateListOf<Pasta>().apply {
-            addAll(listPasta)
-        }
+                        },
+                        onError = {
+                            isError.value = true
+                            isLoading.value = false
+                        }
+                    )
+
+                    callLocaMailApiListarPastasPorIdUsuario(
+                        usuarioSelecionado.value!!.id_usuario,
+                        onSuccess = { listPastasRetornado ->
+                            if (listPastasRetornado != null) {
+                                listPastaState.addAll(listPastasRetornado)
+                            }
+                        },
+                        onError = {
+                            isError.value = true
+                            isLoading.value = false
+                        }
+                    )
+
+                    callLocaMailApiListarAnexosIdEmail(
+                        onSuccess = { listAnexoIdEmailRetornado ->
+
+                            if (listAnexoIdEmailRetornado != null) {
+                                attachEmailList.addAll(listAnexoIdEmailRetornado)
+                            }
+                        },
+                        onError = {
+                            isError.value = true
+                            isLoading.value = false
+                        }
+                    )
+                }
+            },
+            onError = {
+                isError.value = true
+                isLoading.value = false
+            }
+        )
     }
 
     val todosDestinatarios = arrayListOf<String>()
+
     val toastMessageFolderDeleted = stringResource(id = R.string.toast_folder_deleted)
 
-    ModalNavDrawer(
-        selectedDrawer = selectedDrawer,
-        navController = navController,
-        drawerState = drawerState,
-        usuarioRepository = usuarioRepository,
-        pastaRepository = pastaRepository,
-        scrollState = rememberScrollState(),
-        expandedPasta = expandedPasta,
-        openDialogPastaCreator = openDialogPastaCreator,
-        textPastaCreator = textPastaCreator,
-        selectedDrawerPasta = selectedDrawerPasta,
-        alteracaoRepository = alteracaoRepository,
-        context = context,
-        listPastaState = listPastaState,
-        scope = scope,
-        toastMessageFolderDeleted = toastMessageFolderDeleted
-    ) {
-
-        Box(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            Column {
-                RowSearchBar<EmailComAlteracao>(
-                    drawerState = drawerState,
-                    scope = scope,
-                    openDialogUserPicker = openDialogUserPicker,
-                    textSearchBar = textSearchBar,
-                    usuarioSelecionado = usuarioSelecionado,
-                    usuarioRepository = usuarioRepository,
-                    placeholderTextFieldSearch = stringResource(id = R.string.mail_main_searchbar),
-                    selectedDrawerPasta = selectedDrawerPasta,
-                    navController = navController
+    if (isLoading.value) {
+        BackHandler {
+            Toast.makeText(
+                context,
+                toastMessageWait,
+                Toast.LENGTH_LONG
+            ).show()
+        }
+        Box(modifier = Modifier.fillMaxSize()) {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .size(100.dp, 100.dp),
+                color = colorResource(id = R.color.lcweb_red_1)
+            )
+        }
+    } else {
+        if (!isConnectedStatus.value) {
+            Box {
+                ErrorComponent(
+                    title = stringResource(id = R.string.ai_error_oops),
+                    subtitle = stringResource(id = R.string.ai_error_verifynet),
+                    painter = painterResource(id = R.drawable.notfound),
+                    descriptionimage = stringResource(id = R.string.content_desc_nonet),
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .size(400.dp, 400.dp),
+                    modifierButton = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 10.dp)
+                        .height(50.dp)
+                        .align(Alignment.BottomCenter),
+                    textButton = stringResource(id = R.string.ai_button_return),
+                    buttonChange = {
+                        navController.popBackStack()
+                    }
                 )
+            }
+        } else if (isError.value) {
+            Box {
+                ErrorComponent(
+                    title = stringResource(id = R.string.ai_error_oops),
+                    subtitle = stringResource(id = R.string.ai_error_apiproblem),
+                    painter = painterResource(id = R.drawable.bugfixing),
+                    descriptionimage = stringResource(id = R.string.content_desc_apiproblem),
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .size(400.dp, 400.dp),
+                    modifierButton = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 10.dp)
+                        .height(50.dp)
+                        .align(Alignment.BottomCenter),
+                    textButton = stringResource(id = R.string.ai_button_return),
+                    buttonChange = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+        } else {
+            ModalNavDrawer(
+                selectedDrawer = selectedDrawer,
+                navController = navController,
+                drawerState = drawerState,
+                expandedPasta = expandedPasta,
+                openDialogPastaCreator = openDialogPastaCreator,
+                textPastaCreator = textPastaCreator,
+                selectedDrawerPasta = selectedDrawerPasta,
+                context = context,
+                listPastaState = listPastaState,
+                scope = scope,
+                toastMessageFolderDeleted = toastMessageFolderDeleted,
+                isLoading = isLoading,
+                isError = isError
+            ) {
 
-                if (receivedEmailList.isNotEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    Column {
+                        RowSearchBar<EmailComAlteracao>(
+                            drawerState = drawerState,
+                            scope = scope,
+                            openDialogUserPicker = openDialogUserPicker,
+                            textSearchBar = textSearchBar,
+                            usuarioSelecionado = usuarioSelecionado,
+                            placeholderTextFieldSearch = stringResource(id = R.string.mail_main_searchbar),
+                            navController = navController,
+                            isError = isError,
+                            isLoading = isLoading,
+                            listUsuariosNaoAutenticados = listUsuariosNaoAutenticados
+                        )
 
-                    LazyColumn(reverseLayout = false) {
-                        items(receivedEmailList.reversed(), key = {
-                            it.alteracao.id_alteracao
-                        }) {
-                            if (
-                                it.email.assunto.contains(textSearchBar.value, ignoreCase = true) ||
-                                it.email.corpo.contains(textSearchBar.value, ignoreCase = true)
-                            ) {
+                        if (receivedEmailList.value.isNotEmpty()) {
 
-                                val isImportant = remember {
-                                    mutableStateOf(it.alteracao.importante)
-                                }
+                            LazyColumn(reverseLayout = false) {
+                                items(receivedEmailList.value, key = {
+                                    it.id_alteracao
+                                }) {
+                                    if (
+                                        it.assunto.contains(textSearchBar.value, ignoreCase = true) ||
+                                        it.corpo.contains(textSearchBar.value, ignoreCase = true)
+                                    ) {
 
-                                val isRead = remember {
-                                    mutableStateOf(it.alteracao.lido)
-                                }
+                                        val isImportant = remember {
+                                            mutableStateOf(it.importante)
+                                        }
 
-                                val redLcWeb = colorResource(id = R.color.lcweb_red_1)
+                                        val isRead = remember {
+                                            mutableStateOf(it.lido)
+                                        }
 
-                                val respostasEmailList =
-                                    respostaEmailRepository.listarRespostasEmailPorIdEmail(id_email = it.email.id_email)
+                                        val redLcWeb = colorResource(id = R.color.lcweb_red_1)
 
-                                atualizarTodosDestinatariosList(
-                                    todosDestinatarios,
-                                    it.email,
-                                    respostasEmailList
-                                )
+                                        val respostasEmail = remember {
+                                            mutableStateOf(listOf<RespostaEmail>())
+                                        }
 
-                                atualizarIsImportantParaUsuariosRelacionados(
-                                    todosDestinatarios,
-                                    usuarioRepository,
-                                    alteracaoRepository,
-                                    isImportant,
-                                    it.email
-                                )
+                                        callLocaMailApiListarRespostasEmailPorIdEmail(
+                                            it.id_email,
+                                            onSuccess = { listRespostaRetornado ->
+                                                if (listRespostaRetornado != null) {
+                                                    respostasEmail.value = listRespostaRetornado
+                                                }
+                                            },
+                                            onError = { error ->
+                                                isError.value = true
+                                                isLoading.value = false
+                                            }
+                                        )
 
-                                atualizarisReadParaUsuariosRelacionados(
-                                    todosDestinatarios,
-                                    usuarioRepository,
-                                    alteracaoRepository,
-                                    isRead,
-                                    it.email
-                                )
+                                        atualizarTodosDestinatariosList(
+                                            todosDestinatarios,
+                                            it,
+                                            respostasEmail.value
+                                        )
 
-                                EmailViewButton(
-                                    onClickButton = {
-                                        if (!isRead.value) {
-                                            isRead.value = true
-                                            for (destinatario in (stringParaLista(it.email.destinatario) + stringParaLista(
-                                                it.email.cc
-                                            ) + stringParaLista(it.email.cco))) {
-                                                if (destinatario.isNotBlank()) {
-                                                    val usuario =
-                                                        usuarioRepository.retornaUsarioPorEmail(
-                                                            destinatario
-                                                        )
-                                                    val idDestinatario =
-                                                        if (usuario != null) usuario.id_usuario else null
+                                        atualizarIsImportantParaUsuariosRelacionados(
+                                            todosDestinatarios,
+                                            isImportant,
+                                            it,
+                                            isError = isError,
+                                            isLoading = isLoading
+                                        )
 
-                                                    if (idDestinatario != null) {
-                                                        alteracaoRepository.atualizarLidoPorIdEmailEIdusuario(
-                                                            isRead.value,
-                                                            it.email.id_email,
-                                                            idDestinatario
+                                        atualizarisReadParaUsuariosRelacionados(
+                                            todosDestinatarios,
+                                            isRead,
+                                            it,
+                                            isLoading = isLoading,
+                                            isError = isError
+                                        )
+
+                                        EmailViewButton(
+                                            onClickButton = {
+                                                if (!isRead.value) {
+                                                    isRead.value = true
+                                                    val emailComAlteracao = EmailComAlteracao(
+                                                        it.id_email,
+                                                        it.id_usuario,
+                                                        it.remetente,
+                                                        it.destinatario,
+                                                        it.cc,
+                                                        it.cco,
+                                                        it.assunto,
+                                                        it.corpo,
+                                                        it.editavel,
+                                                        it.enviado,
+                                                        it.horario,
+                                                        it.data,
+                                                        it.agenda_atrelada,
+                                                    )
+
+                                                    atualizarTodosDestinatariosList(
+                                                        todosDestinatarios,
+                                                        emailComAlteracao,
+                                                        respostasEmail.value
+                                                    )
+                                                    for (destinatario in todosDestinatarios) {
+                                                        if (destinatario.isNotBlank()) {
+                                                            callLocaMailApiRetornaUsarioPorEmail(
+                                                                destinatario,
+                                                                onSuccess = {
+                                                                    usuarioRetornado ->
+
+                                                                    if (usuarioRetornado != null) {
+
+                                                                        val usuario = usuarioRetornado
+
+                                                                        val idDestinatario =
+                                                                            if (usuario != null) usuario.id_usuario else null
+
+                                                                        if (idDestinatario != null) {
+                                                                            callLocaMailApiAtualizarLidoPorIdEmailEIdusuario(
+                                                                                isRead.value,
+                                                                                it.id_email,
+                                                                                idDestinatario,
+                                                                                onSuccess = {
+
+                                                                                },
+                                                                                onError = {
+                                                                                    isError.value = true
+                                                                                    isLoading.value = false
+                                                                                }
+                                                                            )
+                                                                        }
+                                                                    }
+                                                                },
+                                                                onError = {
+                                                                    isError.value = true
+                                                                    isLoading.value = false
+                                                                }
+
+                                                            )
+                                                        }
+                                                    }
+                                                }
+
+                                                navController.navigate("visualizaemailscreen/${it.id_email}/true")
+                                            },
+                                            isRead = isRead,
+                                            redLcWeb = redLcWeb,
+                                            respostasEmail = respostasEmail.value,
+                                            onClickImportantButton = {
+                                                isImportant.value = !isImportant.value
+                                                val emailComAlteracao = EmailComAlteracao(
+                                                    it.id_email,
+                                                    it.id_usuario,
+                                                    it.remetente,
+                                                    it.destinatario,
+                                                    it.cc,
+                                                    it.cco,
+                                                    it.assunto,
+                                                    it.corpo,
+                                                    it.editavel,
+                                                    it.enviado,
+                                                    it.horario,
+                                                    it.data,
+                                                    it.agenda_atrelada,
+                                                )
+
+                                                atualizarTodosDestinatariosList(
+                                                    todosDestinatarios,
+                                                    emailComAlteracao,
+                                                    respostasEmail.value
+                                                )
+                                                for (destinatario in todosDestinatarios) {
+                                                    if (destinatario.isNotBlank()) {
+                                                        callLocaMailApiRetornaUsarioPorEmail(
+                                                            destinatario,
+                                                            onSuccess = {
+                                                                    usuarioRetornado ->
+                                                                if (usuarioRetornado != null) {
+                                                                    val usuario = usuarioRetornado
+                                                                    val idDestinatario =
+                                                                        if (usuario != null) usuario.id_usuario else null
+                                                                    if (idDestinatario != null) {
+                                                                        callLocaMailApiAtualizarImportantePorIdEmail(
+                                                                            isImportant.value,
+                                                                            it.id_email,
+                                                                            idDestinatario,
+                                                                            onSuccess = {
+
+                                                                            },
+                                                                            onError = {
+                                                                                isError.value = true
+                                                                                isLoading.value = false
+                                                                            }
+                                                                        )
+                                                                    }
+                                                                }
+                                                            },
+                                                            onError = {
+                                                                isError.value = true
+                                                                isLoading.value = false
+                                                            }
+
                                                         )
                                                     }
-
-
                                                 }
-                                            }
-                                        }
-
-                                        navController.navigate("visualizaemailscreen/${it.email.id_email}/true")
-                                    },
-                                    isRead = isRead,
-                                    redLcWeb = redLcWeb,
-                                    respostasEmail = respostasEmailList,
-                                    onClickImportantButton = {
-                                        isImportant.value = !isImportant.value
-
-                                        for (destinatario in (stringParaLista(it.email.destinatario) + stringParaLista(
-                                            it.email.cc
-                                        ) + stringParaLista(it.email.cco))) {
-                                            if (destinatario.isNotBlank()) {
-
-
-                                                val usuario =
-                                                    usuarioRepository.retornaUsarioPorEmail(
-                                                        destinatario
-                                                    )
-                                                val idDestinatario =
-                                                    if (usuario != null) usuario.id_usuario else null
-
-                                                if (idDestinatario != null) {
-                                                    alteracaoRepository.atualizarImportantePorIdEmail(
-                                                        isImportant.value,
-                                                        it.email.id_email,
-                                                        idDestinatario
-                                                    )
-                                                }
-
-                                            }
-                                        }
-                                    },
-                                    isImportant = isImportant,
-                                    attachEmailList = attachEmailList,
-                                    timeState = timeState,
-                                    email = it,
-                                    usuarioSelecionado = usuarioSelecionado,
-                                )
+                                            },
+                                            isImportant = isImportant,
+                                            attachEmailList = attachEmailList,
+                                            timeState = timeState,
+                                            email = it,
+                                            usuarioSelecionado = usuarioSelecionado,
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
+
+                    EmailCreateButton(
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .align(Alignment.BottomEnd),
+                        onClick = {
+                            navController.navigate("criaemailscreen")
+                        }
+                    )
                 }
+
             }
 
-            EmailCreateButton(
-                modifier = Modifier
-                    .padding(8.dp)
-                    .align(Alignment.BottomEnd),
-                onClick = {
-                    navController.navigate("criaemailscreen")
-                }
-            )
         }
-
     }
 }

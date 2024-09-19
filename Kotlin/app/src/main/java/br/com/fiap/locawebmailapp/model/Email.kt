@@ -1,12 +1,10 @@
 package br.com.fiap.locawebmailapp.model
 
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.Stable
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
@@ -32,5 +30,6 @@ data class Email(
     var enviado: Boolean = false,
     var horario: String = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")),
     var data: String = "${LocalDate.now()}",
-    var agenda_atrelada: Boolean = false
+    var agenda_atrelada: Boolean = false,
+    var is_spam: Boolean = false
 )

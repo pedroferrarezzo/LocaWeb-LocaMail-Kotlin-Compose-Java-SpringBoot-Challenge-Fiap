@@ -23,3 +23,13 @@ data class Usuario(
     var profile_image: ByteArray = ByteArray(10),
     var selected_user: Boolean
 )
+
+@Immutable
+data class UsuarioSemSenha(
+    var id_usuario: Long = 0,
+    var email: String,
+    var nome: String,
+    var autenticado: Boolean,
+    var profile_image: ByteArray = ByteArray(10),
+    var selected_user: Boolean
+)

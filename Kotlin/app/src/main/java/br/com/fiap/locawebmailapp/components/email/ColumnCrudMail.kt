@@ -40,7 +40,7 @@ import br.com.fiap.locawebmailapp.model.Usuario
 @Composable
 fun ColumnCrudMail(
     modifier: Modifier = Modifier,
-    usuarioSelecionado: MutableState<Usuario>,
+    usuarioSelecionado: MutableState<Usuario?>,
     destinatarios: SnapshotStateList<String>,
     ccs: SnapshotStateList<String>,
     ccos: SnapshotStateList<String>,
@@ -75,12 +75,18 @@ fun ColumnCrudMail(
             color = colorResource(id = R.color.lcweb_red_1),
             modifier = Modifier.padding(5.dp)
         )
-        Text(
-            text = usuarioSelecionado.value.email,
-            fontSize = 15.sp,
-            color = colorResource(id = R.color.lcweb_gray_1),
-            modifier = Modifier.padding(5.dp)
-        )
+        if (usuarioSelecionado.value != null) {
+            Text(
+                text = usuarioSelecionado.value!!.email,
+                fontSize = 15.sp,
+                color = colorResource(id = R.color.lcweb_gray_1),
+                modifier = Modifier.padding(5.dp)
+            )
+        }
+
+
+
+
     }
     HorizontalDivider(
         color = colorResource(id = R.color.lcweb_red_1)
@@ -320,7 +326,6 @@ fun ColumnCrudMail(
 
         LazyRow() {
             items(ccos) { cco ->
-
                 Button(
                     onClick = { onClickRemoveCco(cco) },
                     colors = ButtonDefaults.buttonColors(

@@ -11,5 +11,4 @@ interface GeminiService {
 
     @POST("v1beta/models/gemini-pro:generateContent?")
     fun getResponseFromGemini(@Query("key") key: String, @Body request: GeminiRequest): Call<GeminiResponse>
-
 }

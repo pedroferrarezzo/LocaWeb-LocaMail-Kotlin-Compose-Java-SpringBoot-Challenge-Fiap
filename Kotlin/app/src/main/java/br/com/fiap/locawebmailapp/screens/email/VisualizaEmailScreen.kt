@@ -1,36 +1,73 @@
 package br.com.fiap.locawebmailapp.screens.email
 
+import android.graphics.Bitmap
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TimePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.toMutableStateList
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import br.com.fiap.locawebmailapp.R
 import br.com.fiap.locawebmailapp.components.email.ColumnEmailDetails
 import br.com.fiap.locawebmailapp.components.email.RowTopOptionsViewEmail
-import br.com.fiap.locawebmailapp.database.repository.AgendaConvidadoRepository
-import br.com.fiap.locawebmailapp.database.repository.AgendaRepository
-import br.com.fiap.locawebmailapp.database.repository.AlteracaoRepository
-import br.com.fiap.locawebmailapp.database.repository.AnexoRepository
-import br.com.fiap.locawebmailapp.database.repository.AnexoRespostaEmailRepository
-import br.com.fiap.locawebmailapp.database.repository.EmailRepository
-import br.com.fiap.locawebmailapp.database.repository.RespostaEmailRepository
-import br.com.fiap.locawebmailapp.database.repository.UsuarioRepository
+import br.com.fiap.locawebmailapp.components.general.ErrorComponent
+import br.com.fiap.locawebmailapp.model.Agenda
+import br.com.fiap.locawebmailapp.model.Alteracao
+import br.com.fiap.locawebmailapp.model.Email
+import br.com.fiap.locawebmailapp.model.EmailComAlteracao
+import br.com.fiap.locawebmailapp.model.RespostaEmail
+import br.com.fiap.locawebmailapp.model.Usuario
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiAtualizaVisivelPorIdAgenda
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiAtualizarArquivadoPorIdEmailEIdusuario
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiAtualizarExcluidoPorIdEmailEIdusuario
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiAtualizarImportantePorIdEmail
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiAtualizarSpamPorIdEmailEIdusuario
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiExcluiAgenda
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiExcluiAlteracaoPorIdEmailEIdUsuario
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiExcluirAnexoPorIdEmail
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiExcluirAnexoPorIdRespostaEmail
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiExcluirEmail
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiExcluirPorIdAgenda
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiExcluirRespostaEmail
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiExcluirRespostaEmailPorIdEmail
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiListarAgendaPorIdEmailEIdUsuario
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiListarAlteracaoPorIdEmail
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiListarAlteracaoPorIdEmailEIdUsuario
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiListarAnexosArraybytePorIdEmail
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiListarEmailPorId
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiListarRespostasEmailPorIdEmail
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiListarUsuarioSelecionado
+import br.com.fiap.locawebmailapp.utils.api.callLocaMailApiRetornaUsarioPorEmail
 import br.com.fiap.locawebmailapp.utils.atualizarIsImportantParaUsuariosRelacionados
 import br.com.fiap.locawebmailapp.utils.atualizarTodosDestinatariosList
 import br.com.fiap.locawebmailapp.utils.atualizarisArchiveParaUsuariosRelacionados
 import br.com.fiap.locawebmailapp.utils.atualizarisExcluidoParaUsuariosRelacionados
 import br.com.fiap.locawebmailapp.utils.atualizarisSpamParaUsuariosRelacionados
 import br.com.fiap.locawebmailapp.utils.byteArrayToBitmap
+import br.com.fiap.locawebmailapp.utils.checkInternetConnectivity
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,111 +80,6 @@ fun VisualizaEmailScreen(
 
     val context = LocalContext.current
 
-    val emailRepository = EmailRepository(context)
-    val anexoRepository = AnexoRepository(context)
-    val alteracaoRepository = AlteracaoRepository(context)
-    val usuarioRepository = UsuarioRepository(context)
-    val respostaEmailRepository = RespostaEmailRepository(context)
-    val anexoRespostaEmailRepository = AnexoRespostaEmailRepository(context)
-    val agendaRepository = AgendaRepository(context)
-    val agendaConvidadoRepository = AgendaConvidadoRepository(context)
-
-
-    val usuarioSelecionado = remember {
-        mutableStateOf(usuarioRepository.listarUsuarioSelecionado())
-    }
-
-    val email = emailRepository.listarEmailPorId(idEmail)
-
-    val alteracao = alteracaoRepository.listarAlteracaoPorIdEmailEIdUsuario(
-        idEmail,
-        usuarioSelecionado.value.id_usuario
-    )
-
-    val todosDestinatarios = arrayListOf<String>()
-
-
-    val respostasEmailList = respostaEmailRepository.listarRespostasEmailPorIdEmail(idEmail)
-    val respostasEmailStateList = respostasEmailList.toMutableStateList()
-
-    val anexoArrayByteList = anexoRepository.listarAnexosArraybytePorIdEmail(idEmail);
-    val anexoBitMapList = anexoArrayByteList.map {
-        byteArrayToBitmap(it)
-    }
-
-
-    val agendaEmailList = agendaRepository.listarAgendaPorIdEmailEIdUsuario(
-        idEmail,
-        usuarioSelecionado.value.id_usuario
-    )
-    val agendaEmailStateList = agendaEmailList.toMutableStateList()
-
-
-    val isAgendaAtrelada = remember {
-        mutableStateOf(if (agendaEmailList.isNotEmpty()) true else false)
-    }
-
-
-    val isImportant = remember {
-        if (alteracao != null) mutableStateOf(alteracao.importante) else mutableStateOf(false)
-    }
-
-    val isArchive = remember {
-        if (alteracao != null) mutableStateOf(alteracao.arquivado) else mutableStateOf(false)
-    }
-
-    val isSpam = remember {
-        if (alteracao != null) mutableStateOf(alteracao.spam) else mutableStateOf(false)
-    }
-
-    val isExcluido = remember {
-        if (alteracao != null) mutableStateOf(alteracao.excluido) else mutableStateOf(false)
-    }
-
-
-
-
-    if (isTodasContasScreen) {
-        atualizarTodosDestinatariosList(
-            todosDestinatarios,
-            email,
-            respostasEmailList
-        )
-
-        atualizarIsImportantParaUsuariosRelacionados(
-            todosDestinatarios,
-            usuarioRepository,
-            alteracaoRepository,
-            isImportant,
-            email
-        )
-
-        atualizarisArchiveParaUsuariosRelacionados(
-            todosDestinatarios,
-            usuarioRepository,
-            alteracaoRepository,
-            isArchive,
-            email
-        )
-
-
-        atualizarisSpamParaUsuariosRelacionados(
-            todosDestinatarios,
-            usuarioRepository,
-            alteracaoRepository,
-            isSpam,
-            email
-        )
-
-        atualizarisExcluidoParaUsuariosRelacionados(
-            todosDestinatarios,
-            usuarioRepository,
-            alteracaoRepository,
-            isExcluido,
-            email
-        )
-    }
-
     val toastMessageMailDeleted = stringResource(id = R.string.toast_mail_delete)
     val toastMessageDraftMailDeleted = stringResource(id = R.string.toast_maildraftresp_delete)
     val toastMessageMailMovedToTrashBin = stringResource(id = R.string.toast_mail_moved_trash_bin)
@@ -155,266 +87,897 @@ fun VisualizaEmailScreen(
     val toastMessageInviteDeleted = stringResource(id = R.string.toast_event_invitedeleted)
     val toastMessageInviteAccepted = stringResource(id = R.string.toast_event_inviteaccepted)
 
-    if (email != null) {
-        Column(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            RowTopOptionsViewEmail(
-                onClickBack = {
-                    navController.popBackStack()
-                },
-                onClickDelete = {
-                    if (isExcluido.value) {
+    val isConnectedStatus = remember {
+        mutableStateOf(checkInternetConnectivity(context))
+    }
+    val isLoading = remember {
+        mutableStateOf(true)
+    }
 
-                        alteracaoRepository.excluiAlteracaoPorIdEmailEIdUsuario(
-                            email.id_email,
-                            usuarioSelecionado.value.id_usuario
+    val isError = remember {
+        mutableStateOf(false)
+    }
+
+    val toastMessageWait = stringResource(id = R.string.toast_api_wait)
+
+    val usuarioSelecionado = remember {
+        mutableStateOf<Usuario?>(null)
+    }
+
+    val anexoBitMapList = remember {
+        mutableStateListOf<Bitmap?>()
+    }
+
+
+
+    val agendaEmailList = remember {
+        mutableStateOf(listOf<Agenda>())
+    }
+
+    val agendaEmailStateList = remember {
+        mutableStateListOf<Agenda>()
+    }
+
+    val alteracao = remember {
+        mutableStateOf<Alteracao?>(null)
+    }
+
+    val todosDestinatarios = arrayListOf<String>()
+
+    val respostasEmailStateList: SnapshotStateList<RespostaEmail?> = remember {
+        mutableStateListOf<RespostaEmail?>()
+    }
+
+    val respostasEmailList = remember {
+        mutableStateOf(listOf<RespostaEmail>())
+    }
+
+    val isAgendaAtrelada = remember {
+        mutableStateOf<Boolean>(false)
+    }
+
+    val isImportant = remember {
+        if (alteracao.value != null) mutableStateOf(alteracao.value!!.importante) else mutableStateOf(false)
+    }
+
+    val isArchive = remember {
+        if (alteracao.value != null) mutableStateOf(alteracao.value!!.arquivado) else mutableStateOf(false)
+    }
+
+    val isSpam = remember {
+        if (alteracao.value != null) mutableStateOf(alteracao.value!!.spam) else mutableStateOf(false)
+    }
+
+    val isExcluido = remember {
+        if (alteracao.value != null) mutableStateOf(alteracao.value!!.excluido) else mutableStateOf(false)
+    }
+
+    val email: MutableState<Email?> = remember {
+        mutableStateOf(null)
+    }
+
+
+    LaunchedEffect(key1 = Unit) {
+
+        callLocaMailApiListarUsuarioSelecionado(
+            onSuccess = { usuarioRetornado ->
+                usuarioSelecionado.value = usuarioRetornado
+
+                if (usuarioSelecionado.value != null) {
+
+                    callLocaMailApiListarAlteracaoPorIdEmailEIdUsuario(
+                        idEmail,
+                        usuarioSelecionado.value!!.id_usuario,
+                        onSuccess = { alteracaoRetornada ->
+                            alteracao.value = alteracaoRetornada
+                            if (alteracao.value != null) {
+                                isImportant.value = alteracao.value!!.importante
+                                isArchive.value = alteracao.value!!.arquivado
+                                isSpam.value = alteracao.value!!.spam
+                                isExcluido.value = alteracao.value!!.excluido
+                            }
+                        },
+                        onError = { error ->
+                            isError.value = true
+                            isLoading.value = false
+                        }
+                    )
+
+                    callLocaMailApiListarAgendaPorIdEmailEIdUsuario(
+                        idEmail,
+                        usuarioSelecionado.value!!.id_usuario,
+                        onSuccess = { listAgendaRetornado ->
+
+                            if (listAgendaRetornado != null) {
+                                agendaEmailList.value = listAgendaRetornado
+                                agendaEmailStateList.addAll(agendaEmailList.value)
+
+                                if (agendaEmailList.value.isNotEmpty()) {
+                                    isAgendaAtrelada.value = true
+                                }
+                                else {
+                                    isAgendaAtrelada.value = false
+                                }
+                            }
+                        },
+                        onError = { error ->
+                            isError.value = true
+                            isLoading.value = false
+                        }
+                    )
+
+                }
+            },
+            onError = { error ->
+                isError.value = true
+                isLoading.value = false
+
+            }
+        )
+
+        callLocaMailApiListarEmailPorId(
+            idEmail,
+            onSuccess = { emailRetornado ->
+                email.value = emailRetornado
+
+                if (email.value != null) {
+                    isLoading.value = false
+                    if (isTodasContasScreen) {
+                        val emailComAlteracao = EmailComAlteracao(
+                            email.value!!.id_email,
+                            email.value!!.id_usuario,
+                            email.value!!.remetente,
+                            email.value!!.destinatario,
+                            email.value!!.cc,
+                            email.value!!.cco,
+                            email.value!!.assunto,
+                            email.value!!.corpo,
+                            email.value!!.editavel,
+                            email.value!!.enviado,
+                            email.value!!.horario,
+                            email.value!!.data,
+                            email.value!!.agenda_atrelada,
                         )
 
-                        val alteracaoList =
-                            alteracaoRepository.listarAlteracaoPorIdEmail(email.id_email)
-
-                        if (alteracaoList.isEmpty()) {
-                            anexoRepository.excluirAnexoPorIdEmail(email.id_email)
-
-                            for (respostaEmail in respostaEmailRepository.listarRespostasEmailPorIdEmail(
-                                email.id_email
-                            )) {
-                                anexoRespostaEmailRepository.excluirAnexoPorIdRespostaEmail(
-                                    respostaEmail.id_resposta_email
-                                )
-                            }
-
-                            respostaEmailRepository.excluirRespostaEmailPorIdEmail(email.id_email)
+                        atualizarTodosDestinatariosList(
+                            todosDestinatarios,
+                            emailComAlteracao,
+                            respostasEmailList.value
+                        )
 
 
-                            emailRepository.excluirEmail(email = email)
+                        atualizarIsImportantParaUsuariosRelacionados(
+                            todosDestinatarios,
+                            isImportant,
+                            emailComAlteracao,
+                            isLoading = isLoading,
+                            isError = isError
+                        )
+
+                        atualizarisArchiveParaUsuariosRelacionados(
+                            todosDestinatarios,
+                            isArchive,
+                            email.value!!,
+                            isLoading = isLoading,
+                            isError = isError
+                        )
+
+
+                        atualizarisSpamParaUsuariosRelacionados(
+                            todosDestinatarios,
+                            isSpam,
+                            email.value!!,
+                            isLoading = isLoading,
+                            isError = isError
+                        )
+
+                        atualizarisExcluidoParaUsuariosRelacionados(
+                            todosDestinatarios,
+                            isExcluido,
+                            email.value!!,
+                            isLoading = isLoading,
+                            isError = isError
+                        )
+                    }
+                }
+            },
+            onError = { error ->
+                isError.value = true
+                isLoading.value = false
+
+            }
+        )
+
+        callLocaMailApiListarAnexosArraybytePorIdEmail(
+            idEmail,
+            onSuccess = { byteArrayListRetornado ->
+                val anexoArrayByteList = byteArrayListRetornado;
+                if (anexoArrayByteList != null) {
+                    anexoBitMapList.addAll(anexoArrayByteList.map {
+                        byteArrayToBitmap(it)
+                    })
+                }
+            },
+            onError = { error ->
+                isError.value = true
+                isLoading.value = false
+            }
+        )
+
+        callLocaMailApiListarRespostasEmailPorIdEmail(
+            idEmail,
+            onSuccess = { repostaEmailRetornada ->
+
+                if (repostaEmailRetornada != null) {
+                    respostasEmailList.value = repostaEmailRetornada
+                    respostasEmailList.value.forEach { resposta ->
+                        if (!respostasEmailStateList.contains(resposta)) {
+                            respostasEmailStateList.add(resposta)
                         }
+                    }
+                }
+            },
+            onError = { error ->
+                isError.value = true
+                isLoading.value = false
+            }
+        )
+    }
 
-                        Toast.makeText(context, toastMessageMailDeleted, Toast.LENGTH_LONG)
-                            .show()
-
-
-
-                        if (agendaEmailStateList.isNotEmpty()) {
-                            for (agenda in agendaEmailList) {
-                                agendaConvidadoRepository.excluirPorIdAgenda(agenda.id_agenda)
-                                agendaRepository.excluiAgenda(agenda)
-                                agendaEmailStateList.remove(agenda)
-                            }
-
-                            Toast.makeText(
-                                context,
-                                toastMessageInviteDeleted,
-                                Toast.LENGTH_LONG
-                            ).show()
-                        }
-
+    if (isLoading.value) {
+        BackHandler {
+            Toast.makeText(
+                context,
+                toastMessageWait,
+                Toast.LENGTH_LONG
+            ).show()
+        }
+        Box(modifier = Modifier.fillMaxSize()) {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .size(100.dp, 100.dp),
+                color = colorResource(id = R.color.lcweb_red_1)
+            )
+        }
+    } else {
+        if (!isConnectedStatus.value) {
+            Box {
+                ErrorComponent(
+                    title = stringResource(id = R.string.ai_error_oops),
+                    subtitle = stringResource(id = R.string.ai_error_verifynet),
+                    painter = painterResource(id = R.drawable.notfound),
+                    descriptionimage = stringResource(id = R.string.content_desc_nonet),
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .size(400.dp, 400.dp),
+                    modifierButton = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 10.dp)
+                        .height(50.dp)
+                        .align(Alignment.BottomCenter),
+                    textButton = stringResource(id = R.string.ai_button_return),
+                    buttonChange = {
                         navController.popBackStack()
+                    }
+                )
+            }
+        } else if (isError.value) {
+            Box {
+                ErrorComponent(
+                    title = stringResource(id = R.string.ai_error_oops),
+                    subtitle = stringResource(id = R.string.ai_error_apiproblem),
+                    painter = painterResource(id = R.drawable.bugfixing),
+                    descriptionimage = stringResource(id = R.string.content_desc_apiproblem),
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .size(400.dp, 400.dp),
+                    modifierButton = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 10.dp)
+                        .height(50.dp)
+                        .align(Alignment.BottomCenter),
+                    textButton = stringResource(id = R.string.ai_button_return),
+                    buttonChange = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+        } else {
+            if (email.value != null) {
+                Column(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    RowTopOptionsViewEmail(
+                        onClickBack = {
+                            navController.popBackStack()
+                        },
+                        onClickDelete = {
+                            if (isExcluido.value) {
 
-                    } else {
-                        if (isTodasContasScreen) {
-                            for (destinatario in todosDestinatarios) {
-                                if (destinatario.isNotBlank()) {
-                                    val usuario =
-                                        usuarioRepository.retornaUsarioPorEmail(
-                                            destinatario
+                                if (usuarioSelecionado.value != null) {
+                                    callLocaMailApiExcluiAlteracaoPorIdEmailEIdUsuario(
+                                        email.value!!.id_email,
+                                        usuarioSelecionado.value!!.id_usuario,
+                                        onSuccess = {
+
+                                            callLocaMailApiListarAlteracaoPorIdEmail(
+                                                email.value!!.id_email,
+                                                onSuccess = { listAlteracaoRetornado ->
+
+                                                    val alteracaoList = listAlteracaoRetornado
+
+                                                    if (alteracaoList!!.isEmpty()) {
+
+                                                        callLocaMailApiExcluirAnexoPorIdEmail(
+                                                            email.value!!.id_email,
+                                                            onSuccess = {
+                                                            },
+                                                            onError = { error ->
+                                                                isError.value = true
+                                                                isLoading.value = false
+                                                            }
+
+                                                        )
+
+                                                        callLocaMailApiListarRespostasEmailPorIdEmail(
+                                                            email.value!!.id_email,
+                                                            onSuccess = { listRespostaRetornado ->
+                                                                if (listRespostaRetornado != null) {
+                                                                    for (respostaEmail in listRespostaRetornado) {
+                                                                        callLocaMailApiExcluirAnexoPorIdRespostaEmail(
+                                                                            respostaEmail.id_resposta_email,
+                                                                            onSuccess = {
+
+                                                                            },
+                                                                            onError = { error ->
+                                                                                isError.value = true
+                                                                                isLoading.value =
+                                                                                    false
+                                                                            }
+                                                                        )
+                                                                    }
+
+                                                                }
+                                                            },
+                                                            onError = { error ->
+                                                                isError.value = true
+                                                                isLoading.value = false
+                                                            }
+                                                        )
+
+                                                        callLocaMailApiExcluirRespostaEmailPorIdEmail(
+                                                            email.value!!.id_email,
+                                                            onSuccess = {
+                                                            },
+                                                            onError = { error ->
+                                                                isError.value = true
+                                                                isLoading.value = false
+                                                            }
+                                                        )
+
+                                                        callLocaMailApiExcluirEmail(
+                                                            email.value!!.id_email,
+                                                            onSuccess = {
+                                                                Toast.makeText(
+                                                                    context,
+                                                                    toastMessageMailDeleted,
+                                                                    Toast.LENGTH_LONG
+                                                                ).show()
+
+                                                            },
+                                                            onError = { error ->
+                                                                isError.value = true
+                                                                isLoading.value = false
+                                                            }
+                                                        )
+                                                    }
+                                                },
+                                                onError = { error ->
+                                                    isError.value = true
+                                                    isLoading.value = false
+                                                }
+                                            )
+                                        },
+                                        onError = { error ->
+                                            isError.value = true
+                                            isLoading.value = false
+                                        }
+                                    )
+                                }
+
+                                if (agendaEmailStateList.isNotEmpty()) {
+
+                                    for (agenda in agendaEmailList.value) {
+
+                                        callLocaMailApiExcluirPorIdAgenda(
+                                            agenda.id_agenda,
+                                            onSuccess = {
+
+                                            },
+                                            onError = { error ->
+                                                isError.value = true
+                                                isLoading.value = false
+                                            }
                                         )
 
-                                    val idDestinatario =
-                                        if (usuario != null) usuario.id_usuario else null
+                                        callLocaMailApiExcluiAgenda(
+                                            agenda.id_agenda,
+                                            onSuccess = {
+                                                agendaEmailStateList!!.remove(agenda)
 
-                                    if (idDestinatario != null) {
-                                        alteracaoRepository.atualizarExcluidoPorIdEmailEIdusuario(
+                                            },
+                                            onError = { error ->
+                                                isError.value = true
+                                                isLoading.value = false
+                                            }
+                                        )
+                                    }
+
+                                    Toast.makeText(
+                                        context,
+                                        toastMessageInviteDeleted,
+                                        Toast.LENGTH_LONG
+                                    ).show()
+
+
+                                }
+                                navController.popBackStack()
+
+                            } else {
+                                if (isTodasContasScreen) {
+                                    val emailComAlteracao = EmailComAlteracao(
+                                        email.value!!.id_email,
+                                        email.value!!.id_usuario,
+                                        email.value!!.remetente,
+                                        email.value!!.destinatario,
+                                        email.value!!.cc,
+                                        email.value!!.cco,
+                                        email.value!!.assunto,
+                                        email.value!!.corpo,
+                                        email.value!!.editavel,
+                                        email.value!!.enviado,
+                                        email.value!!.horario,
+                                        email.value!!.data,
+                                        email.value!!.agenda_atrelada,
+                                    )
+
+                                    atualizarTodosDestinatariosList(
+                                        todosDestinatarios,
+                                        emailComAlteracao,
+                                        respostasEmailList.value
+                                    )
+
+                                    for (destinatario in todosDestinatarios) {
+                                        if (destinatario.isNotBlank()) {
+                                            callLocaMailApiRetornaUsarioPorEmail(
+                                                destinatario,
+                                                onSuccess = { usuarioRetornado ->
+
+                                                    val usuario = usuarioRetornado
+
+                                                    val idDestinatario =
+                                                        if (usuario != null) usuario.id_usuario else null
+
+                                                    if (idDestinatario != null) {
+
+                                                        callLocaMailApiAtualizarExcluidoPorIdEmailEIdusuario(
+                                                            true,
+                                                            email.value!!.id_email,
+                                                            idDestinatario,
+                                                            onSuccess = {
+                                                                Toast.makeText(
+                                                                    context,
+                                                                    toastMessageMailMovedToTrashBin,
+                                                                    Toast.LENGTH_LONG
+                                                                ).show()
+                                                            },
+                                                            onError = { error ->
+                                                                isError.value = true
+                                                                isLoading.value = false
+                                                            }
+                                                        )
+                                                    }
+                                                },
+                                                onError = { error ->
+                                                    isError.value = true
+                                                    isLoading.value = false
+                                                }
+                                            )
+                                        }
+                                    }
+                                } else {
+                                    if (usuarioSelecionado.value != null) {
+                                        callLocaMailApiAtualizarExcluidoPorIdEmailEIdusuario(
                                             true,
-                                            email.id_email,
-                                            idDestinatario
+                                            email.value!!.id_email,
+                                            usuarioSelecionado.value!!.id_usuario,
+                                            onSuccess = {
+                                                Toast.makeText(
+                                                    context,
+                                                    toastMessageMailMovedToTrash,
+                                                    Toast.LENGTH_LONG
+                                                ).show()
+                                            },
+                                            onError = { error ->
+                                                isError.value = true
+                                                isLoading.value = false
+
+                                            }
                                         )
                                     }
                                 }
+                                navController.popBackStack()
                             }
-                            Toast.makeText(
-                                context,
-                                toastMessageMailMovedToTrashBin,
-                                Toast.LENGTH_LONG
-                            ).show()
-                        } else {
-                            alteracaoRepository.atualizarExcluidoPorIdEmailEIdusuario(
-                                true,
-                                email.id_email,
-                                usuarioSelecionado.value.id_usuario
+                        },
+                        isExcluido = isExcluido,
+                        isTodasContasScreen = isTodasContasScreen,
+                        onClickReply = { navController.navigate("criarespostaemailscreen?id_email=${idEmail}") },
+                        onClickSpam = {
+                            if (isTodasContasScreen) {
+                                isSpam.value = !isSpam.value
+
+                                val emailComAlteracao = EmailComAlteracao(
+                                    email.value!!.id_email,
+                                    email.value!!.id_usuario,
+                                    email.value!!.remetente,
+                                    email.value!!.destinatario,
+                                    email.value!!.cc,
+                                    email.value!!.cco,
+                                    email.value!!.assunto,
+                                    email.value!!.corpo,
+                                    email.value!!.editavel,
+                                    email.value!!.enviado,
+                                    email.value!!.horario,
+                                    email.value!!.data,
+                                    email.value!!.agenda_atrelada,
+                                )
+
+                                atualizarTodosDestinatariosList(
+                                    todosDestinatarios,
+                                    emailComAlteracao,
+                                    respostasEmailList.value
+                                )
+                                for (destinatario in todosDestinatarios) {
+                                    if (destinatario.isNotBlank()) {
+
+                                        callLocaMailApiRetornaUsarioPorEmail(
+                                            destinatario,
+                                            onSuccess = { usuarioRetornado ->
+
+                                                val usuario = usuarioRetornado
+
+
+                                                val idDestinatario =
+                                                    if (usuario != null) usuario.id_usuario else null
+
+                                                if (idDestinatario != null) {
+
+                                                    callLocaMailApiAtualizarSpamPorIdEmailEIdusuario(
+                                                        isSpam.value,
+                                                        email.value!!.id_email,
+                                                        idDestinatario,
+                                                        onSuccess = {
+
+                                                        },
+                                                        onError = { error ->
+                                                            isError.value = true
+                                                            isLoading.value = false
+                                                        }
+                                                    )
+                                                }
+                                            },
+                                            onError = { error ->
+                                                isError.value = true
+                                                isLoading.value = false
+                                            }
+                                        )
+
+
+                                    }
+                                }
+                            } else {
+                                isSpam.value = !isSpam.value
+
+                                if (usuarioSelecionado.value != null) {
+                                    callLocaMailApiAtualizarSpamPorIdEmailEIdusuario(
+                                        isSpam.value,
+                                        email.value!!.id_email,
+                                        usuarioSelecionado.value!!.id_usuario,
+                                        onSuccess = {
+
+                                        },
+                                        onError = { error ->
+                                            isError.value = true
+                                            isLoading.value = false
+                                        }
+                                    )
+
+                                }
+                            }
+                        },
+                        onClickFavorite = {
+                            if (isTodasContasScreen) {
+                                isImportant.value = !isImportant.value
+                                val emailComAlteracao = EmailComAlteracao(
+                                    email.value!!.id_email,
+                                    email.value!!.id_usuario,
+                                    email.value!!.remetente,
+                                    email.value!!.destinatario,
+                                    email.value!!.cc,
+                                    email.value!!.cco,
+                                    email.value!!.assunto,
+                                    email.value!!.corpo,
+                                    email.value!!.editavel,
+                                    email.value!!.enviado,
+                                    email.value!!.horario,
+                                    email.value!!.data,
+                                    email.value!!.agenda_atrelada,
+                                )
+
+                                atualizarTodosDestinatariosList(
+                                    todosDestinatarios,
+                                    emailComAlteracao,
+                                    respostasEmailList.value
+                                )
+
+                                for (destinatario in todosDestinatarios) {
+                                    if (destinatario.isNotBlank()) {
+                                        callLocaMailApiRetornaUsarioPorEmail(
+                                            destinatario,
+                                            onSuccess = { usuarioRetornado ->
+
+                                                val usuario = usuarioRetornado
+
+                                                val idDestinatario =
+                                                    if (usuario != null) usuario.id_usuario else null
+
+                                                if (idDestinatario != null) {
+
+                                                    callLocaMailApiAtualizarImportantePorIdEmail(
+                                                        isImportant.value,
+                                                        email.value!!.id_email,
+                                                        idDestinatario,
+                                                        onSuccess = {
+                                                        },
+                                                        onError = { error ->
+                                                            isError.value = true
+                                                            isLoading.value = false
+                                                        }
+                                                    )
+
+                                                }
+
+                                            },
+                                            onError = { error ->
+                                                isError.value = true
+                                                isLoading.value = false
+                                            }
+                                        )
+
+
+                                    }
+                                }
+                            } else {
+                                isImportant.value = !isImportant.value
+
+                                if (usuarioSelecionado.value != null) {
+                                    callLocaMailApiAtualizarImportantePorIdEmail(
+                                        isImportant.value,
+                                        email.value!!.id_email,
+                                        usuarioSelecionado.value!!.id_usuario,
+                                        onSuccess = {
+                                        },
+                                        onError = { error ->
+                                            isError.value = true
+                                            isLoading.value = false
+                                        }
+                                    )
+
+                                }
+                            }
+                        },
+                        onClickArchive = {
+                            if (isTodasContasScreen) {
+                                isArchive.value = !isArchive.value
+
+                                val emailComAlteracao = EmailComAlteracao(
+                                    email.value!!.id_email,
+                                    email.value!!.id_usuario,
+                                    email.value!!.remetente,
+                                    email.value!!.destinatario,
+                                    email.value!!.cc,
+                                    email.value!!.cco,
+                                    email.value!!.assunto,
+                                    email.value!!.corpo,
+                                    email.value!!.editavel,
+                                    email.value!!.enviado,
+                                    email.value!!.horario,
+                                    email.value!!.data,
+                                    email.value!!.agenda_atrelada,
+                                )
+
+                                atualizarTodosDestinatariosList(
+                                    todosDestinatarios,
+                                    emailComAlteracao,
+                                    respostasEmailList.value
+                                )
+                                for (destinatario in todosDestinatarios) {
+                                    if (destinatario.isNotBlank()) {
+
+
+                                        callLocaMailApiRetornaUsarioPorEmail(
+                                            destinatario,
+                                            onSuccess = { usuarioRetornado ->
+
+                                                val usuario = usuarioRetornado
+
+                                                val idDestinatario =
+                                                    if (usuario != null) usuario.id_usuario else null
+
+                                                if (idDestinatario != null) {
+
+                                                    callLocaMailApiAtualizarArquivadoPorIdEmailEIdusuario(
+                                                        isArchive.value,
+                                                        email.value!!.id_email,
+                                                        idDestinatario,
+                                                        onSuccess = {
+
+                                                        },
+                                                        onError = { error ->
+                                                            isError.value = true
+                                                            isLoading.value = false
+                                                        }
+                                                    )
+                                                }
+
+                                            },
+                                            onError = { error ->
+                                                isError.value = true
+                                                isLoading.value = false
+                                            }
+                                        )
+
+
+                                    }
+                                }
+                            } else {
+                                isArchive.value = !isArchive.value
+                                if (usuarioSelecionado.value != null) {
+
+                                    callLocaMailApiAtualizarArquivadoPorIdEmailEIdusuario(
+                                        isArchive.value,
+                                        email.value!!.id_email,
+                                        usuarioSelecionado.value!!.id_usuario,
+                                        onSuccess = {
+
+                                        },
+                                        onError = { error ->
+                                            isError.value = true
+                                            isLoading.value = false
+                                        }
+                                    )
+                                }
+                            }
+                        },
+                        isSpam = isSpam,
+                        isImportant = isImportant,
+                        isArchive = isArchive,
+                        isAgendaAtrelada = isAgendaAtrelada
+                    )
+
+                    ColumnEmailDetails(
+                        onClickDraftRespostaEmailDelete = { respostaEmail ->
+
+                            callLocaMailApiExcluirAnexoPorIdRespostaEmail(
+                                respostaEmail.id_resposta_email,
+                                onSuccess = {
+
+                                },
+                                onError = { error ->
+                                    isError.value = true
+                                    isLoading.value = false
+                                }
                             )
 
-                            Toast.makeText(
-                                context,
-                                toastMessageMailMovedToTrash,
-                                Toast.LENGTH_LONG
-                            ).show()
-                        }
-                        navController.popBackStack()
-                    }
-                },
-                isExcluido = isExcluido,
-                isTodasContasScreen = isTodasContasScreen,
-                onClickReply = { navController.navigate("criarespostaemailscreen?id_email=${idEmail}") },
-                onClickSpam = {
-                    if (isTodasContasScreen) {
-                        isSpam.value = !isSpam.value
-                        for (destinatario in todosDestinatarios) {
-                            if (destinatario.isNotBlank()) {
-                                val usuario =
-                                    usuarioRepository.retornaUsarioPorEmail(
-                                        destinatario
-                                    )
-
-                                val idDestinatario =
-                                    if (usuario != null) usuario.id_usuario else null
-
-                                if (idDestinatario != null) {
-                                    alteracaoRepository.atualizarSpamPorIdEmailEIdusuario(
-                                        isSpam.value,
-                                        email.id_email,
-                                        idDestinatario
+                            callLocaMailApiExcluirRespostaEmail(
+                                respostaEmail.id_resposta_email,
+                                onSuccess = {
+                                    if (respostasEmailStateList != null) {
+                                        respostasEmailStateList.remove(respostaEmail)
+                                        Toast.makeText(
+                                            context,
+                                            toastMessageDraftMailDeleted,
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                    }
+                                },
+                                onError = {
+                                    isError.value = true
+                                    isLoading.value = false
+                                }
+                            )
+                        },
+                        onClickDraftRespostaEmailEdit = { respostaEmail ->
+                            navController.navigate("editarespostaemailscreen/${respostaEmail.id_resposta_email}")
+                        },
+                        email = email.value!!,
+                        anexoBitMapList = anexoBitMapList,
+                        timeState = timeState,
+                        usuarioSelecionado = usuarioSelecionado,
+                        respostasEmailStateList = respostasEmailStateList,
+                        isTodasContasScreen = isTodasContasScreen,
+                        onClickReply = {
+                            navController.navigate("criarespostaemailscreen?id_email=${idEmail}&id_resposta_email=${it.id_resposta_email}")
+                        },
+                        isAgendaAtrelada = isAgendaAtrelada,
+                        onClickAcceptInviteButton = {
+                            if (agendaEmailList.value.isNotEmpty()) {
+                                isLoading.value = true
+                                for (agenda in agendaEmailList.value) {
+                                    callLocaMailApiAtualizaVisivelPorIdAgenda(
+                                        agenda.id_agenda,
+                                        true,
+                                        onSuccess = {
+                                            if (agendaEmailStateList.isNotEmpty()) {
+                                                agendaEmailStateList.remove(agenda)
+                                            }
+                                        },
+                                        onError = {
+                                            isError.value = true
+                                            isLoading.value = false
+                                        }
                                     )
                                 }
+                                isLoading.value = false
+                                Toast.makeText(
+                                    context,
+                                    toastMessageInviteAccepted,
+                                    Toast.LENGTH_LONG
+                                ).show()
                             }
-                        }
-                    } else {
-                        isSpam.value = !isSpam.value
-                        alteracaoRepository.atualizarSpamPorIdEmailEIdusuario(
-                            isSpam.value,
-                            email.id_email,
-                            usuarioSelecionado.value.id_usuario
-                        )
-                    }
-                },
-                onClickFavorite = {
-                    if (isTodasContasScreen) {
-                        isImportant.value = !isImportant.value
-                        for (destinatario in todosDestinatarios) {
-                            if (destinatario.isNotBlank()) {
-
-                                val usuario =
-                                    usuarioRepository.retornaUsarioPorEmail(
-                                        destinatario
-                                    )
-
-                                val idDestinatario =
-                                    if (usuario != null) usuario.id_usuario else null
-
-                                if (idDestinatario != null) {
-                                    alteracaoRepository.atualizarImportantePorIdEmail(
-                                        isImportant.value,
-                                        email.id_email,
-                                        idDestinatario
+                        },
+                        onClickRejectInviteButton = {
+                            if (agendaEmailList.value.isNotEmpty()) {
+                                isLoading.value = true
+                                for (agenda in agendaEmailList.value) {
+                                    callLocaMailApiExcluirPorIdAgenda(
+                                        agenda.id_agenda,
+                                        onSuccess = {
+                                            callLocaMailApiExcluiAgenda(
+                                                agenda.id_agenda,
+                                                onSuccess = {
+                                                    if (agendaEmailStateList.isNotEmpty()) {
+                                                        agendaEmailStateList.remove(agenda)
+                                                    }
+                                                },
+                                                onError = {
+                                                    isError.value = true
+                                                    isLoading.value = false
+                                                }
+                                            )
+                                        },
+                                        onError = {
+                                            isError.value = true
+                                            isLoading.value = false
+                                        }
                                     )
                                 }
+                                isLoading.value = false
+                                Toast.makeText(
+                                    context,
+                                    toastMessageInviteDeleted,
+                                    Toast.LENGTH_LONG
+                                ).show()
                             }
-                        }
-                    } else {
-                        isImportant.value = !isImportant.value
-                        alteracaoRepository.atualizarImportantePorIdEmail(
-                            isImportant.value,
-                            email.id_email,
-                            usuarioSelecionado.value.id_usuario
-                        )
-                    }
-                },
-                onClickArchive = {
-                    if (isTodasContasScreen) {
-                        isArchive.value = !isArchive.value
-                        for (destinatario in todosDestinatarios) {
-                            if (destinatario.isNotBlank()) {
-                                val usuario =
-                                    usuarioRepository.retornaUsarioPorEmail(
-                                        destinatario
-                                    )
-
-                                val idDestinatario =
-                                    if (usuario != null) usuario.id_usuario else null
-
-                                if (idDestinatario != null) {
-                                    alteracaoRepository.atualizarArquivadoPorIdEmailEIdusuario(
-                                        isArchive.value,
-                                        email.id_email,
-                                        idDestinatario
-                                    )
-                                }
-                            }
-                        }
-                    } else {
-                        isArchive.value = !isArchive.value
-                        alteracaoRepository.atualizarArquivadoPorIdEmailEIdusuario(
-                            isArchive.value,
-                            email.id_email,
-                            usuarioSelecionado.value.id_usuario
-                        )
-                    }
-                },
-                isSpam = isSpam,
-                isImportant = isImportant,
-                isArchive = isArchive,
-                isAgendaAtrelada = isAgendaAtrelada
-            )
-
-
-            ColumnEmailDetails(
-                onClickDraftRespostaEmailDelete = { respostaEmail ->
-                    anexoRespostaEmailRepository.excluirAnexoPorIdRespostaEmail(
-                        respostaEmail.id_resposta_email
+                        },
+                        agendaEmailStateList = agendaEmailStateList,
+                        isLoading = isLoading,
+                        isError = isError
                     )
-                    respostaEmailRepository.excluirRespostaEmail(respostaEmail)
-                    respostasEmailStateList.remove(respostaEmail)
-                    Toast.makeText(
-                        context,
-                        toastMessageDraftMailDeleted,
-                        Toast.LENGTH_LONG
-                    ).show()
-
-                },
-                onClickDraftRespostaEmailEdit = { respostaEmail ->
-                    navController.navigate("editarespostaemailscreen/${respostaEmail.id_resposta_email}")
-                },
-                email = email,
-                anexoBitMapList = anexoBitMapList,
-                timeState = timeState,
-                usuarioSelecionado = usuarioSelecionado,
-                anexoRespostaEmailRepository = anexoRespostaEmailRepository,
-                respostasEmailStateList = respostasEmailStateList,
-                isTodasContasScreen = isTodasContasScreen,
-                onClickReply = {
-                    navController.navigate("criarespostaemailscreen?id_email=${idEmail}&id_resposta_email=${it.id_resposta_email}")
-                },
-                isAgendaAtrelada = isAgendaAtrelada,
-                onClickAcceptInviteButton = {
-                    for (agenda in agendaEmailList) {
-                        agendaRepository.atualizaVisivelPorIdAgenda(agenda.id_agenda, true)
-                        agendaEmailStateList.remove(agenda)
-                    }
-
-                    Toast.makeText(
-                        context,
-                        toastMessageInviteAccepted,
-                        Toast.LENGTH_LONG
-                    ).show()
-
-                },
-                onClickRejectInviteButton = {
-                    for (agenda in agendaEmailList) {
-                        agendaConvidadoRepository.excluirPorIdAgenda(agenda.id_agenda)
-                        agendaRepository.excluiAgenda(agenda)
-                        agendaEmailStateList.remove(agenda)
-                    }
-
-                    Toast.makeText(
-                        context,
-                        toastMessageInviteDeleted,
-                        Toast.LENGTH_LONG
-                    ).show()
-
-                },
-                agendaEmailStateList = agendaEmailStateList
-            )
+                }
+            }
         }
+
     }
 }

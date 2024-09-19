@@ -1,6 +1,5 @@
 package br.com.fiap.locawebmailapp.components.calendar
 
-import android.util.Log
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -40,7 +39,7 @@ fun PeopleSelectorDalog(
     listConvidado: MutableState<List<Convidado>>,
     listConvidadoSelected: MutableList<Convidado>,
     listConvidadoText: MutableState<String>,
-    usuarioSelecionado: MutableState<Usuario>
+    usuarioSelecionado: MutableState<Usuario?>
 ) {
     if (openDialogPeoplePicker.value) {
         Dialog(onDismissRequest = { openDialogPeoplePicker.value = false }) {
@@ -76,59 +75,61 @@ fun PeopleSelectorDalog(
                         isError = false
                     )
 
-                    LazyColumn(
-                        reverseLayout = false,
-                        content = {
-                            items(
-                                listConvidado.value.filter {
-                                    it.email != usuarioSelecionado.value.email
-                                }.reversed(),
-                                key = {
-                                    it.id_convidado
-                                }
-                            ) {
-                                if (it.email.contains(listConvidadoText.value)) {
-                                    Button(
-                                        onClick = {
-                                            if (!listConvidadoSelected.contains(it)) {
-                                                listConvidadoSelected.add(it)
-                                                listConvidadoText.value = ""
-                                            } else {
-                                                listConvidadoSelected.remove(it)
-                                            }
-                                        },
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = Color.Transparent
-                                        ),
-                                        modifier = Modifier.fillMaxWidth(),
-                                        shape = RectangleShape
+                    if (usuarioSelecionado.value != null) {
+                        LazyColumn(
+                            reverseLayout = false,
+                            content = {
+                                items(
+                                    listConvidado.value.filter {
+                                        it.email != usuarioSelecionado.value!!.email
+                                    }.reversed(),
+                                    key = {
+                                        it.id_convidado
+                                    }
+                                ) {
+                                    if (it.email.contains(listConvidadoText.value)) {
+                                        Button(
+                                            onClick = {
+                                                if (!listConvidadoSelected.contains(it)) {
+                                                    listConvidadoSelected.add(it)
+                                                    listConvidadoText.value = ""
+                                                } else {
+                                                    listConvidadoSelected.remove(it)
+                                                }
+                                            },
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = Color.Transparent
+                                            ),
+                                            modifier = Modifier.fillMaxWidth(),
+                                            shape = RectangleShape
 
 
-                                    ) {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Text(
-                                                text = it.email,
-                                                color = colorResource(id = R.color.lcweb_gray_1),
-                                                fontSize = 20.sp
-                                            )
-
-                                            if (listConvidadoSelected.contains(it)) {
-                                                Icon(
-                                                    imageVector = Icons.Filled.Check,
-                                                    contentDescription = stringResource(
-                                                        id = R.string.content_desc_check
-                                                    ),
-                                                    tint = colorResource(
-                                                        id = R.color.lcweb_gray_1
-                                                    )
+                                        ) {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Text(
+                                                    text = it.email,
+                                                    color = colorResource(id = R.color.lcweb_gray_1),
+                                                    fontSize = 20.sp
                                                 )
+
+                                                if (listConvidadoSelected.contains(it)) {
+                                                    Icon(
+                                                        imageVector = Icons.Filled.Check,
+                                                        contentDescription = stringResource(
+                                                            id = R.string.content_desc_check
+                                                        ),
+                                                        tint = colorResource(
+                                                            id = R.color.lcweb_gray_1
+                                                        )
+                                                    )
+                                                }
                                             }
                                         }
                                     }
                                 }
                             }
-                        }
-                    )
+                        )
+                    }
                 }
             }
         }

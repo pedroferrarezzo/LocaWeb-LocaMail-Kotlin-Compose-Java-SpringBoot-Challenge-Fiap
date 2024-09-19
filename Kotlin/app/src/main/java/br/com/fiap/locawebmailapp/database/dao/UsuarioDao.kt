@@ -16,7 +16,6 @@ interface UsuarioDao {
     @Query("SELECT * FROM T_LCW_USUARIO where id_usuario = :id_usuario")
     fun retornaUsuarioPorId(id_usuario: Long): Usuario
 
-
     @Query("SELECT * FROM T_LCW_USUARIO where email != 'dev@locaweb.com.br'")
     fun listarUsuarios(): List<Usuario>
 
@@ -35,9 +34,7 @@ interface UsuarioDao {
     @Query("UPDATE T_LCW_USUARIO SET autenticado = :autenticado where id_usuario = :id_usuario")
     fun atualizaAutenticaUsuario(id_usuario: Long, autenticado: Boolean)
 
-
     @Query("SELECT * FROM T_LCW_USUARIO where autenticado = 1 AND email != 'dev@locaweb.com.br'")
     fun listarUsuariosAutenticados(): List<Usuario>
-
 
 }
