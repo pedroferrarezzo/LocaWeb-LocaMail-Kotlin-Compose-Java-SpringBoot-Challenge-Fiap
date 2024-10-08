@@ -55,6 +55,7 @@ Para o controle de spam, foi implementado uma chamada a API externa (BlackList C
     - Tarefas e eventos contam com opções de repetição automática de dias;
     - O dia atual é estilizado de maneira especial, facilitando a usabilidade do usuário;
     - É possível atribuir uma cor personalizada a tarefa ou evento, definindo assim, por exemplo, seu grau de importância.
+      
       ![image](https://github.com/user-attachments/assets/f1ddcb39-d88c-447e-8045-d8ac9f752bac)
       ![image](https://github.com/user-attachments/assets/dba05c43-760c-4e47-bd65-125dca00412c)
       ![image](https://github.com/user-attachments/assets/511c2a79-fb48-44f0-b3a2-d1a41349053d)
