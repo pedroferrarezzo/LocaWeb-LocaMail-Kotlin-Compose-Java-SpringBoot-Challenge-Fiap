@@ -5,6 +5,7 @@ services:
   oracledb:
     image: gvenzl/oracle-xe
     container_name: oracledb
+    restart: always
     ports:
       - "1521:1521"
     volumes:
@@ -24,6 +25,7 @@ services:
   locamailapi:
     image: ferrarezzodev/locamailapi:latest
     container_name: locamailapi
+    restart: always
     ports:
       - "80:80"
     networks:
